@@ -1,5 +1,7 @@
 # 40K Deployment
 
+[![Deploy](https://github.com/barkin-aygun/wh40k-deploy/actions/workflows/deploy.yml/badge.svg)](https://github.com/barkin-aygun/wh40k-deploy/actions/workflows/deploy.yml)
+
 This app is there to load your armies, layouts and practice deployment. 
 
 ## To Do
