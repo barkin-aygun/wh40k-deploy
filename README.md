@@ -4,14 +4,6 @@ This app is there to load your armies, layouts and practice deployment.
 
 ## To Do
 
-Dear Claude, here are features I'd like you to implement.
-
-### Adding models on battlefield
-
-I'd like a palette of 25mm, 28mm, 32mm, 40mm, 50mm, 60mm, 80mm, 90x25mm oval, 105x70mm oval, 120x90mm oval bases on the side of the screen. I can drag these shapes from this palette to the battlefield, at which point they are added as a model to the field. 
-
-There should be a toggle switch letting me decide which player I am adding this model for. Models can be moved, rotated, deleted, just like other editors. And I'd like a LoS visualizer that will check LoS against all models of the other side.
-
 ### Deep Strike Denial
 
 In the game, units can come from reserves onto the battlefield. Some units can do this anywhere on the field that is 9" away from any enemy models. So what we need is a way to render a 9" shape/circle around the base of a model indicating the areas where an enemy can not fit. This shape should be the collection of all points that are 9" or less close to the model.
