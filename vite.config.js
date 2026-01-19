@@ -5,9 +5,6 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 export default defineConfig({
   plugins: [svelte()],
   base: "https://barkin-aygun.github.io/wh40k-deploy/",
-  server: {
-    allowedHosts: ["unlying-laci-unwanted.ngrok-free.dev"]
-  },
   build: {
     sourcemap: true, // Generates production source maps
   },
