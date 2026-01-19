@@ -5,11 +5,76 @@
 
 import {
   circlePerimeterPoints,
+  ellipsePerimeterPoints,
   circleOverlapsPolygon,
   lineIntersectsPolygon
 } from './geometry.js';
 
 const NUM_SAMPLE_POINTS = 16;
+
+/**
+ * Get perimeter points for a model (circle or ellipse)
+ * @param {Object} model - Model with either {x, y, radius} or {x, y, rx, ry, rotation}
+ * @returns {Array} Array of perimeter points
+ */
+function getModelPerimeterPoints(model) {
+  if (model.radius !== undefined) {
+    // Circle
+    return circlePerimeterPoints(model.x, model.y, model.radius, NUM_SAMPLE_POINTS);
+  } else if (model.rx !== undefined && model.ry !== undefined) {
+    // Ellipse
+    return ellipsePerimeterPoints(model.x, model.y, model.rx, model.ry, model.rotation || 0, NUM_SAMPLE_POINTS);
+  } else {
+    // Fallback: treat as circle with default radius
+    return circlePerimeterPoints(model.x, model.y, 0.5, NUM_SAMPLE_POINTS);
+  }
+}
+
+/**
+ * Check if a model (circle or ellipse) overlaps a polygon
+ * @param {Object} model - Model with either {x, y, radius} or {x, y, rx, ry, rotation}
+ * @param {Array} vertices - Polygon vertices
+ * @returns {boolean} True if model overlaps polygon
+ */
+function modelOverlapsPolygon(model, vertices) {
+  // For simplicity, check if any perimeter point is inside the polygon
+  // Or if center is inside
+  // This is an approximation; true overlap test would be more complex
+  const points = getModelPerimeterPoints(model);
+  for (const point of points) {
+    if (pointInPolygon(point, vertices)) {
+      return true;
+    }
+  }
+  // Check center
+  if (pointInPolygon({ x: model.x, y: model.y }, vertices)) {
+    return true;
+  }
+  return false;
+}
+
+// Simple point in polygon test
+function pointInPolygon(point, vertices) {
+  const n = vertices.length;
+  let sign = null;
+
+  for (let i = 0; i < n; i++) {
+    const v1 = vertices[i];
+    const v2 = vertices[(i + 1) % n];
+
+    const cross = (v2.x - v1.x) * (point.y - v1.y) - (v2.y - v1.y) * (point.x - v1.x);
+
+    if (cross !== 0) {
+      const currentSign = cross > 0;
+      if (sign === null) {
+        sign = currentSign;
+      } else if (sign !== currentSign) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 /**
  * Check if model A can see model B
@@ -25,14 +90,14 @@ const NUM_SAMPLE_POINTS = 16;
  * @returns {Object} { canSee: boolean, rays: Array } rays included for debug visualization
  */
 export function checkLineOfSight(modelA, modelB, terrainPolygons, walls) {
-  const pointsA = circlePerimeterPoints(modelA.x, modelA.y, modelA.radius, NUM_SAMPLE_POINTS);
-  const pointsB = circlePerimeterPoints(modelB.x, modelB.y, modelB.radius, NUM_SAMPLE_POINTS);
+  const pointsA = getModelPerimeterPoints(modelA);
+  const pointsB = getModelPerimeterPoints(modelB);
 
   // For each terrain, check if EITHER model touches it (if so, that terrain doesn't block)
   const terrainsToIgnore = new Set();
   for (const terrain of terrainPolygons) {
-    const viewerOnTerrain = circleOverlapsPolygon(modelA.x, modelA.y, modelA.radius, terrain.vertices);
-    const targetOnTerrain = circleOverlapsPolygon(modelB.x, modelB.y, modelB.radius, terrain.vertices);
+    const viewerOnTerrain = modelOverlapsPolygon(modelA, terrain.vertices);
+    const targetOnTerrain = modelOverlapsPolygon(modelB, terrain.vertices);
     if (viewerOnTerrain || targetOnTerrain) {
       terrainsToIgnore.add(terrain.id);
     }
@@ -95,14 +160,14 @@ export function checkLineOfSight(modelA, modelB, terrainPolygons, walls) {
  * Quick check without collecting rays (for performance when debug is off)
  */
 export function canSee(modelA, modelB, terrainPolygons, walls) {
-  const pointsA = circlePerimeterPoints(modelA.x, modelA.y, modelA.radius, NUM_SAMPLE_POINTS);
-  const pointsB = circlePerimeterPoints(modelB.x, modelB.y, modelB.radius, NUM_SAMPLE_POINTS);
+  const pointsA = getModelPerimeterPoints(modelA);
+  const pointsB = getModelPerimeterPoints(modelB);
 
   // For each terrain, check if EITHER model touches it
   const terrainsToIgnore = new Set();
   for (const terrain of terrainPolygons) {
-    const viewerOnTerrain = circleOverlapsPolygon(modelA.x, modelA.y, modelA.radius, terrain.vertices);
-    const targetOnTerrain = circleOverlapsPolygon(modelB.x, modelB.y, modelB.radius, terrain.vertices);
+    const viewerOnTerrain = modelOverlapsPolygon(modelA, terrain.vertices);
+    const targetOnTerrain = modelOverlapsPolygon(modelB, terrain.vertices);
     if (viewerOnTerrain || targetOnTerrain) {
       terrainsToIgnore.add(terrain.id);
     }

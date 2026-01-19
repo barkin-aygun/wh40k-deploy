@@ -3,63 +3,33 @@
   import Battlefield from '../lib/Battlefield.svelte';
   import { DEPLOYMENT_PRESETS, pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
   import { savedLayoutsList, refreshSavedLayouts, TERRAIN_LAYOUT_PRESETS } from '../stores/layout.js';
-
-  // Selected deployment and layout
-  let selectedDeployment = null;
-  let selectedLayoutName = null;
-  let selectedLayoutType = null; // 'preset' or 'saved'
-  let loadedTerrain = { terrains: [], walls: [] };
+  import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
 
   onMount(() => {
     refreshSavedLayouts();
   });
 
-  // Load terrain layout from localStorage
-  function loadSavedLayout(name) {
-    const saved = localStorage.getItem('warhammer-deployment-layouts');
-    if (saved) {
-      try {
-        const layouts = JSON.parse(saved);
-        if (layouts[name]) {
-          return {
-            terrains: layouts[name].terrains || [],
-            walls: layouts[name].walls || []
-          };
-        }
-      } catch (e) {
-        console.error('Failed to load layout:', e);
-      }
-    }
-    return { terrains: [], walls: [] };
-  }
-
   function handleSelectDeployment(preset) {
-    selectedDeployment = preset;
+    selectedDeployment.set(preset);
   }
 
   function handleSelectPreset(preset) {
-    selectedLayoutName = preset.name;
-    selectedLayoutType = 'preset';
-    loadedTerrain = {
-      terrains: preset.terrains || [],
-      walls: preset.walls || []
-    };
+    selectedLayoutName.set(preset.name);
+    selectedLayoutType.set('preset');
   }
 
   function handleSelectSavedLayout(name) {
-    selectedLayoutName = name;
-    selectedLayoutType = 'saved';
-    loadedTerrain = loadSavedLayout(name);
+    selectedLayoutName.set(name);
+    selectedLayoutType.set('saved');
   }
 
   function handleClearLayout() {
-    selectedLayoutName = null;
-    selectedLayoutType = null;
-    loadedTerrain = { terrains: [], walls: [] };
+    selectedLayoutName.set(null);
+    selectedLayoutType.set(null);
   }
 
   function handleClearDeployment() {
-    selectedDeployment = null;
+    selectedDeployment.set(null);
   }
 
   // Get wall vertices for rendering
@@ -136,7 +106,9 @@
   <div class="header">
     <h1>Battlefield Setup</h1>
     <nav class="nav-links">
-      <a href="#/">Terrain Builder</a>
+      <a href="#/setup" class="active">Battlefield Setup</a>
+      <a href="#/deployment">Deployment</a>
+      <a href="#/">Layout Builder</a>
       <a href="#/debug">Debug Mode</a>
     </nav>
   </div>
@@ -146,9 +118,9 @@
       <!-- Deployment Selection -->
       <section>
         <h3>Deployment</h3>
-        {#if selectedDeployment}
+        {#if $selectedDeployment}
           <div class="selected-item">
-            <span class="selected-name">{selectedDeployment.name}</span>
+            <span class="selected-name">{$selectedDeployment.name}</span>
             <button class="small secondary" on:click={handleClearDeployment}>Change</button>
           </div>
         {:else}
@@ -165,9 +137,9 @@
       <!-- Terrain Layout Selection -->
       <section>
         <h3>Terrain Layout</h3>
-        {#if selectedLayoutName}
+        {#if $selectedLayoutName}
           <div class="selected-item">
-            <span class="selected-name">{selectedLayoutName}</span>
+            <span class="selected-name">{$selectedLayoutName}</span>
             <button class="small secondary" on:click={handleClearLayout}>Change</button>
           </div>
         {:else}
@@ -204,22 +176,22 @@
         <div class="summary">
           <div class="summary-row">
             <span class="label">Deployment:</span>
-            <span class="value">{selectedDeployment?.name || 'None'}</span>
+            <span class="value">{$selectedDeployment?.name || 'None'}</span>
           </div>
           <div class="summary-row">
             <span class="label">Terrain:</span>
-            <span class="value">{selectedLayoutName || 'None'}</span>
+            <span class="value">{$selectedLayoutName || 'None'}</span>
           </div>
-          {#if selectedDeployment}
+          {#if $selectedDeployment}
             <div class="summary-row">
               <span class="label">Objectives:</span>
-              <span class="value">{selectedDeployment.objectives.length}</span>
+              <span class="value">{$selectedDeployment.objectives.length}</span>
             </div>
           {/if}
-          {#if loadedTerrain.terrains.length > 0 || loadedTerrain.walls.length > 0}
+          {#if $loadedTerrain.terrains.length > 0 || $loadedTerrain.walls.length > 0}
             <div class="summary-row">
               <span class="label">Pieces:</span>
-              <span class="value">{loadedTerrain.terrains.length} terrain, {loadedTerrain.walls.length} walls</span>
+              <span class="value">{$loadedTerrain.terrains.length} terrain, {$loadedTerrain.walls.length} walls</span>
             </div>
           {/if}
         </div>
@@ -230,30 +202,19 @@
       <div class="battlefield-container">
         <Battlefield>
           <!-- Deployment zones -->
-          {#if selectedDeployment}
-            {#each selectedDeployment.zones as zone}
+          {#if $selectedDeployment}
+            {#each $selectedDeployment.zones as zone}
               <path
                 d={pathToSvgD(zone.path)}
                 fill={zone.color}
                 stroke={zone.borderColor}
-                stroke-width="0.15"
+                stroke-width="0.10"
                 stroke-dasharray="0.5,0.25"
               />
-              <text
-                x={zone.path.reduce((acc, p) => p.x !== undefined ? acc + p.x : acc, 0) / zone.path.filter(p => p.x !== undefined).length}
-                y={zone.path.reduce((acc, p) => p.y !== undefined ? acc + p.y : acc, 0) / zone.path.filter(p => p.y !== undefined).length}
-                text-anchor="middle"
-                dominant-baseline="middle"
-                fill={zone.borderColor}
-                font-size="1.5"
-                font-weight="600"
-              >
-                {zone.name}
-              </text>
             {/each}
 
             <!-- Objectives -->
-            {#each selectedDeployment.objectives as obj}
+            {#each $selectedDeployment.objectives as obj}
               {@const markerColor = obj.isPrimary ? '#fbbf24' : '#9ca3af'}
               {@const controlColor = obj.isPrimary ? 'rgba(251, 191, 36, 0.15)' : 'rgba(156, 163, 175, 0.15)'}
               <circle
@@ -283,7 +244,7 @@
           {/if}
 
           <!-- Terrain pieces -->
-          {#each loadedTerrain.terrains as terrain}
+          {#each $loadedTerrain.terrains as terrain}
             {@const centerX = terrain.x + terrain.width / 2}
             {@const centerY = terrain.y + terrain.height / 2}
             <g transform="rotate({terrain.rotation}, {centerX}, {centerY})">
@@ -292,7 +253,7 @@
                 y={terrain.y}
                 width={terrain.width}
                 height={terrain.height}
-                fill="rgba(139, 90, 43, 0.3)"
+                fill="rgba(139, 90, 43, 0.6)"
                 stroke="#8b5a2b"
                 stroke-width="0.1"
               />
@@ -300,7 +261,7 @@
           {/each}
 
           <!-- Wall pieces -->
-          {#each loadedTerrain.walls as wall}
+          {#each $loadedTerrain.walls as wall}
             {@const center = getWallCenter(wall)}
             <g transform="rotate({wall.rotation}, {center.x}, {center.y})">
               <path
@@ -357,6 +318,10 @@
   .nav-links a:hover {
     color: #aaa;
     text-decoration: underline;
+  }
+
+  .nav-links a.active {
+    color: #fff;
   }
 
   .layout {

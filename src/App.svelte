@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import MainPage from './pages/MainPage.svelte';
   import BattlefieldSetupPage from './pages/BattlefieldSetupPage.svelte';
+  import DeploymentPage from './pages/DeploymentPage.svelte';
   import DebugPage from './pages/DebugPage.svelte';
 
   let currentPage = 'main';
@@ -12,8 +13,10 @@
       currentPage = 'debug';
     } else if (hash === '#/setup') {
       currentPage = 'setup';
+    } else if (hash === '#/deployment') {
+      currentPage = 'deployment';
     } else {
-      currentPage = 'main';
+      currentPage = 'setup';
     }
   }
 
@@ -28,6 +31,8 @@
   <DebugPage />
 {:else if currentPage === 'setup'}
   <BattlefieldSetupPage />
+{:else if currentPage === 'deployment'}
+  <DeploymentPage />
 {:else}
   <MainPage />
 {/if}

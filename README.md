@@ -1,43 +1,41 @@
-# Svelte + Vite
+# 40K Deployment
 
-This template should help get you started developing with Svelte in Vite.
+This app is there to load your armies, layouts and practice deployment. 
 
-## Recommended IDE Setup
+## To Do
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+Dear Claude, here are features I'd like you to implement.
 
-## Need an official Svelte framework?
+### Adding models on battlefield
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+I'd like a palette of 25mm, 28mm, 32mm, 40mm, 50mm, 60mm, 80mm, 90x25mm oval, 105x70mm oval, 120x90mm oval bases on the side of the screen. I can drag these shapes from this palette to the battlefield, at which point they are added as a model to the field. 
 
-## Technical considerations
+There should be a toggle switch letting me decide which player I am adding this model for. Models can be moved, rotated, deleted, just like other editors. And I'd like a LoS visualizer that will check LoS against all models of the other side.
 
-**Why use this over SvelteKit?**
+### Deep Strike Denial
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+In the game, units can come from reserves onto the battlefield. Some units can do this anywhere on the field that is 9" away from any enemy models. So what we need is a way to render a 9" shape/circle around the base of a model indicating the areas where an enemy can not fit. This shape should be the collection of all points that are 9" or less close to the model.
 
-This template contains as little as possible to get started with Vite + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
+There should be a button that does this for the entire army, allowing us to get a overview of what parts of battlefield are covered and not.
 
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
+### Drag Move Ruler
 
-**Why include `.vscode/extensions.json`?**
+While a model is being dragged, a line with a label should be drawn from where the model was to where it's moving, showing exactly how far the model is moving. This helps users visualize how far their model is moving and the limits.
 
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
+### Ray casting from a unit out
 
-**Why enable `checkJs` in the JS template?**
+One of the ways to figure out good deployment is making sure no models in the unit are visible to areas enemy can move their units into in their next turn. To that end, when a unit is selected, a button should allow a complete raycast from that unit, following visibility rules to show from what parts of the map that unit can be seen.
 
-It is likely that most cases of changing variable types in runtime are likely to be accidental, rather than deliberate. This provides advanced typechecking out of the box. Should you like to take advantage of the dynamically-typed nature of JavaScript, it is trivial to change the configuration.
+### Creation of a base size dataset
 
-**Why is HMR not preserving my local component state?**
+There are a lot of different models/units in the game. Their base sizes are listed, but some units have multiple models with different base sizes, some have Hull as their base indicating it's the model that determines LoS. I'd like you to provide me with a JSON that I can edit that maps faction > unit > models so I can create a dataset of all the models.
 
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/sveltejs/svelte-hmr/tree/master/packages/svelte-hmr#preservation-of-local-state).
+### Army Import
 
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
+I'd like to go from a GW app exported army list (or one that's compacted), to a collection of bases representing the army. Some models (especially tanks and aircraft) go by hull rules, so we'll eventually need to support SVGs for these shapes. Refer to the units.json 
 
-```js
-// store.js
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
-```
+A staging area next to the battlefield is needed for the player. This will group all the bases on there, and let the player drag/drop them onto the battlefield.
+
+Some units will have multiple models, and will have coherency rules. If a unit has 6 or less models, every model must be within 2" of at least one model of the unit. If it has 7 or more, every model must be within 2" of at least two other models of the unit. Units not in coherency during deployment should be marked as such.
+
+Every unit should have a clear label that indicates where the unit is, ability to move the entire unit at once, or move individual models. Rotation for entire unit/model is also needed.

@@ -101,7 +101,7 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.3)',
+        color: 'rgba(59, 130, 246, 0.1)',
         borderColor: '#3b82f6',
         // Rectangle: bottom 12" strip
         path: [
@@ -114,7 +114,7 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.3)',
+        color: 'rgba(239, 68, 68, 0.1)',
         borderColor: '#ef4444',
         // Rectangle: top 12" strip
         path: [
@@ -139,7 +139,7 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.3)',
+        color: 'rgba(59, 130, 246, 0.1)',
         borderColor: '#3b82f6',
         // Rectangle: left 18" strip
         path: [
@@ -152,7 +152,7 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.3)',
+        color: 'rgba(239, 68, 68, 0.1)',
         borderColor: '#ef4444',
         // Rectangle: right 18" strip
         path: [
@@ -177,7 +177,7 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.3)',
+        color: 'rgba(59, 130, 246, 0.1)',
         borderColor: '#3b82f6',
         // Rectangle: left 12/20 steps
         path: [
@@ -192,7 +192,7 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.3)',
+        color: 'rgba(239, 68, 68, 0.1)',
         borderColor: '#ef4444',
         path: [
           { type: 'M', x: 40, y: 0 },
@@ -218,7 +218,7 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.3)',
+        color: 'rgba(59, 130, 246, 0.1)',
         borderColor: '#3b82f6',
         // Bottom-left corner with quarter circle arc (9" radius from corner)
         path: [
@@ -232,7 +232,7 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.3)',
+        color: 'rgba(239, 68, 68, 0.1)',
         borderColor: '#ef4444',
         // Top-right corner with quarter circle arc (9" radius from corner)
         path: [
@@ -258,7 +258,7 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.3)',
+        color: 'rgba(59, 130, 246, 0.1)',
         borderColor: '#3b82f6',
         // Diagonal bottom-left
         path: [
@@ -273,7 +273,7 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.3)',
+        color: 'rgba(239, 68, 68, 0.1)',
         borderColor: '#ef4444',
         // Diagonal top-right
         path: [
@@ -300,7 +300,7 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.3)',
+        color: 'rgba(59, 130, 246, 0.1)',
         borderColor: '#3b82f6',
         // Left Diagonal
         path: [
@@ -312,7 +312,7 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.3)',
+        color: 'rgba(239, 68, 68, 0.1)',
         borderColor: '#ef4444',
         path: [
           { type: 'M', x: 60, y: 44 },

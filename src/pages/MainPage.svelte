@@ -254,7 +254,7 @@
   }
 
   function handleClear() {
-    if (confirm('Clear all terrain and wall pieces?')) {
+    if (confirm('Clear all terrain and walls?')) {
       layoutTerrains.clear();
       layoutWalls.clear();
       selectedTerrainId.set(null);
@@ -335,9 +335,11 @@
 
 <main>
   <div class="header">
-    <h1>Terrain Layout Builder</h1>
+    <h1>Layout Builder</h1>
     <nav class="nav-links">
       <a href="#/setup">Battlefield Setup</a>
+      <a href="#/deployment">Deployment</a>
+      <a href="#/" class="active">Layout Builder</a>
       <a href="#/debug">Debug Mode</a>
     </nav>
   </div>
@@ -575,6 +577,10 @@
   .nav-links a:hover {
     color: #aaa;
     text-decoration: underline;
+  }
+
+  .nav-links a.active {
+    color: #fff;
   }
 
   .layout {

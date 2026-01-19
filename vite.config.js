@@ -6,5 +6,8 @@ export default defineConfig({
   plugins: [svelte()],
   server: {
     allowedHosts: ["unlying-laci-unwanted.ngrok-free.dev"]
-  }
+  },
+  build: {
+    sourcemap: true, // Generates production source maps
+  },
 })

@@ -88,6 +88,39 @@ export function circlePerimeterPoints(cx, cy, r, numPoints = 16) {
 }
 
 /**
+ * Generate evenly spaced points around an ellipse's perimeter
+ * @param {number} cx - Ellipse center x
+ * @param {number} cy - Ellipse center y
+ * @param {number} rx - Horizontal radius (half width)
+ * @param {number} ry - Vertical radius (half height)
+ * @param {number} rotationDeg - Rotation angle in degrees (0 = no rotation)
+ * @param {number} numPoints - Number of points to generate
+ * @returns {Array} Array of {x, y} points
+ */
+export function ellipsePerimeterPoints(cx, cy, rx, ry, rotationDeg = 0, numPoints = 16) {
+  const points = [];
+  const rotationRad = (rotationDeg * Math.PI) / 180;
+  const cosRot = Math.cos(rotationRad);
+  const sinRot = Math.sin(rotationRad);
+
+  for (let i = 0; i < numPoints; i++) {
+    const angle = (2 * Math.PI * i) / numPoints;
+
+    // Point on unrotated ellipse
+    const x = rx * Math.cos(angle);
+    const y = ry * Math.sin(angle);
+
+    // Apply rotation and translation
+    points.push({
+      x: cx + x * cosRot - y * sinRot,
+      y: cy + x * sinRot + y * cosRot
+    });
+  }
+
+  return points;
+}
+
+/**
  * Check if a line segment intersects a rectangle
  * @param {Object} p1 - First point of segment {x, y}
  * @param {Object} p2 - Second point of segment {x, y}
