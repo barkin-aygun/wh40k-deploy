@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import MainPage from './pages/MainPage.svelte';
+  import BattlefieldSetupPage from './pages/BattlefieldSetupPage.svelte';
   import DebugPage from './pages/DebugPage.svelte';
 
   let currentPage = 'main';
@@ -9,6 +10,8 @@
     const hash = window.location.hash;
     if (hash === '#/debug') {
       currentPage = 'debug';
+    } else if (hash === '#/setup') {
+      currentPage = 'setup';
     } else {
       currentPage = 'main';
     }
@@ -23,6 +26,8 @@
 
 {#if currentPage === 'debug'}
   <DebugPage />
+{:else if currentPage === 'setup'}
+  <BattlefieldSetupPage />
 {:else}
   <MainPage />
 {/if}

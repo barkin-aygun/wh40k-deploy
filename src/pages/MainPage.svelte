@@ -1,17 +1,149 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import Battlefield from '../lib/Battlefield.svelte';
   import TerrainRect from '../lib/TerrainRect.svelte';
-  import { layoutTerrains, selectedTerrainId, TERRAIN_SIZES } from '../stores/layout.js';
+  import WallPiece from '../lib/WallPiece.svelte';
+  import {
+    layoutTerrains,
+    layoutWalls,
+    selectedTerrainId,
+    selectedWallId,
+    TERRAIN_SIZES,
+    WALL_SHAPES,
+    savedLayoutsList,
+    refreshSavedLayouts,
+    saveLayout,
+    loadLayout,
+    deleteLayout
+  } from '../stores/layout.js';
 
-  let hasSavedLayout = false;
+  // Modal state
+  let showSaveModal = false;
+  let showLoadModal = false;
+  let saveLayoutName = '';
+
+  // Clipboard for copy/paste
+  let clipboard = null;
 
   onMount(() => {
-    hasSavedLayout = layoutTerrains.hasSaved();
+    refreshSavedLayouts();
+    window.addEventListener('keydown', handleKeyDown);
   });
+
+  onDestroy(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+  });
+
+  function handleKeyDown(event) {
+    // Don't handle keys when typing in inputs or modals are open
+    if (event.target.tagName === 'INPUT' || showSaveModal || showLoadModal) {
+      return;
+    }
+
+    const hasSelection = $selectedTerrainId || $selectedWallId;
+
+    // Delete/Backspace - remove selected piece
+    if ((event.key === 'Delete' || event.key === 'Backspace') && hasSelection) {
+      event.preventDefault();
+      handleRemoveSelected();
+      return;
+    }
+
+    // Arrow keys - move selected piece
+    if (hasSelection && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      event.preventDefault();
+      const step = event.shiftKey ? 0.1 : 1; // Shift for fine movement
+      let dx = 0, dy = 0;
+
+      switch (event.key) {
+        case 'ArrowUp': dy = -step; break;
+        case 'ArrowDown': dy = step; break;
+        case 'ArrowLeft': dx = -step; break;
+        case 'ArrowRight': dx = step; break;
+      }
+
+      if ($selectedTerrainId) {
+        const terrain = $layoutTerrains.find(t => t.id === $selectedTerrainId);
+        if (terrain) {
+          layoutTerrains.updateTerrain($selectedTerrainId, {
+            x: terrain.x + dx,
+            y: terrain.y + dy
+          });
+        }
+      } else if ($selectedWallId) {
+        const wall = $layoutWalls.find(w => w.id === $selectedWallId);
+        if (wall) {
+          layoutWalls.updateWall($selectedWallId, {
+            x: wall.x + dx,
+            y: wall.y + dy
+          });
+        }
+      }
+      return;
+    }
+
+    // Ctrl+C - copy selected piece
+    if (event.key === 'c' && (event.ctrlKey || event.metaKey) && hasSelection) {
+      event.preventDefault();
+      if ($selectedTerrainId) {
+        const terrain = $layoutTerrains.find(t => t.id === $selectedTerrainId);
+        if (terrain) {
+          clipboard = { type: 'terrain', data: { ...terrain } };
+        }
+      } else if ($selectedWallId) {
+        const wall = $layoutWalls.find(w => w.id === $selectedWallId);
+        if (wall) {
+          clipboard = { type: 'wall', data: { ...wall } };
+        }
+      }
+      return;
+    }
+
+    // Ctrl+V - paste piece
+    if (event.key === 'v' && (event.ctrlKey || event.metaKey) && clipboard) {
+      event.preventDefault();
+      if (clipboard.type === 'terrain') {
+        const newId = 'terrain-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        const newTerrain = {
+          ...clipboard.data,
+          id: newId,
+          x: clipboard.data.x + 2, // Offset so it's visible
+          y: clipboard.data.y + 2
+        };
+        layoutTerrains.update(terrains => [...terrains, newTerrain]);
+        selectedTerrainId.set(newId);
+        selectedWallId.set(null);
+        // Update clipboard position for next paste
+        clipboard.data.x += 2;
+        clipboard.data.y += 2;
+      } else if (clipboard.type === 'wall') {
+        const newId = 'wall-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        const newWall = {
+          ...clipboard.data,
+          id: newId,
+          x: clipboard.data.x + 2,
+          y: clipboard.data.y + 2
+        };
+        layoutWalls.update(walls => [...walls, newWall]);
+        selectedWallId.set(newId);
+        selectedTerrainId.set(null);
+        // Update clipboard position for next paste
+        clipboard.data.x += 2;
+        clipboard.data.y += 2;
+      }
+      return;
+    }
+
+    // Escape - deselect
+    if (event.key === 'Escape') {
+      handleDeselectAll();
+      return;
+    }
+  }
 
   // Get selected terrain data
   $: selectedTerrain = $layoutTerrains.find(t => t.id === $selectedTerrainId);
+  $: selectedWall = $layoutWalls.find(w => w.id === $selectedWallId);
 
   // Local editing values (bound to inputs)
   let editX = '';
@@ -21,67 +153,193 @@
   $: if (selectedTerrain) {
     editX = selectedTerrain.x.toFixed(1);
     editY = selectedTerrain.y.toFixed(1);
+  } else if (selectedWall) {
+    editX = selectedWall.x.toFixed(1);
+    editY = selectedWall.y.toFixed(1);
   }
 
   function handleAddTerrain(width, height) {
     layoutTerrains.add(width, height);
   }
 
+  function handleAddWall(shape) {
+    layoutWalls.add(shape);
+  }
+
   function handleSelectTerrain(id) {
     selectedTerrainId.set(id);
+    selectedWallId.set(null);
+  }
+
+  function handleSelectWall(id) {
+    selectedWallId.set(id);
+    selectedTerrainId.set(null);
   }
 
   function handleDeselectAll() {
     selectedTerrainId.set(null);
+    selectedWallId.set(null);
   }
 
   function handleDragTerrain(id, x, y) {
     layoutTerrains.updateTerrain(id, { x, y });
   }
 
+  function handleDragWall(id, x, y) {
+    layoutWalls.updateWall(id, { x, y });
+  }
+
   function handleRotateTerrain(id, rotation) {
     layoutTerrains.updateTerrain(id, { rotation });
+  }
+
+  function handleRotateWall(id, rotation) {
+    layoutWalls.updateWall(id, { rotation });
   }
 
   function handleRemoveSelected() {
     if ($selectedTerrainId) {
       layoutTerrains.remove($selectedTerrainId);
       selectedTerrainId.set(null);
+    } else if ($selectedWallId) {
+      layoutWalls.remove($selectedWallId);
+      selectedWallId.set(null);
     }
   }
 
   function handleUpdateCoordinates() {
-    if ($selectedTerrainId) {
-      const x = parseFloat(editX);
-      const y = parseFloat(editY);
-      if (!isNaN(x) && !isNaN(y)) {
+    const x = parseFloat(editX);
+    const y = parseFloat(editY);
+    if (!isNaN(x) && !isNaN(y)) {
+      if ($selectedTerrainId) {
         layoutTerrains.updateTerrain($selectedTerrainId, { x, y });
+      } else if ($selectedWallId) {
+        layoutWalls.updateWall($selectedWallId, { x, y });
       }
     }
   }
 
-  function handleSave() {
-    layoutTerrains.save();
-    hasSavedLayout = true;
+  function openSaveModal() {
+    saveLayoutName = '';
+    showSaveModal = true;
   }
 
-  function handleLoad() {
-    layoutTerrains.load();
+  function handleSave() {
+    if (saveLayoutName.trim()) {
+      saveLayout(saveLayoutName.trim());
+      refreshSavedLayouts();
+      showSaveModal = false;
+      saveLayoutName = '';
+    }
+  }
+
+  function openLoadModal() {
+    refreshSavedLayouts();
+    showLoadModal = true;
+  }
+
+  function handleLoad(name) {
+    loadLayout(name);
     selectedTerrainId.set(null);
+    selectedWallId.set(null);
+    showLoadModal = false;
+  }
+
+  function handleDeleteLayout(name, event) {
+    event.stopPropagation();
+    if (confirm(`Delete layout "${name}"?`)) {
+      deleteLayout(name);
+      refreshSavedLayouts();
+    }
   }
 
   function handleClear() {
-    if (confirm('Clear all terrain pieces?')) {
+    if (confirm('Clear all terrain and wall pieces?')) {
       layoutTerrains.clear();
+      layoutWalls.clear();
       selectedTerrainId.set(null);
+      selectedWallId.set(null);
     }
+  }
+
+  function formatDate(timestamp) {
+    return new Date(timestamp).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  // Get shape display name
+  function getShapeName(shape) {
+    const found = WALL_SHAPES.find(s => s.shape === shape);
+    return found ? found.label : shape;
+  }
+
+  // Export current layout to JSON file
+  function handleExport() {
+    const terrains = $layoutTerrains;
+    const walls = $layoutWalls;
+    const data = {
+      version: 1,
+      exportedAt: Date.now(),
+      terrains,
+      walls
+    };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `layout-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Import layout from JSON file
+  let fileInput;
+
+  function handleImportClick() {
+    fileInput.click();
+  }
+
+  function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (data.terrains && Array.isArray(data.terrains)) {
+          layoutTerrains.set(data.terrains);
+        }
+        if (data.walls && Array.isArray(data.walls)) {
+          layoutWalls.set(data.walls);
+        }
+        selectedTerrainId.set(null);
+        selectedWallId.set(null);
+      } catch (err) {
+        alert('Failed to import layout: Invalid file format');
+        console.error('Import error:', err);
+      }
+    };
+    reader.readAsText(file);
+    // Reset input so same file can be selected again
+    event.target.value = '';
   }
 </script>
 
 <main>
   <div class="header">
-    <h1>Warhammer Deployment Planner</h1>
-    <a href="#/debug" class="debug-link">Debug Mode</a>
+    <h1>Terrain Layout Builder</h1>
+    <nav class="nav-links">
+      <a href="#/setup">Battlefield Setup</a>
+      <a href="#/debug">Debug Mode</a>
+    </nav>
   </div>
 
   <div class="layout">
@@ -98,14 +356,27 @@
         </div>
       </section>
 
-      <!-- Selected Terrain Section -->
+      <!-- Add Wall Section -->
       <section>
-        <h3>Selected Terrain</h3>
-        {#if selectedTerrain}
+        <h3>Add Wall</h3>
+        <div class="button-group">
+          {#each WALL_SHAPES as wallShape}
+            <button on:click={() => handleAddWall(wallShape.shape)}>
+              {wallShape.label}
+            </button>
+          {/each}
+        </div>
+      </section>
+
+      <!-- Selected Item Section -->
+      <section>
+        <h3>Selected {selectedTerrain ? 'Terrain' : selectedWall ? 'Wall' : 'Item'}</h3>
+        {#if selectedTerrain || selectedWall}
           <div class="edit-form">
             <div class="field">
-              <label>X (inches)</label>
+              <label for="edit-x">X (inches)</label>
               <input
+                id="edit-x"
                 type="number"
                 step="0.1"
                 bind:value={editX}
@@ -113,28 +384,40 @@
               />
             </div>
             <div class="field">
-              <label>Y (inches)</label>
+              <label for="edit-y">Y (inches)</label>
               <input
+                id="edit-y"
                 type="number"
                 step="0.1"
                 bind:value={editY}
                 on:change={handleUpdateCoordinates}
               />
             </div>
-            <div class="field">
-              <label>Size</label>
-              <span class="value">{selectedTerrain.width}" x {selectedTerrain.height}"</span>
-            </div>
-            <div class="field">
-              <label>Rotation</label>
-              <span class="value">{Math.round(selectedTerrain.rotation)}°</span>
-            </div>
+            {#if selectedTerrain}
+              <div class="field">
+                <span class="label-text">Size</span>
+                <span class="value">{selectedTerrain.width}" x {selectedTerrain.height}"</span>
+              </div>
+              <div class="field">
+                <span class="label-text">Rotation</span>
+                <span class="value">{Math.round(selectedTerrain.rotation)}°</span>
+              </div>
+            {:else if selectedWall}
+              <div class="field">
+                <span class="label-text">Shape</span>
+                <span class="value">{getShapeName(selectedWall.shape)}</span>
+              </div>
+              <div class="field">
+                <span class="label-text">Rotation</span>
+                <span class="value">{Math.round(selectedWall.rotation)}°</span>
+              </div>
+            {/if}
             <button class="danger" on:click={handleRemoveSelected}>
               Remove
             </button>
           </div>
         {:else}
-          <p class="hint">Click a terrain piece to select it</p>
+          <p class="hint">Click a piece to select it</p>
         {/if}
       </section>
 
@@ -142,13 +425,26 @@
       <section>
         <h3>Layout</h3>
         <div class="button-group vertical">
-          <button on:click={handleSave}>Save Layout</button>
-          <button on:click={handleLoad} disabled={!hasSavedLayout}>
+          <button on:click={openSaveModal}>Save Layout</button>
+          <button on:click={openLoadModal} disabled={$savedLayoutsList.length === 0}>
             Load Layout
           </button>
+          <div class="button-row">
+            <button class="secondary small" on:click={handleExport}>Export</button>
+            <button class="secondary small" on:click={handleImportClick}>Import</button>
+          </div>
           <button class="secondary" on:click={handleClear}>Clear All</button>
         </div>
       </section>
+
+      <!-- Hidden file input for import -->
+      <input
+        type="file"
+        accept=".json"
+        bind:this={fileInput}
+        on:change={handleFileSelect}
+        style="display: none;"
+      />
     </div>
 
     <div class="battlefield-area">
@@ -169,14 +465,79 @@
               onRotate={handleRotateTerrain}
             />
           {/each}
+          {#each $layoutWalls as wall (wall.id)}
+            <WallPiece
+              id={wall.id}
+              x={wall.x}
+              y={wall.y}
+              shape={wall.shape}
+              rotation={wall.rotation}
+              selected={wall.id === $selectedWallId}
+              {screenToSvg}
+              onSelect={handleSelectWall}
+              onDrag={handleDragWall}
+              onRotate={handleRotateWall}
+            />
+          {/each}
         </Battlefield>
       </div>
       <div class="info">
-        <p>Battlefield: 60" x 44" | {$layoutTerrains.length} terrain piece{$layoutTerrains.length !== 1 ? 's' : ''}</p>
+        <p>Battlefield: 60" x 44" | {$layoutTerrains.length} terrain{$layoutTerrains.length !== 1 ? 's' : ''} | {$layoutWalls.length} wall{$layoutWalls.length !== 1 ? 's' : ''}</p>
+        <p class="hint">Scroll to zoom | Space+drag or middle-click to pan | Double-click to reset view</p>
       </div>
     </div>
   </div>
 </main>
+
+<!-- Save Modal -->
+{#if showSaveModal}
+  <div class="modal-overlay" on:click={() => showSaveModal = false} role="presentation">
+    <div class="modal" on:click|stopPropagation role="dialog">
+      <h2>Save Layout</h2>
+      <div class="modal-field">
+        <label for="layout-name">Layout Name</label>
+        <input
+          id="layout-name"
+          type="text"
+          bind:value={saveLayoutName}
+          placeholder="Enter a name..."
+          on:keydown={(e) => e.key === 'Enter' && handleSave()}
+        />
+      </div>
+      <div class="modal-actions">
+        <button class="secondary" on:click={() => showSaveModal = false}>Cancel</button>
+        <button on:click={handleSave} disabled={!saveLayoutName.trim()}>Save</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Load Modal -->
+{#if showLoadModal}
+  <div class="modal-overlay" on:click={() => showLoadModal = false} role="presentation">
+    <div class="modal" on:click|stopPropagation role="dialog">
+      <h2>Load Layout</h2>
+      {#if $savedLayoutsList.length === 0}
+        <p class="hint">No saved layouts yet</p>
+      {:else}
+        <div class="layout-list">
+          {#each $savedLayoutsList as layout}
+            <div class="layout-item" on:click={() => handleLoad(layout.name)} role="button" tabindex="0">
+              <div class="layout-info">
+                <span class="layout-name">{layout.name}</span>
+                <span class="layout-meta">{layout.terrainCount} terrain{layout.terrainCount !== 1 ? 's' : ''}, {layout.wallCount || 0} wall{(layout.wallCount || 0) !== 1 ? 's' : ''} · {formatDate(layout.savedAt)}</span>
+              </div>
+              <button class="delete-btn" on:click={(e) => handleDeleteLayout(layout.name, e)} title="Delete">×</button>
+            </div>
+          {/each}
+        </div>
+      {/if}
+      <div class="modal-actions">
+        <button class="secondary" on:click={() => showLoadModal = false}>Cancel</button>
+      </div>
+    </div>
+  </div>
+{/if}
 
 <style>
   main {
@@ -200,13 +561,18 @@
     color: #e0e0e0;
   }
 
-  .debug-link {
+  .nav-links {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .nav-links a {
     color: #888;
     text-decoration: none;
     font-size: 0.875rem;
   }
 
-  .debug-link:hover {
+  .nav-links a:hover {
     color: #aaa;
     text-decoration: underline;
   }
@@ -247,6 +613,20 @@
 
   .button-group.vertical {
     flex-direction: column;
+  }
+
+  .button-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .button-row button {
+    flex: 1;
+  }
+
+  button.small {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8rem;
   }
 
   button {
@@ -302,7 +682,8 @@
     gap: 0.25rem;
   }
 
-  .field label {
+  .field label,
+  .field .label-text {
     font-size: 0.75rem;
     color: #888;
   }
@@ -344,7 +725,7 @@
     border: 2px solid #444;
     border-radius: 4px;
     overflow: hidden;
-    aspect-ratio: 60 / 44;
+    aspect-ratio: 64 / 48;
     max-height: calc(100vh - 160px);
   }
 
@@ -357,5 +738,126 @@
 
   .info p {
     margin: 0;
+  }
+
+  .info .hint {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #666;
+    font-style: italic;
+  }
+
+  /* Modal Styles */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .modal {
+    background: #252525;
+    border-radius: 8px;
+    padding: 1.5rem;
+    min-width: 320px;
+    max-width: 400px;
+  }
+
+  .modal h2 {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+    color: #e0e0e0;
+  }
+
+  .modal-field {
+    margin-bottom: 1rem;
+  }
+
+  .modal-field label {
+    display: block;
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 0.25rem;
+  }
+
+  .modal-field input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #444;
+    border-radius: 4px;
+    background: #1a1a1a;
+    color: #fff;
+    font-size: 0.875rem;
+    box-sizing: border-box;
+  }
+
+  .modal-field input:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  .layout-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+  }
+
+  .layout-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: #1a1a1a;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .layout-item:hover {
+    background: #333;
+  }
+
+  .layout-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .layout-name {
+    color: #e0e0e0;
+    font-weight: 500;
+  }
+
+  .layout-meta {
+    font-size: 0.75rem;
+    color: #666;
+  }
+
+  .delete-btn {
+    padding: 0.25rem 0.5rem;
+    background: transparent;
+    border: none;
+    color: #666;
+    font-size: 1.25rem;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .delete-btn:hover {
+    color: #ef4444;
+    background: transparent;
   }
 </style>

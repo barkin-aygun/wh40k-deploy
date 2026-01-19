@@ -191,7 +191,7 @@
   .battlefield-container {
     width: 100%;
     max-width: 1200px;
-    aspect-ratio: 60 / 44;
+    aspect-ratio: 64 / 48;
     border: 2px solid #444;
     border-radius: 4px;
     overflow: hidden;

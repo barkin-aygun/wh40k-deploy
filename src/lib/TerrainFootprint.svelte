@@ -43,6 +43,12 @@
     let newX = svgCoords.x - dragOffset.x;
     let newY = svgCoords.y - dragOffset.y;
 
+    // Snap to grid (1 inch) unless Shift is held
+    if (!event.shiftKey) {
+      newX = Math.round(newX);
+      newY = Math.round(newY);
+    }
+
     // Constrain to battlefield bounds (approximate for rotated rect)
     const margin = Math.max(width, height) / 2;
     newX = Math.max(-margin, Math.min(BATTLEFIELD.width - width + margin, newX));

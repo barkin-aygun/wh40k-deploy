@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "exportedAt": 1768841794132,
+  "terrains": [
+    {
+      "id": "terrain-1768841324325-opjod9l2y",
+      "x": 23,
+      "y": 22,
+      "width": 4,
+      "height": 6,
+      "rotation": 0
+    },
+    {
+      "id": "terrain-1768841343872-leskbtdtn",
+      "x": 23,
+      "y": 28,
+      "width": 4,
+      "height": 6,
+      "rotation": 0
+    },
+    {
+      "id": "terrain-1768841345826-dd4gd6zo5",
+      "x": 33,
+      "y": 16,
+      "width": 4,
+      "height": 6,
+      "rotation": 0
+    },
+    {
+      "id": "terrain-1768841348847-333cl9qm8",
+      "x": 33,
+      "y": 10,
+      "width": 4,
+      "height": 6,
+      "rotation": 0
+    },
+    {
+      "id": "terrain-1768841358766-b3p6pno7i",
+      "x": 41,
+      "y": 19,
+      "width": 6,
+      "height": 12,
+      "rotation": 0
+    },
+    {
+      "id": "terrain-1768841363326-72yo247wh",
+      "x": 13,
+      "y": 13,
+      "width": 6,
+      "height": 12,
+      "rotation": 0
+    },
+    {
+      "id": "terrain-1768841371431-6d56iqmiz",
+      "x": 32,
+      "y": 32,
+      "width": 6,
+      "height": 12,
+      "rotation": 0
+    },
+    {
+      "id": "terrain-1768841376041-vm4zbzjri",
+      "x": 22,
+      "y": 0,
+      "width": 6,
+      "height": 12,
+      "rotation": 0
+    },
+    {
+      "id": "terrain-1768841381808-kgkid6fqx",
+      "x": 9.501612663269043,
+      "y": 27.681087493896484,
+      "width": 6,
+      "height": 12,
+      "rotation": -48.69033044884999
+    },
+    {
+      "id": "terrain-1768841404133-4yygyiiua",
+      "x": 44.51260852813721,
+      "y": 4.351897239685059,
+      "width": 6,
+      "height": 12,
+      "rotation": -48.69033044884999
+    },
+    {
+      "id": "terrain-1768841441988-2pvudxxa9",
+      "x": 6.951573371887207,
+      "y": 4,
+      "width": 5,
+      "height": 10,
+      "rotation": 53.90077941724675
+    },
+    {
+      "id": "terrain-1768841471104-z13tmjd7f",
+      "x": 48,
+      "y": 30,
+      "width": 5,
+      "height": 10,
+      "rotation": 53.90077941724675
+    }
+  ],
+  "walls": [
+    {
+      "id": "wall-1768841479706-fdrsjjl97",
+      "x": 32,
+      "y": 34,
+      "shape": "C-4-8-4",
+      "rotation": 0
+    },
+    {
+      "id": "wall-1768841532992-agup7vsu2",
+      "x": 24,
+      "y": 2,
+      "shape": "C-4-8-4",
+      "rotation": 180
+    },
+    {
+      "id": "wall-1768841551326-lncmhloug",
+      "x": 44.6811637878418,
+      "y": 19.06376838684082,
+      "shape": "L-4x8-mirror",
+      "rotation": 180
+    },
+    {
+      "id": "wall-1768841561610-esex2kqot",
+      "x": 18.432302474975586,
+      "y": 16.907699584960938,
+      "shape": "L-4x8-mirror",
+      "rotation": 0
+    },
+    {
+      "id": "wall-1768841568264-hycy0bo6l",
+      "x": 46.38044357299805,
+      "y": 33.13276290893555,
+      "shape": "L-5x6",
+      "rotation": 52.86719403463009
+    },
+    {
+      "id": "wall-1768841587602-ypvvgbvz9",
+      "x": 8.545299530029297,
+      "y": 4.888657569885254,
+      "shape": "L-5x6",
+      "rotation": -127.66400038633742
+    },
+    {
+      "id": "wall-1768841613194-hk3uy0tvd",
+      "x": 15.997928619384766,
+      "y": 30.278200149536133,
+      "shape": "L-4x8-mirror",
+      "rotation": -48.61932353139143
+    },
+    {
+      "id": "wall-1768841627919-87iehxtfl",
+      "x": 46.909732818603516,
+      "y": 5.849551200866699,
+      "shape": "L-4x8-mirror",
+      "rotation": 132.18676454041946
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store';
 
-const STORAGE_KEY = 'warhammer-deployment-layout';
+const STORAGE_KEY = 'warhammer-deployment-layouts';
 
 // Terrain size presets (width x height in inches)
 export const TERRAIN_SIZES = [
@@ -9,9 +9,261 @@ export const TERRAIN_SIZES = [
   { label: '4" x 6"', width: 4, height: 6 }
 ];
 
+// Wall shape presets
+export const WALL_SHAPES = [
+  { label: 'L 4x8', shape: 'L-4x8' },
+  { label: 'L 4x8 ⌐', shape: 'L-4x8-mirror' },
+  { label: 'C 4-8-4', shape: 'C-4-8-4' },
+  { label: 'L 5x6', shape: 'L-5x6' },
+  { label: 'L 5x6 ⌐', shape: 'L-5x6-mirror' },
+  { label: 'L 4x6', shape: 'L-4x6' },
+  { label: 'L 4x6 ⌐', shape: 'L-4x6-mirror' }
+];
+
+// Preset terrain layouts
+export const TERRAIN_LAYOUT_PRESETS = [
+  {
+    name: 'Layout 1',
+    terrains: [
+      { x: 28, y: 0, width: 4, height: 6, rotation: 0 },
+      { x: 28, y: 38, width: 4, height: 6, rotation: 0 },
+      { x: 6, y: 5, width: 6, height: 12, rotation: 0 },
+      { x: 48, y: 27, width: 6, height: 12, rotation: 0 },
+      { x: 16, y: 28, width: 6, height: 12, rotation: 0 },
+      { x: 7, y: 19, width: 6, height: 12, rotation: 90 },
+      { x: 38, y: 4, width: 6, height: 12, rotation: 0 },
+      { x: 47, y: 13, width: 6, height: 12, rotation: 90 },
+      { x: 32.74, y: 23.59, width: 5, height: 10, rotation: 135 },
+      { x: 35.06, y: 19.50, width: 4, height: 6, rotation: 45 },
+      { x: 22.07, y: 10.17, width: 5, height: 10, rotation: -45 },
+      { x: 20.72, y: 18.23, width: 4, height: 6, rotation: 45 }
+    ],
+    walls: [
+      { x: 38, y: 6, shape: 'C-4-8-4', rotation: 0 },
+      { x: 18, y: 30, shape: 'C-4-8-4', rotation: 180 },
+      { x: 13.33, y: 20.15, shape: 'L-4x8-mirror', rotation: -90 },
+      { x: 49.67, y: 15.93, shape: 'L-4x8-mirror', rotation: 90 },
+      { x: 48.20, y: 30.88, shape: 'L-4x8', rotation: 0 },
+      { x: 7.84, y: 5.01, shape: 'L-4x8', rotation: 180 },
+      { x: 27.06, y: 11.52, shape: 'L-4x8-mirror', rotation: -45 },
+      { x: 35.81, y: 24.24, shape: 'L-4x8-mirror', rotation: 135 }
+    ]
+  },
+  {
+    name: 'Layout 2',
+    terrains: [
+      { x: 31, y: 7, width: 4, height: 6, rotation: -90 },
+      { x: 25, y: 30, width: 4, height: 6, rotation: 90 },
+      { x: 5, y: 4, width: 6, height: 12, rotation: 0 },
+      { x: 49, y: 28, width: 6, height: 12, rotation: 0 },
+      { x: 46, y: 4, width: 6, height: 12, rotation: 0 },
+      { x: 16.32, y: 16.13, width: 6, height: 12, rotation: 135 },
+      { x: 53, y: 15, width: 4, height: 6, rotation: 90 },
+      { x: 8, y: 28, width: 6, height: 12, rotation: 0 },
+      { x: 3, y: 23, width: 4, height: 6, rotation: 90 },
+      { x: 32.62, y: 32.55, width: 5, height: 10, rotation: -90 },
+      { x: 22.48, y: 0.51, width: 5, height: 10, rotation: -90 },
+      { x: 37, y: 16, width: 6, height: 12, rotation: 135 }
+    ],
+    walls: [
+      { x: 49, y: 32, shape: 'L-4x8', rotation: 0 },
+      { x: 7, y: 4, shape: 'L-4x8', rotation: 180 },
+      { x: 46, y: 8, shape: 'L-4x8', rotation: 0 },
+      { x: 10, y: 28, shape: 'L-4x8', rotation: 180 },
+      { x: 35.07, y: 34.56, shape: 'L-5x6-mirror', rotation: -90 },
+      { x: 29.09, y: 2.47, shape: 'L-5x6-mirror', rotation: 90 },
+      { x: 17.86, y: 17.53, shape: 'C-4-8-4', rotation: 135 },
+      { x: 37.24, y: 18.38, shape: 'C-4-8-4', rotation: -45 }
+    ]
+  },
+  {
+    name: 'Layout 3',
+    terrains: [
+      { x: 11, y: 3, width: 4, height: 6, rotation: 90 },
+      { x: 45, y: 35, width: 4, height: 6, rotation: 90 },
+      { x: 25, y: 1, width: 6, height: 12, rotation: 90 },
+      { x: 29, y: 31, width: 6, height: 12, rotation: 90 },
+      { x: 7.74, y: 26.05, width: 6, height: 12, rotation: 125.31 },
+      { x: 46.34, y: 5.51, width: 6, height: 12, rotation: 121.72 },
+      { x: 5.14, y: 10.46, width: 6, height: 12, rotation: 41.51 },
+      { x: 48.67, y: 21.52, width: 6, height: 12, rotation: 41.51 },
+      { x: 19.59, y: 14.36, width: 5, height: 10, rotation: -38.13 },
+      { x: 20.69, y: 24.37, width: 4, height: 6, rotation: -39.33 },
+      { x: 35.34, y: 19.61, width: 5, height: 10, rotation: -38.13 },
+      { x: 35.31, y: 13.50, width: 4, height: 6, rotation: -39.33 }
+    ],
+    walls: [
+      { x: 30, y: 32, shape: 'C-4-8-4', rotation: 90 },
+      { x: 26, y: 4, shape: 'C-4-8-4', rotation: -90 },
+      { x: 8.19, y: 11.64, shape: 'L-4x8', rotation: 222.46 },
+      { x: 47.79, y: 24.30, shape: 'L-4x8', rotation: 41.26 },
+      { x: 38.64, y: 20.09, shape: 'L-5x6-mirror', rotation: 141.31 },
+      { x: 25.26, y: 17.90, shape: 'L-5x6-mirror', rotation: -37.61 },
+      { x: 14.37, y: 28.38, shape: 'L-4x8-mirror', rotation: -54.26 },
+      { x: 48.75, y: 7.30, shape: 'L-4x8-mirror', rotation: 122.02 }
+    ]
+  },
+  {
+    name: 'Layout 4',
+    terrains: [
+      { x: 15, y: 1, width: 6, height: 12, rotation: 90 },
+      { x: 8, y: 10, width: 4, height: 6, rotation: 0 },
+      { x: 4, y: 19, width: 4, height: 6, rotation: 0 },
+      { x: 7.50, y: 27.68, width: 6, height: 12, rotation: -48.57 },
+      { x: 46.53, y: 4.24, width: 6, height: 12, rotation: -48.57 },
+      { x: 53, y: 19, width: 4, height: 6, rotation: 0 },
+      { x: 48, y: 28, width: 4, height: 6, rotation: 0 },
+      { x: 39, y: 31, width: 6, height: 12, rotation: 90 },
+      { x: 33.03, y: 2.97, width: 6, height: 12, rotation: -37.25 },
+      { x: 20.96, y: 28.96, width: 6, height: 12, rotation: -37.25 },
+      { x: 16.93, y: 16.51, width: 5, height: 10, rotation: -41.85 },
+      { x: 37.96, y: 17.43, width: 5, height: 10, rotation: -41.85 }
+    ],
+    walls: [
+      { x: 18, y: 4, shape: 'L-4x8', rotation: -90 },
+      { x: 9.04, y: 29.01, shape: 'C-4-8-4', rotation: 131.97 },
+      { x: 47, y: 7, shape: 'C-4-8-4', rotation: -48.54 },
+      { x: 38, y: 32, shape: 'L-4x8', rotation: 90 },
+      { x: 34.42, y: 7.12, shape: 'L-4x8', rotation: -37.53 },
+      { x: 21.57, y: 28.80, shape: 'L-4x8', rotation: 142.46 },
+      { x: 15.70, y: 17.01, shape: 'L-5x6', rotation: 137.87 },
+      { x: 39.17, y: 20.85, shape: 'L-5x6', rotation: -40.92 }
+    ]
+  },
+  {
+    name: 'Layout 5',
+    terrains: [
+      { x: 27, y: 1, width: 6, height: 12, rotation: 90 },
+      { x: 36.53, y: 12.48, width: 5, height: 10, rotation: -90 },
+      { x: 13, y: 3, width: 4, height: 6, rotation: 90 },
+      { x: 43, y: 35, width: 4, height: 6, rotation: 90 },
+      { x: 27, y: 31, width: 6, height: 12, rotation: 90 },
+      { x: 18.43, y: 21.49, width: 5, height: 10, rotation: -90 },
+      { x: 1, y: 23, width: 4, height: 6, rotation: 90 },
+      { x: 55, y: 15, width: 4, height: 6, rotation: 90 },
+      { x: 7.83, y: 30.22, width: 6, height: 12, rotation: -60 },
+      { x: 46.32, y: 1.58, width: 6, height: 12, rotation: -60 },
+      { x: 8.74, y: 10.19, width: 6, height: 12, rotation: 65.22 },
+      { x: 45.22, y: 21.75, width: 6, height: 12, rotation: 65.22 }
+    ],
+    walls: [
+      { x: 28, y: 32, shape: 'C-4-8-4', rotation: 90 },
+      { x: 28, y: 4, shape: 'C-4-8-4', rotation: -90 },
+      { x: 11.88, y: 12.29, shape: 'L-4x8', rotation: -114.74 },
+      { x: 43.97, y: 23.59, shape: 'L-4x8', rotation: 64.22 },
+      { x: 24.91, y: 23.52, shape: 'L-5x6-mirror', rotation: -90.37 },
+      { x: 39.00, y: 14.51, shape: 'L-5x6-mirror', rotation: 89.90 },
+      { x: 7.58, y: 30.57, shape: 'L-4x8', rotation: 120.93 },
+      { x: 48.51, y: 5.28, shape: 'L-4x8', rotation: -59.06 }
+    ]
+  },
+  {
+    name: 'Layout 6',
+    terrains: [
+      { x: 13, y: 1, width: 6, height: 12, rotation: 90 },
+      { x: 6, y: 10, width: 4, height: 6, rotation: 0 },
+      { x: 25, y: 11, width: 4, height: 6, rotation: 90 },
+      { x: 7.34, y: 27.57, width: 6, height: 12, rotation: -40.32 },
+      { x: 46.69, y: 4.57, width: 6, height: 12, rotation: -41.90 },
+      { x: 31, y: 27, width: 4, height: 6, rotation: -90 },
+      { x: 50, y: 28, width: 4, height: 6, rotation: 0 },
+      { x: 41, y: 31, width: 6, height: 12, rotation: 90 },
+      { x: 34, y: 4, width: 6, height: 12, rotation: 0 },
+      { x: 20, y: 28, width: 6, height: 12, rotation: 0 },
+      { x: 15.70, y: 15.03, width: 5, height: 10, rotation: -41.85 },
+      { x: 39.43, y: 19.24, width: 5, height: 10, rotation: -39.95 }
+    ],
+    walls: [
+      { x: 16, y: 4, shape: 'L-4x8', rotation: -90 },
+      { x: 9.04, y: 29.01, shape: 'C-4-8-4', rotation: 140.05 },
+      { x: 47, y: 7.16, shape: 'C-4-8-4', rotation: -41.53 },
+      { x: 40, y: 32, shape: 'L-4x8', rotation: 90 },
+      { x: 34.15, y: 7.88, shape: 'L-4x8', rotation: 0 },
+      { x: 22, y: 28, shape: 'L-4x8', rotation: 180 },
+      { x: 14.47, y: 15.47, shape: 'L-5x6', rotation: 137.87 },
+      { x: 40.53, y: 22.78, shape: 'L-5x6', rotation: -40.92 }
+    ]
+  },
+  {
+    name: 'Layout 7',
+    terrains: [
+      { x: 8, y: 8, width: 6, height: 12, rotation: 0 },
+      { x: 6, y: 28, width: 6, height: 12, rotation: 0 },
+      { x: 7, y: 39, width: 4, height: 6, rotation: 90 },
+      { x: 18, y: 26, width: 5, height: 10, rotation: 0 },
+      { x: 19, y: 20, width: 4, height: 6, rotation: 0 },
+      { x: 23, y: 3, width: 6, height: 12, rotation: 0 },
+      { x: 31, y: 29, width: 6, height: 12, rotation: 0 },
+      { x: 37, y: 18, width: 4, height: 6, rotation: 0 },
+      { x: 37, y: 8, width: 5, height: 10, rotation: 0 },
+      { x: 46, y: 24, width: 6, height: 12, rotation: 0 },
+      { x: 48, y: 4, width: 6, height: 12, rotation: 0 },
+      { x: 49, y: -1, width: 4, height: 6, rotation: 90 }
+    ],
+    walls: [
+      { x: 9, y: 10, shape: 'L-5x6', rotation: 180 },
+      { x: 11.44, y: 31.97, shape: 'L-4x8-mirror', rotation: 0 },
+      { x: 19, y: 20, shape: 'L-4x6', rotation: 180 },
+      { x: 22.53, y: 30.02, shape: 'L-5x6-mirror', rotation: 0 },
+      { x: 25, y: 5, shape: 'C-4-8-4', rotation: 180 },
+      { x: 31, y: 31, shape: 'C-4-8-4', rotation: 0 },
+      { x: 37, y: 18, shape: 'L-4x6', rotation: 0 },
+      { x: 41.51, y: 8.09, shape: 'L-5x6-mirror', rotation: 180 },
+      { x: 46, y: 28, shape: 'L-5x6', rotation: 0 },
+      { x: 51.51, y: 4.01, shape: 'L-4x8-mirror', rotation: 180 }
+    ]
+  },
+  {
+    name: 'Layout 8',
+    terrains: [
+      { x: 23, y: 22, width: 4, height: 6, rotation: 0 },
+      { x: 23, y: 28, width: 4, height: 6, rotation: 0 },
+      { x: 33, y: 16, width: 4, height: 6, rotation: 0 },
+      { x: 33, y: 10, width: 4, height: 6, rotation: 0 },
+      { x: 41, y: 19, width: 6, height: 12, rotation: 0 },
+      { x: 13, y: 13, width: 6, height: 12, rotation: 0 },
+      { x: 32, y: 32, width: 6, height: 12, rotation: 0 },
+      { x: 22, y: 0, width: 6, height: 12, rotation: 0 },
+      { x: 9.50, y: 27.68, width: 6, height: 12, rotation: -48.69 },
+      { x: 44.51, y: 4.35, width: 6, height: 12, rotation: -48.69 },
+      { x: 6.95, y: 4, width: 5, height: 10, rotation: 53.90 },
+      { x: 48, y: 30, width: 5, height: 10, rotation: 53.90 }
+    ],
+    walls: [
+      { x: 32, y: 34, shape: 'C-4-8-4', rotation: 0 },
+      { x: 24, y: 2, shape: 'C-4-8-4', rotation: 180 },
+      { x: 44.68, y: 19.06, shape: 'L-4x8-mirror', rotation: 180 },
+      { x: 18.43, y: 16.91, shape: 'L-4x8-mirror', rotation: 0 },
+      { x: 46.38, y: 33.13, shape: 'L-5x6', rotation: 52.87 },
+      { x: 8.55, y: 4.89, shape: 'L-5x6', rotation: -127.66 },
+      { x: 16.00, y: 30.28, shape: 'L-4x8-mirror', rotation: -48.62 },
+      { x: 46.91, y: 5.85, shape: 'L-4x8-mirror', rotation: 132.19 }
+    ]
+  }
+];
+
 // Generate unique ID
 function generateId() {
   return 'terrain-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+}
+
+// Get all saved layouts from localStorage
+function getSavedLayouts() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error('Failed to parse saved layouts:', e);
+      return {};
+    }
+  }
+  return {};
+}
+
+// Save layouts object to localStorage
+function saveLayoutsToStorage(layouts) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(layouts));
 }
 
 // Create terrain store
@@ -55,36 +307,150 @@ function createTerrainStore() {
       set([]);
     },
 
-    // Save to localStorage
-    save() {
+    // Save current layout with a name
+    save(name) {
       const terrains = get({ subscribe });
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(terrains));
+      const layouts = getSavedLayouts();
+      layouts[name] = {
+        terrains,
+        savedAt: Date.now()
+      };
+      saveLayoutsToStorage(layouts);
     },
 
-    // Load from localStorage
-    load() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const terrains = JSON.parse(saved);
-          set(terrains);
-          return true;
-        } catch (e) {
-          console.error('Failed to load layout:', e);
-          return false;
-        }
+    // Load a layout by name
+    load(name) {
+      const layouts = getSavedLayouts();
+      if (layouts[name]) {
+        set(layouts[name].terrains);
+        return true;
       }
       return false;
     },
 
-    // Check if there's a saved layout
+    // Delete a saved layout
+    deleteLayout(name) {
+      const layouts = getSavedLayouts();
+      delete layouts[name];
+      saveLayoutsToStorage(layouts);
+    },
+
+    // Get list of saved layout names
+    getSavedLayoutNames() {
+      const layouts = getSavedLayouts();
+      return Object.keys(layouts).map(name => ({
+        name,
+        savedAt: layouts[name].savedAt,
+        terrainCount: layouts[name].terrains.length
+      })).sort((a, b) => b.savedAt - a.savedAt);
+    },
+
+    // Check if there are any saved layouts
     hasSaved() {
-      return localStorage.getItem(STORAGE_KEY) !== null;
+      const layouts = getSavedLayouts();
+      return Object.keys(layouts).length > 0;
     }
   };
 }
 
 export const layoutTerrains = createTerrainStore();
 
+// Create wall store
+function createWallStore() {
+  const { subscribe, set, update } = writable([]);
+
+  return {
+    subscribe,
+    set,
+    update,
+
+    // Add a new wall piece
+    add(shape) {
+      update(walls => [
+        ...walls,
+        {
+          id: 'wall-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+          x: 30, // Center horizontally
+          y: 22, // Center vertically
+          shape,
+          rotation: 0
+        }
+      ]);
+    },
+
+    // Update a wall piece
+    updateWall(id, changes) {
+      update(walls => walls.map(w =>
+        w.id === id ? { ...w, ...changes } : w
+      ));
+    },
+
+    // Remove a wall piece
+    remove(id) {
+      update(walls => walls.filter(w => w.id !== id));
+    },
+
+    // Clear all walls
+    clear() {
+      set([]);
+    }
+  };
+}
+
+export const layoutWalls = createWallStore();
+
 // Currently selected terrain ID
 export const selectedTerrainId = writable(null);
+
+// Currently selected wall ID
+export const selectedWallId = writable(null);
+
+// Saved layouts list (reactive)
+export const savedLayoutsList = writable([]);
+
+// Save current layout (terrains + walls)
+export function saveLayout(name) {
+  const terrains = get(layoutTerrains);
+  const walls = get(layoutWalls);
+  const layouts = getSavedLayouts();
+  layouts[name] = {
+    terrains,
+    walls,
+    savedAt: Date.now()
+  };
+  saveLayoutsToStorage(layouts);
+}
+
+// Load a layout by name
+export function loadLayout(name) {
+  const layouts = getSavedLayouts();
+  if (layouts[name]) {
+    layoutTerrains.set(layouts[name].terrains || []);
+    layoutWalls.set(layouts[name].walls || []);
+    return true;
+  }
+  return false;
+}
+
+// Delete a saved layout
+export function deleteLayout(name) {
+  const layouts = getSavedLayouts();
+  delete layouts[name];
+  saveLayoutsToStorage(layouts);
+}
+
+// Get list of saved layout names
+export function getSavedLayoutNames() {
+  const layouts = getSavedLayouts();
+  return Object.keys(layouts).map(name => ({
+    name,
+    savedAt: layouts[name].savedAt,
+    terrainCount: (layouts[name].terrains || []).length,
+    wallCount: (layouts[name].walls || []).length
+  })).sort((a, b) => b.savedAt - a.savedAt);
+}
+
+// Refresh the saved layouts list
+export function refreshSavedLayouts() {
+  savedLayoutsList.set(getSavedLayoutNames());
+}
