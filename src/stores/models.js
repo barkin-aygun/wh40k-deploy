@@ -17,6 +17,7 @@ export const BASE_SIZES = {
     { type: '90mm', radius: (90 * MM_TO_INCH) / 2, label: '90mm' },
     { type: '100mm', radius: (100 * MM_TO_INCH) / 2, label: '100mm' },
     { type: '130mm', radius: (130 * MM_TO_INCH) / 2, label: '130mm' },
+    { type: '160mm', radius: (160 * MM_TO_INCH) / 2, label: '160mm' }
     
   ],
   ovals: [
@@ -24,7 +25,9 @@ export const BASE_SIZES = {
     { type: '75x42mm', width: 75 * MM_TO_INCH, height: 42 * MM_TO_INCH, label: '75×42mm' },
     { type: '90x52.5mm', width: 90 * MM_TO_INCH, height: 52.5 * MM_TO_INCH, label: '90×52.5mm' },
     { type: '105x70mm', width: 105 * MM_TO_INCH, height: 70 * MM_TO_INCH, label: '105×70mm' },
-    { type: '120x90mm', width: 120 * MM_TO_INCH, height: 90 * MM_TO_INCH, label: '120×90mm' }
+    { type: '120x90mm', width: 120 * MM_TO_INCH, height: 90 * MM_TO_INCH, label: '120×90mm' },
+    { type: '150x95mm', width: 150 * MM_TO_INCH, height: 95 * MM_TO_INCH, label: '150×95mm' },
+    { type: '170x109mm', width: 170 * MM_TO_INCH, height: 109 * MM_TO_INCH, label: '170×109mm' }
   ]
 };
 
