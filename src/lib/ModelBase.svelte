@@ -50,6 +50,13 @@
   $: handleX = x + handleDistance * Math.cos((rotation - 45) * Math.PI / 180);
   $: handleY = y + handleDistance * Math.sin((rotation - 45) * Math.PI / 180);
 
+  // Drag ruler
+  $: dragDistance = isDragging && dragStartState
+    ? Math.sqrt(Math.pow(x - dragStartState.x, 2) + Math.pow(y - dragStartState.y, 2))
+    : 0;
+  $: dragMidX = isDragging && dragStartState ? (dragStartState.x + x) / 2 : 0;
+  $: dragMidY = isDragging && dragStartState ? (dragStartState.y + y) / 2 : 0;
+
   function handleClick(event) {
     event.stopPropagation();
     onSelect(id);
@@ -243,6 +250,43 @@
       class="rotate-handle"
     />
   {/if}
+
+  <!-- Drag move ruler -->
+  {#if isDragging && dragStartState && dragDistance > 0.1}
+    <line
+      x1={dragStartState.x}
+      y1={dragStartState.y}
+      x2={x}
+      y2={y}
+      stroke="#fbbf24"
+      stroke-width="0.12"
+      stroke-dasharray="0.3,0.15"
+      pointer-events="none"
+    />
+    <circle
+      cx={dragStartState.x}
+      cy={dragStartState.y}
+      r="0.25"
+      fill="#fbbf24"
+      pointer-events="none"
+    />
+    <text
+      x={dragMidX}
+      y={dragMidY - 0.5}
+      text-anchor="middle"
+      dominant-baseline="middle"
+      font-size="0.5"
+      font-weight="bold"
+      fill="#fbbf24"
+      stroke="#000"
+      stroke-width="0.05"
+      paint-order="stroke"
+      pointer-events="none"
+      class="drag-ruler-label"
+    >
+      {dragDistance.toFixed(2)}"
+    </text>
+  {/if}
 </g>
 
 <style>
@@ -264,5 +308,8 @@
   .rotate-handle {
     cursor: grab;
     filter: drop-shadow(0.05px 0.05px 0.1px rgba(0,0,0,0.5));
+  }
+  .drag-ruler-label {
+    filter: drop-shadow(0.05px 0.05px 0.1px rgba(0,0,0,0.8));
   }
 </style>
