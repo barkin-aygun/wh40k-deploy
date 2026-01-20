@@ -20,7 +20,7 @@
   } from '../stores/models.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
   import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
-  import { canSee } from '../lib/visibility/lineOfSight.js';
+  import { checkLineOfSight } from '../lib/visibility/lineOfSight.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
 
   // Model palette state
@@ -29,6 +29,7 @@
   let isDraggingFromPalette = false;
   let screenToSvgRef = null;
   let losVisualizationEnabled = false;
+  let showDebugRays = false;
 
   const DEPLOYMENT_SAVE_KEY = 'warhammer-deployment-state';
 
@@ -192,6 +193,10 @@
     models.updateModel(id, { rotation });
   }
 
+  function handleRenameModel(id, newName) {
+    models.updateModel(id, { name: newName });
+  }
+
   function handleRemoveSelected() {
     if ($selectedModelId) {
       models.remove($selectedModelId);
@@ -226,30 +231,34 @@
     }
   }
 
-  let t_id = 0;
   // Reactive calculations for LoS
   $: selectedModel = $models.find(m => m.id === $selectedModelId);
   $: enemyModels = selectedModel
     ? $models.filter(m => m.playerId !== selectedModel.playerId)
     : [];
   $: allTerrainPolygons = $loadedTerrain.terrains.map(t => ({
-    id: t_id++,
+    id: t.id,
     vertices: getRotatedRectVertices(t)
   }));
   $: allWallPolygons = $loadedTerrain.walls.map(wall =>
     transformWallVertices(getWallVertices(wall.shape), wall.x, wall.y, wall.rotation)
   );
   $: losResults = selectedModel && losVisualizationEnabled && enemyModels.length > 0
-    ? enemyModels.map(enemy => ({
-        targetId: enemy.id,
-        target: enemy,
-        canSee: canSee(
+    ? enemyModels.map(enemy => {
+        const result = checkLineOfSight(
           modelToLosFormat(selectedModel),
           modelToLosFormat(enemy),
           allTerrainPolygons,
           allWallPolygons
-        )
-      }))
+        );
+        return {
+          targetId: enemy.id,
+          target: enemy,
+          canSee: result.canSee,
+          firstClearRay: result.firstClearRay,
+          rays: result.rays
+        };
+      })
     : [];
 </script>
 
@@ -319,6 +328,15 @@
         {#if selectedModel}
           <div class="edit-form">
             <div class="field">
+              <label for="model-name">Name</label>
+              <input
+                id="model-name"
+                type="text"
+                value={selectedModel.name || ''}
+                on:change={(e) => handleRenameModel(selectedModel.id, e.target.value)}
+              />
+            </div>
+            <div class="field">
               <span class="label-text">Base Type</span>
               <span class="value">{getBaseSize(selectedModel.baseType).label}</span>
             </div>
@@ -342,6 +360,14 @@
                 Show Line of Sight
               </label>
             </div>
+            {#if losVisualizationEnabled}
+              <div class="field">
+                <label class="checkbox-label">
+                  <input type="checkbox" bind:checked={showDebugRays} />
+                  Show Debug Rays
+                </label>
+              </div>
+            {/if}
             {#if losVisualizationEnabled && losResults.length > 0}
               <div class="field">
                 <span class="label-text">LoS Status</span>
@@ -465,11 +491,13 @@
               baseType={model.baseType}
               playerId={model.playerId}
               rotation={model.rotation}
+              name={model.name || ''}
               selected={model.id === $selectedModelId}
               {screenToSvg}
               onSelect={handleSelectModel}
               onDrag={handleDragModel}
               onRotate={handleRotateModel}
+              onRename={handleRenameModel}
             />
           {/each}
 
@@ -490,20 +518,52 @@
             />
           {/if}
 
+          <!-- Debug rays (render behind LoS lines) -->
+          {#if showDebugRays && losVisualizationEnabled && selectedModel && losResults.length > 0}
+            {#each losResults as result}
+              {#each result.rays as ray}
+                <line
+                  x1={ray.from.x}
+                  y1={ray.from.y}
+                  x2={ray.to.x}
+                  y2={ray.to.y}
+                  stroke={ray.blocked ? '#ff000033' : '#00ff0033'}
+                  stroke-width="0.05"
+                  pointer-events="none"
+                />
+              {/each}
+            {/each}
+          {/if}
+
           <!-- LoS Visualization -->
           {#if losVisualizationEnabled && selectedModel && losResults.length > 0}
             {#each losResults as result}
-              <line
-                x1={selectedModel.x}
-                y1={selectedModel.y}
-                x2={result.target.x}
-                y2={result.target.y}
-                stroke={result.canSee ? '#22c55e' : '#ef4444'}
-                stroke-width={result.canSee ? 0.15 : 0.1}
-                stroke-dasharray={result.canSee ? 'none' : '0.5 0.25'}
-                opacity="0.7"
-                pointer-events="none"
-              />
+              {#if result.firstClearRay}
+                <!-- Show the actual clear ray of sight -->
+                <line
+                  x1={result.firstClearRay.from.x}
+                  y1={result.firstClearRay.from.y}
+                  x2={result.firstClearRay.to.x}
+                  y2={result.firstClearRay.to.y}
+                  stroke="#22c55e"
+                  stroke-width="0.15"
+                  opacity="0.7"
+                  pointer-events="none"
+                />
+              {:else}
+                <!-- Show blocked line from center to center -->
+                <line
+                  x1={selectedModel.x}
+                  y1={selectedModel.y}
+                  x2={result.target.x}
+                  y2={result.target.y}
+                  stroke="#ef4444"
+                  stroke-width="0.1"
+                  stroke-dasharray="0.5 0.25"
+                  opacity="0.7"
+                  pointer-events="none"
+                />
+              {/if}
             {/each}
           {/if}
         </Battlefield>

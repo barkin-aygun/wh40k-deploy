@@ -7,7 +7,9 @@ import {
   circlePerimeterPoints,
   ellipsePerimeterPoints,
   circleOverlapsPolygon,
-  lineIntersectsPolygon
+  lineIntersectsPolygon,
+  findConnectedTerrainGroups,
+  getTerrainGroupMembers
 } from './geometry.js';
 
 const NUM_SAMPLE_POINTS = 16;
@@ -93,13 +95,21 @@ export function checkLineOfSight(modelA, modelB, terrainPolygons, walls) {
   const pointsA = getModelPerimeterPoints(modelA);
   const pointsB = getModelPerimeterPoints(modelB);
 
-  // For each terrain, check if EITHER model touches it (if so, that terrain doesn't block)
+  // Find connected terrain groups (terrains sharing edges are treated as one footprint)
+  const terrainToGroup = findConnectedTerrainGroups(terrainPolygons);
+
+  // For each terrain, check if EITHER model touches it
+  // If so, ignore that terrain AND all terrains connected to it (sharing edges)
   const terrainsToIgnore = new Set();
   for (const terrain of terrainPolygons) {
     const viewerOnTerrain = modelOverlapsPolygon(modelA, terrain.vertices);
     const targetOnTerrain = modelOverlapsPolygon(modelB, terrain.vertices);
     if (viewerOnTerrain || targetOnTerrain) {
-      terrainsToIgnore.add(terrain.id);
+      // Add this terrain and all connected terrains to ignore set
+      const groupMembers = getTerrainGroupMembers(terrain.id, terrainToGroup, terrainPolygons);
+      for (const memberId of groupMembers) {
+        terrainsToIgnore.add(memberId);
+      }
     }
   }
 
@@ -163,13 +173,21 @@ export function canSee(modelA, modelB, terrainPolygons, walls) {
   const pointsA = getModelPerimeterPoints(modelA);
   const pointsB = getModelPerimeterPoints(modelB);
 
+  // Find connected terrain groups (terrains sharing edges are treated as one footprint)
+  const terrainToGroup = findConnectedTerrainGroups(terrainPolygons);
+
   // For each terrain, check if EITHER model touches it
+  // If so, ignore that terrain AND all terrains connected to it (sharing edges)
   const terrainsToIgnore = new Set();
   for (const terrain of terrainPolygons) {
     const viewerOnTerrain = modelOverlapsPolygon(modelA, terrain.vertices);
     const targetOnTerrain = modelOverlapsPolygon(modelB, terrain.vertices);
     if (viewerOnTerrain || targetOnTerrain) {
-      terrainsToIgnore.add(terrain.id);
+      // Add this terrain and all connected terrains to ignore set
+      const groupMembers = getTerrainGroupMembers(terrain.id, terrainToGroup, terrainPolygons);
+      for (const memberId of groupMembers) {
+        terrainsToIgnore.add(memberId);
+      }
     }
   }
 

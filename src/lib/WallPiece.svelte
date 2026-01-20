@@ -1,5 +1,6 @@
 <script>
   import { BATTLEFIELD } from '../stores/elements.js';
+  import { getWallVertices } from '../stores/layout.js';
 
   export let id;
   export let x;
@@ -11,89 +12,6 @@
   export let onSelect = () => {};
   export let onDrag = () => {};
   export let onRotate = () => {};
-
-  const WALL_THICKNESS = 0.5;
-
-  // Get wall vertices based on shape type (relative to origin 0,0)
-  function getWallVertices(shapeType) {
-    const t = WALL_THICKNESS;
-    switch (shapeType) {
-      case 'L-4x8':
-        // L-shape: vertical 8", horizontal 4" at bottom
-        return [
-          { x: 0, y: 0 },
-          { x: t, y: 0 },
-          { x: t, y: 8 - t },
-          { x: 4, y: 8 - t },
-          { x: 4, y: 8 },
-          { x: 0, y: 8 }
-        ];
-      case 'L-4x8-mirror':
-        // Mirrored L: vertical 8", horizontal 4" at bottom going left
-        return [
-          { x: 0, y: 0 },
-          { x: t, y: 0 },
-          { x: t, y: 8 },
-          { x: -4 + t, y: 8 },
-          { x: -4 + t, y: 8 - t },
-          { x: 0, y: 8 - t }
-        ];
-      case 'C-4-8-4':
-        // C-shape: vertical 8" with 4" arms at top and bottom
-        return [
-          { x: 0, y: 0 },
-          { x: 4, y: 0 },
-          { x: 4, y: t },
-          { x: t, y: t },
-          { x: t, y: 8 - t },
-          { x: 4, y: 8 - t },
-          { x: 4, y: 8 },
-          { x: 0, y: 8 }
-        ];
-      case 'L-5x6':
-        // L-shape: vertical 6", horizontal 5" at bottom
-        return [
-          { x: 0, y: 0 },
-          { x: t, y: 0 },
-          { x: t, y: 6 - t },
-          { x: 5, y: 6 - t },
-          { x: 5, y: 6 },
-          { x: 0, y: 6 }
-        ];
-      case 'L-5x6-mirror':
-        // Mirrored L: vertical 6", horizontal 5" at bottom going left
-        return [
-          { x: 0, y: 0 },
-          { x: t, y: 0 },
-          { x: t, y: 6 },
-          { x: -5 + t, y: 6 },
-          { x: -5 + t, y: 6 - t },
-          { x: 0, y: 6 - t }
-        ];
-      case 'L-4x6':
-        // L-shape: vertical 6", horizontal 4" at bottom
-        return [
-          { x: 0, y: 0 },
-          { x: t, y: 0 },
-          { x: t, y: 6 - t },
-          { x: 4, y: 6 - t },
-          { x: 4, y: 6 },
-          { x: 0, y: 6 }
-        ];
-      case 'L-4x6-mirror':
-        // Mirrored L: vertical 6", horizontal 4" at bottom going left
-        return [
-          { x: 0, y: 0 },
-          { x: t, y: 0 },
-          { x: t, y: 6 },
-          { x: -4 + t, y: 6 },
-          { x: -4 + t, y: 6 - t },
-          { x: 0, y: 6 - t }
-        ];
-      default:
-        return [];
-    }
-  }
 
   // Get bounding box for shape
   function getBoundingBox(vertices) {

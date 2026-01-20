@@ -380,3 +380,149 @@ export function circleOverlapsPolygon(cx, cy, r, vertices) {
 
   return false;
 }
+
+/**
+ * Check if two line segments are collinear and share a common segment (edge overlap)
+ * Returns true if the segments share more than just a single point
+ * @param {Object} a1 - First point of segment A {x, y}
+ * @param {Object} a2 - Second point of segment A {x, y}
+ * @param {Object} b1 - First point of segment B {x, y}
+ * @param {Object} b2 - Second point of segment B {x, y}
+ * @param {number} tolerance - Distance tolerance for collinearity check
+ * @returns {boolean} True if segments share an edge (not just a point)
+ */
+export function segmentsShareEdge(a1, a2, b1, b2, tolerance = 0.01) {
+  // Check if all four points are collinear
+  const d1 = Math.abs(direction(a1, a2, b1));
+  const d2 = Math.abs(direction(a1, a2, b2));
+
+  // If not collinear, no edge sharing
+  const lengthA = Math.sqrt((a2.x - a1.x) ** 2 + (a2.y - a1.y) ** 2);
+  const collinearTolerance = tolerance * lengthA;
+
+  if (d1 > collinearTolerance || d2 > collinearTolerance) {
+    return false;
+  }
+
+  // Project all points onto the line direction
+  const dx = a2.x - a1.x;
+  const dy = a2.y - a1.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+
+  if (len < tolerance) return false;
+
+  const ux = dx / len;
+  const uy = dy / len;
+
+  // Project points onto the line (relative to a1)
+  const projA1 = 0;
+  const projA2 = len;
+  const projB1 = (b1.x - a1.x) * ux + (b1.y - a1.y) * uy;
+  const projB2 = (b2.x - a1.x) * ux + (b2.y - a1.y) * uy;
+
+  // Find overlap of the two segments on the line
+  const minA = Math.min(projA1, projA2);
+  const maxA = Math.max(projA1, projA2);
+  const minB = Math.min(projB1, projB2);
+  const maxB = Math.max(projB1, projB2);
+
+  const overlapStart = Math.max(minA, minB);
+  const overlapEnd = Math.min(maxA, maxB);
+
+  // Overlap must be more than a point (tolerance check)
+  return overlapEnd - overlapStart > tolerance;
+}
+
+/**
+ * Check if two polygons share an edge (not just touch at a corner)
+ * @param {Array} verticesA - Vertices of polygon A [{x, y}, ...]
+ * @param {Array} verticesB - Vertices of polygon B [{x, y}, ...]
+ * @param {number} tolerance - Distance tolerance
+ * @returns {boolean} True if polygons share an edge
+ */
+export function polygonsShareEdge(verticesA, verticesB, tolerance = 0.1) {
+  const nA = verticesA.length;
+  const nB = verticesB.length;
+
+  // Check each edge of A against each edge of B
+  for (let i = 0; i < nA; i++) {
+    const a1 = verticesA[i];
+    const a2 = verticesA[(i + 1) % nA];
+
+    for (let j = 0; j < nB; j++) {
+      const b1 = verticesB[j];
+      const b2 = verticesB[(j + 1) % nB];
+
+      if (segmentsShareEdge(a1, a2, b1, b2, tolerance)) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Find connected groups of terrains based on edge sharing
+ * Uses Union-Find algorithm
+ * @param {Array} terrainPolygons - Array of {id, vertices}
+ * @returns {Map} Map from terrain id to group id
+ */
+export function findConnectedTerrainGroups(terrainPolygons) {
+  const n = terrainPolygons.length;
+  if (n === 0) return new Map();
+
+  // Union-Find parent array (index-based)
+  const parent = Array.from({ length: n }, (_, i) => i);
+
+  function find(x) {
+    if (parent[x] !== x) {
+      parent[x] = find(parent[x]); // Path compression
+    }
+    return parent[x];
+  }
+
+  function union(x, y) {
+    const px = find(x);
+    const py = find(y);
+    if (px !== py) {
+      parent[px] = py;
+    }
+  }
+
+  // Check all pairs for edge sharing
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (polygonsShareEdge(terrainPolygons[i].vertices, terrainPolygons[j].vertices)) {
+        union(i, j);
+      }
+    }
+  }
+
+  // Build map from terrain id to group id
+  const idToIndex = new Map();
+  terrainPolygons.forEach((t, idx) => idToIndex.set(t.id, idx));
+
+  const terrainToGroup = new Map();
+  terrainPolygons.forEach((t, idx) => {
+    terrainToGroup.set(t.id, find(idx));
+  });
+
+  return terrainToGroup;
+}
+
+/**
+ * Get all terrain IDs that belong to the same group as a given terrain
+ * @param {*} terrainId - The terrain ID to find group members for
+ * @param {Map} terrainToGroup - Map from terrain id to group id
+ * @param {Array} terrainPolygons - Array of {id, vertices}
+ * @returns {Array} Array of terrain IDs in the same group
+ */
+export function getTerrainGroupMembers(terrainId, terrainToGroup, terrainPolygons) {
+  const groupId = terrainToGroup.get(terrainId);
+  if (groupId === undefined) return [terrainId];
+
+  return terrainPolygons
+    .filter(t => terrainToGroup.get(t.id) === groupId)
+    .map(t => t.id);
+}

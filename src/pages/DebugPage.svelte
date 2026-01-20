@@ -1,80 +1,66 @@
 <script>
+  import { onMount } from 'svelte';
   import Battlefield from '../lib/Battlefield.svelte';
-  import UnitBase from '../lib/UnitBase.svelte';
-  import TerrainFootprint from '../lib/TerrainFootprint.svelte';
   import TerrainRect from '../lib/TerrainRect.svelte';
   import WallPiece from '../lib/WallPiece.svelte';
   import ModelBase from '../lib/ModelBase.svelte';
   import ModelPaletteItem from '../lib/ModelPaletteItem.svelte';
-  import { units, terrains, allWalls, allTerrainPolygons, debugMode } from '../stores/elements.js';
+  import { debugMode } from '../stores/elements.js';
   import { checkLineOfSight } from '../lib/visibility/index.js';
   import {
-    layoutTerrains,
-    layoutWalls,
-    selectedTerrainId,
-    selectedWallId,
+    debugTerrains,
+    debugWalls,
+    debugSelectedTerrainId,
+    debugSelectedWallId,
     TERRAIN_SIZES,
-    WALL_SHAPES
+    WALL_SHAPES,
+    getWallVertices,
+    transformWallVertices
   } from '../stores/layout.js';
   import {
-    models,
-    selectedModelId,
-    BASE_SIZES
+    debugModels,
+    debugSelectedModelId,
+    BASE_SIZES,
+    getBaseSize,
+    isOvalBase
   } from '../stores/models.js';
+  import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
 
-  function updateUnit(id, x, y) {
-    units.update(u => u.map(unit =>
-      unit.id === id ? { ...unit, x, y } : unit
-    ));
-  }
-
-  function updateTerrain(id, x, y) {
-    terrains.update(t => t.map(terrain =>
-      terrain.id === id ? { ...terrain, x, y } : terrain
-    ));
-  }
-
-  function rotateTerrain(id, rotation) {
-    terrains.update(t => t.map(terrain =>
-      terrain.id === id ? { ...terrain, rotation } : terrain
-    ));
-  }
-
-  // Layout terrain/wall/model handlers
+  // Terrain/wall/model handlers
   function handleAddTerrain(width, height) {
-    layoutTerrains.add(width, height);
+    debugTerrains.add(width, height);
   }
 
   function handleAddWall(shape) {
-    layoutWalls.add(shape);
+    debugWalls.add(shape);
   }
 
   function handleSelectTerrain(id) {
-    selectedTerrainId.set(id);
-    selectedWallId.set(null);
-    selectedModelId.set(null);
+    debugSelectedTerrainId.set(id);
+    debugSelectedWallId.set(null);
+    debugSelectedModelId.set(null);
   }
 
   function handleSelectWall(id) {
-    selectedWallId.set(id);
-    selectedTerrainId.set(null);
-    selectedModelId.set(null);
+    debugSelectedWallId.set(id);
+    debugSelectedTerrainId.set(null);
+    debugSelectedModelId.set(null);
   }
 
   function handleDragTerrain(id, x, y) {
-    layoutTerrains.updateTerrain(id, { x, y });
+    debugTerrains.updateTerrain(id, { x, y });
   }
 
   function handleDragWall(id, x, y) {
-    layoutWalls.updateWall(id, { x, y });
+    debugWalls.updateWall(id, { x, y });
   }
 
   function handleRotateLayoutTerrain(id, rotation) {
-    layoutTerrains.updateTerrain(id, { rotation });
+    debugTerrains.updateTerrain(id, { rotation });
   }
 
   function handleRotateWall(id, rotation) {
-    layoutWalls.updateWall(id, { rotation });
+    debugWalls.updateWall(id, { rotation });
   }
 
   // Model palette state
@@ -82,6 +68,17 @@
   let phantomModel = null;
   let isDraggingFromPalette = false;
   let screenToSvgRef = null;
+
+  // Initialize debug mode with two models (one for each player)
+  onMount(() => {
+    // Only initialize if debug models is empty
+    if ($debugModels.length === 0) {
+      const p1Id = debugModels.add('32mm', 1, 10, 22);
+      const p2Id = debugModels.add('32mm', 2, 50, 22);
+      // Select the first model by default
+      debugSelectedModelId.set(p1Id);
+    }
+  });
 
   function handlePaletteDragStart(baseSize, event) {
     if (!screenToSvgRef) return;
@@ -117,7 +114,8 @@
       return;
     }
 
-    models.add(phantomModel.baseType, currentPlayer, phantomModel.x, phantomModel.y);
+    const id = debugModels.add(phantomModel.baseType, currentPlayer, phantomModel.x, phantomModel.y);
+    debugSelectedModelId.set(id);
 
     phantomModel = null;
     isDraggingFromPalette = false;
@@ -126,23 +124,72 @@
   }
 
   function handleSelectModel(id) {
-    selectedModelId.set(id);
-    selectedTerrainId.set(null);
-    selectedWallId.set(null);
+    debugSelectedModelId.set(id);
+    debugSelectedTerrainId.set(null);
+    debugSelectedWallId.set(null);
   }
 
   function handleDragModel(id, x, y) {
-    models.updateModel(id, { x, y });
+    debugModels.updateModel(id, { x, y });
   }
 
   function handleRotateModel(id, rotation) {
-    models.updateModel(id, { rotation });
+    debugModels.updateModel(id, { rotation });
   }
 
-  // Calculate line of sight between the two units
-  $: losResult = $units.length >= 2
-    ? checkLineOfSight($units[0], $units[1], $allTerrainPolygons, $allWalls)
-    : { canSee: true, rays: [] };
+  function handleRenameModel(id, name) {
+    debugModels.updateModel(id, { name });
+  }
+
+  // Convert model to LoS format
+  function modelToLosFormat(model) {
+    const baseSize = getBaseSize(model.baseType);
+    if (isOvalBase(model.baseType)) {
+      return {
+        x: model.x,
+        y: model.y,
+        rx: baseSize.width / 2,
+        ry: baseSize.height / 2,
+        rotation: model.rotation || 0
+      };
+    } else {
+      return {
+        x: model.x,
+        y: model.y,
+        radius: baseSize.radius
+      };
+    }
+  }
+
+  // Model-based LOS calculations (using debug terrains/walls/models)
+  $: selectedModel = $debugModels.find(m => m.id === $debugSelectedModelId);
+  $: enemyModels = selectedModel
+    ? $debugModels.filter(m => m.playerId !== selectedModel.playerId)
+    : [];
+  $: debugTerrainPolygons = $debugTerrains.map(t => ({
+    id: t.id,
+    vertices: getRotatedRectVertices(t)
+  }));
+  $: debugWallPolygons = $debugWalls.map(wall =>
+    transformWallVertices(getWallVertices(wall.shape), wall.x, wall.y, wall.rotation)
+  );
+  $: modelLosResults = selectedModel && enemyModels.length > 0
+    ? enemyModels.map(enemy => {
+        const result = checkLineOfSight(
+          modelToLosFormat(selectedModel),
+          modelToLosFormat(enemy),
+          debugTerrainPolygons,
+          debugWallPolygons
+        );
+        return {
+          targetId: enemy.id,
+          target: enemy,
+          canSee: result.canSee,
+          firstClearRay: result.firstClearRay,
+          rays: result.rays  // Include all rays for debug visualization
+        };
+      })
+    : [];
 </script>
 
 <main>
@@ -166,9 +213,13 @@
             <input type="checkbox" bind:checked={$debugMode} />
             Show debug rays
           </label>
-          <span class="los-status" class:can-see={losResult.canSee} class:blocked={!losResult.canSee}>
-            {losResult.canSee ? 'Can See' : 'Blocked'}
-          </span>
+          {#if selectedModel && modelLosResults.length > 0}
+            <span class="los-status" class:can-see={modelLosResults.some(r => r.canSee)} class:blocked={!modelLosResults.some(r => r.canSee)}>
+              {modelLosResults.filter(r => r.canSee).length}/{modelLosResults.length} visible
+            </span>
+          {:else}
+            <span class="los-status">No enemies</span>
+          {/if}
         </div>
       </section>
 
@@ -252,47 +303,23 @@
           {/if}
 
           <!-- Debug rays (render first, behind everything) -->
-          {#if $debugMode}
-            {#each losResult.rays as ray}
-              <line
-                x1={ray.from.x}
-                y1={ray.from.y}
-                x2={ray.to.x}
-                y2={ray.to.y}
-                stroke={ray.blocked ? '#ff000033' : '#00ff0033'}
-                stroke-width="0.05"
-              />
+          {#if $debugMode && selectedModel && modelLosResults.length > 0}
+            {#each modelLosResults as result}
+              {#each result.rays as ray}
+                <line
+                  x1={ray.from.x}
+                  y1={ray.from.y}
+                  x2={ray.to.x}
+                  y2={ray.to.y}
+                  stroke={ray.blocked ? '#ff000033' : '#00ff0033'}
+                  stroke-width="0.05"
+                />
+              {/each}
             {/each}
           {/if}
 
-          <!-- Visibility line between units -->
-          {#if $units.length >= 2}
-            {#if losResult.canSee && losResult.firstClearRay}
-              <!-- Show the actual clear line of sight -->
-              <line
-                x1={losResult.firstClearRay.from.x}
-                y1={losResult.firstClearRay.from.y}
-                x2={losResult.firstClearRay.to.x}
-                y2={losResult.firstClearRay.to.y}
-                stroke="#22c55e"
-                stroke-width="0.15"
-              />
-            {:else if !losResult.canSee}
-              <!-- Show blocked line from center to center -->
-              <line
-                x1={$units[0].x}
-                y1={$units[0].y}
-                x2={$units[1].x}
-                y2={$units[1].y}
-                stroke="#ef4444"
-                stroke-width="0.15"
-                stroke-dasharray="0.5,0.25"
-              />
-            {/if}
-          {/if}
-
-          <!-- Layout terrain from terrain builder -->
-          {#each $layoutTerrains as terrain (terrain.id)}
+          <!-- Debug terrain pieces -->
+          {#each $debugTerrains as terrain (terrain.id)}
             <TerrainRect
               id={terrain.id}
               x={terrain.x}
@@ -300,7 +327,7 @@
               width={terrain.width}
               height={terrain.height}
               rotation={terrain.rotation}
-              selected={terrain.id === $selectedTerrainId}
+              selected={terrain.id === $debugSelectedTerrainId}
               {screenToSvg}
               onSelect={handleSelectTerrain}
               onDrag={handleDragTerrain}
@@ -308,15 +335,15 @@
             />
           {/each}
 
-          <!-- Layout walls from terrain builder -->
-          {#each $layoutWalls as wall (wall.id)}
+          <!-- Debug walls -->
+          {#each $debugWalls as wall (wall.id)}
             <WallPiece
               id={wall.id}
               x={wall.x}
               y={wall.y}
               shape={wall.shape}
               rotation={wall.rotation}
-              selected={wall.id === $selectedWallId}
+              selected={wall.id === $debugSelectedWallId}
               {screenToSvg}
               onSelect={handleSelectWall}
               onDrag={handleDragWall}
@@ -324,8 +351,8 @@
             />
           {/each}
 
-          <!-- Models from deployment -->
-          {#each $models as model (model.id)}
+          <!-- Debug models -->
+          {#each $debugModels as model (model.id)}
             <ModelBase
               id={model.id}
               x={model.x}
@@ -333,13 +360,47 @@
               baseType={model.baseType}
               playerId={model.playerId}
               rotation={model.rotation}
-              selected={model.id === $selectedModelId}
+              name={model.name || ''}
+              selected={model.id === $debugSelectedModelId}
               {screenToSvg}
               onSelect={handleSelectModel}
               onDrag={handleDragModel}
               onRotate={handleRotateModel}
+              onRename={handleRenameModel}
             />
           {/each}
+
+          <!-- Model LOS Visualization -->
+          {#if $debugMode && selectedModel && modelLosResults.length > 0}
+            {#each modelLosResults as result}
+              {#if result.firstClearRay}
+                <!-- Show the actual clear ray of sight -->
+                <line
+                  x1={result.firstClearRay.from.x}
+                  y1={result.firstClearRay.from.y}
+                  x2={result.firstClearRay.to.x}
+                  y2={result.firstClearRay.to.y}
+                  stroke="#22c55e"
+                  stroke-width="0.15"
+                  opacity="0.7"
+                  pointer-events="none"
+                />
+              {:else}
+                <!-- Show blocked line from center to center -->
+                <line
+                  x1={selectedModel.x}
+                  y1={selectedModel.y}
+                  x2={result.target.x}
+                  y2={result.target.y}
+                  stroke="#ef4444"
+                  stroke-width="0.1"
+                  stroke-dasharray="0.5 0.25"
+                  opacity="0.7"
+                  pointer-events="none"
+                />
+              {/if}
+            {/each}
+          {/if}
 
           <!-- Phantom model during drag from palette -->
           {#if phantomModel}
@@ -357,36 +418,13 @@
               onRotate={() => {}}
             />
           {/if}
-
-          <!-- Debug terrain pieces with L-walls -->
-          {#each $terrains as terrain (terrain.id)}
-            <TerrainFootprint
-              x={terrain.x}
-              y={terrain.y}
-              width={terrain.width}
-              height={terrain.height}
-              rotation={terrain.rotation}
-              {screenToSvg}
-              onDrag={(x, y) => updateTerrain(terrain.id, x, y)}
-              onRotate={(r) => rotateTerrain(terrain.id, r)}
-            />
-          {/each}
-
-          <!-- Debug unit bases -->
-          {#each $units as unit (unit.id)}
-            <UnitBase
-              x={unit.x}
-              y={unit.y}
-              radius={unit.radius}
-              color={unit.color}
-              {screenToSvg}
-              onDrag={(x, y) => updateUnit(unit.id, x, y)}
-            />
-          {/each}
         </Battlefield>
       </div>
       <div class="info">
-        <p>Battlefield: 60" x 44" | {$layoutTerrains.length} terrain | {$layoutWalls.length} walls | {$models.length} models | {$terrains.length} debug terrain | {$units.length} debug units</p>
+        <p>Battlefield: 60" x 44" | {$debugTerrains.length} terrain | {$debugWalls.length} walls | {$debugModels.length} models</p>
+        {#if $debugMode && selectedModel && modelLosResults.length > 0}
+          <p>Selected model LOS: {modelLosResults.filter(r => r.canSee).length}/{modelLosResults.length} visible</p>
+        {/if}
         <p class="hint">Scroll to zoom | Space+drag to pan | Double-click to reset view</p>
       </div>
     </div>

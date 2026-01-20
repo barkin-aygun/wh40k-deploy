@@ -9,10 +9,12 @@
   export let playerId;
   export let rotation = 0;
   export let selected = false;
+  export let name = '';
   export let screenToSvg;
   export let onSelect = () => {};
   export let onDrag = () => {};
   export let onRotate = () => {};
+  export let onRename = () => {};
 
   let isDragging = false;
   let isRotating = false;
@@ -41,6 +43,14 @@
     onSelect(id);
   }
 
+  function handleDoubleClick(event) {
+    event.stopPropagation();
+    const newName = prompt('Model name:', name);
+    if (newName !== null) {
+      onRename(id, newName);
+    }
+  }
+
   function handleMouseDown(event) {
     if (event.button !== 0) return;
     event.preventDefault();
@@ -63,12 +73,21 @@
     let newX = svgCoords.x - dragOffset.x;
     let newY = svgCoords.y - dragOffset.y;
 
-    
-
     // Constrain to battlefield
-    const margin = isOval ? Math.max(rx, ry) : radius;
-    newX = Math.max(margin, Math.min(BATTLEFIELD.width - margin, newX));
-    newY = Math.max(margin, Math.min(BATTLEFIELD.height - margin, newY));
+    let marginX, marginY;
+    if (isOval) {
+      // For rotated ellipse, calculate axis-aligned bounding box extent
+      const rotRad = (rotation * Math.PI) / 180;
+      const cosR = Math.cos(rotRad);
+      const sinR = Math.sin(rotRad);
+      marginX = Math.sqrt((rx * cosR) ** 2 + (ry * sinR) ** 2);
+      marginY = Math.sqrt((rx * sinR) ** 2 + (ry * cosR) ** 2);
+    } else {
+      marginX = marginY = radius;
+    }
+
+    newX = Math.max(marginX, Math.min(BATTLEFIELD.width - marginX, newX));
+    newY = Math.max(marginY, Math.min(BATTLEFIELD.height - marginY, newY));
 
     onDrag(id, newX, newY);
   }
@@ -113,20 +132,22 @@
 <g class="model-base" class:selected class:dragging={isDragging}>
   {#if isOval}
     <!-- Oval base (ellipse) -->
-    <ellipse
-      cx={x}
-      cy={y}
-      {rx}
-      {ry}
-      transform="rotate({rotation}, {x}, {y})"
-      fill={selected ? playerColor : playerFill}
-      stroke={playerColor}
-      stroke-width={strokeWidth}
-      on:click={handleClick}
-      on:mousedown={handleMouseDown}
-      role="button"
-      tabindex="0"
-    />
+    <g transform="rotate({rotation}, {x}, {y})">
+      <ellipse
+        cx={x}
+        cy={y}
+        {rx}
+        {ry}
+        fill={selected ? playerColor : playerFill}
+        stroke={playerColor}
+        stroke-width={strokeWidth}
+        on:click={handleClick}
+        on:dblclick={handleDoubleClick}
+        on:mousedown={handleMouseDown}
+        role="button"
+        tabindex="0"
+      />
+    </g>
   {:else}
     <!-- Circle base -->
     <circle
@@ -137,10 +158,28 @@
       stroke={playerColor}
       stroke-width={strokeWidth}
       on:click={handleClick}
+      on:dblclick={handleDoubleClick}
       on:mousedown={handleMouseDown}
       role="button"
       tabindex="0"
     />
+  {/if}
+
+  <!-- Name text with background -->
+  {#if name}
+    <text
+      x={x}
+      y={y}
+      text-anchor="middle"
+      dominant-baseline="middle"
+      font-size="0.4"
+      font-weight="bold"
+      fill="white"
+      pointer-events="none"
+      class="model-name"
+    >
+      {name}
+    </text>
   {/if}
 
   <!-- Rotation handle (only for ovals when selected) -->

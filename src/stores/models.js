@@ -109,3 +109,14 @@ export const selectedModel = derived(
     return $models.find(m => m.id === $selectedModelId);
   }
 );
+
+// Debug mode models (separate from deployment models)
+export const debugModels = createModelsStore();
+export const debugSelectedModelId = writable(null);
+export const debugSelectedModel = derived(
+  [debugModels, debugSelectedModelId],
+  ([$debugModels, $debugSelectedModelId]) => {
+    if (!$debugSelectedModelId) return null;
+    return $debugModels.find(m => m.id === $debugSelectedModelId);
+  }
+);

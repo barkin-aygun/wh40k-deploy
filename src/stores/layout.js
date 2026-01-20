@@ -399,6 +399,12 @@ function createWallStore() {
 
 export const layoutWalls = createWallStore();
 
+// Debug mode terrain/walls (separate from main layout builder)
+export const debugTerrains = createTerrainStore();
+export const debugWalls = createWallStore();
+export const debugSelectedTerrainId = writable(null);
+export const debugSelectedWallId = writable(null);
+
 // Get wall vertices based on shape type (relative to origin 0,0)
 export function getWallVertices(shapeType) {
   const WALL_THICKNESS = 0.5;
@@ -424,15 +430,17 @@ export function getWallVertices(shapeType) {
         { x: 0, y: 8 - t }
       ];
     case 'C-4-8-4':
+      // C shape as a simple concave polygon tracing the filled area
+      // Traces outer edge, then inner edge to form a C opening to the right
       return [
-        { x: 0, y: 0 },
-        { x: 4, y: 0 },
-        { x: 4, y: t },
-        { x: t, y: t },
-        { x: t, y: 8 - t },
-        { x: 4, y: 8 - t },
-        { x: 4, y: 8 },
-        { x: 0, y: 8 }
+        { x: 0, y: 0 },      // bottom-left corner
+        { x: 4, y: 0 },      // bottom-right corner
+        { x: 4, y: t },      // inner bottom-right
+        { x: t, y: t },      // inner bottom-left
+        { x: t, y: 8 - t },  // inner top-left
+        { x: 4, y: 8 - t },  // inner top-right
+        { x: 4, y: 8 },      // top-right corner
+        { x: 0, y: 8 }       // top-left corner (closes back to start)
       ];
     case 'L-5x6':
       return [
@@ -476,15 +484,43 @@ export function getWallVertices(shapeType) {
 }
 
 // Rotate and translate wall vertices
+// Must match the rotation used in WallPiece.svelte (rotate around bounding box center)
 export function transformWallVertices(vertices, x, y, rotation) {
+  if (vertices.length === 0) return [];
+
+  // Calculate bounding box to find center (same as WallPiece.svelte)
+  const xs = vertices.map(v => v.x);
+  const ys = vertices.map(v => v.y);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+  const width = maxX - minX;
+  const height = maxY - minY;
+
+  // Center of unrotated shape in world coordinates
+  const centerX = x + minX + width / 2;
+  const centerY = y + minY + height / 2;
+
   const angleRad = (rotation * Math.PI) / 180;
   const cos = Math.cos(angleRad);
   const sin = Math.sin(angleRad);
 
-  return vertices.map(v => ({
-    x: x + v.x * cos - v.y * sin,
-    y: y + v.x * sin + v.y * cos
-  }));
+  // First translate vertices to world position, then rotate around center
+  return vertices.map(v => {
+    // Vertex position in world coordinates (before rotation)
+    const worldX = x + v.x;
+    const worldY = y + v.y;
+
+    // Rotate around center
+    const dx = worldX - centerX;
+    const dy = worldY - centerY;
+
+    return {
+      x: centerX + dx * cos - dy * sin,
+      y: centerY + dx * sin + dy * cos
+    };
+  });
 }
 
 // Derived store for all wall polygons (for LoS checking)
