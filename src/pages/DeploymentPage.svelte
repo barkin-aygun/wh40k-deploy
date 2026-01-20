@@ -20,6 +20,7 @@
     isOvalBase,
     isRectangularBase
   } from '../stores/models.js';
+  import { history } from '../stores/history.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
   import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
   import { checkLineOfSight } from '../lib/visibility/lineOfSight.js';
@@ -62,6 +63,7 @@
         const state = JSON.parse(saved);
         if (state.models && Array.isArray(state.models)) {
           models.set(state.models);
+          history.clear(); // Clear history when restoring saved state
         }
       } catch (err) {
         console.error('Failed to restore deployment state:', err);
@@ -86,6 +88,20 @@
     if (event.target.tagName === 'INPUT') return;
 
     const hasSelection = $selectedModelId;
+
+    // Undo (Ctrl+Z)
+    if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+      event.preventDefault();
+      models.undo();
+      return;
+    }
+
+    // Redo (Ctrl+Y or Ctrl+Shift+Z)
+    if ((event.ctrlKey || event.metaKey) && (event.key === 'y' || (event.shiftKey && event.key === 'z'))) {
+      event.preventDefault();
+      models.redo();
+      return;
+    }
 
     // Player switch keys (1, 2)
     if (event.key === '1') {
@@ -487,6 +503,22 @@
       <!-- Actions -->
       <CollapsibleSection title="Actions">
         <div class="button-group vertical">
+          <div class="button-row">
+            <button
+              on:click={() => models.undo()}
+              disabled={!$history.past.length}
+              title="Undo (Ctrl+Z)"
+            >
+              Undo
+            </button>
+            <button
+              on:click={() => models.redo()}
+              disabled={!$history.future.length}
+              title="Redo (Ctrl+Y)"
+            >
+              Redo
+            </button>
+          </div>
           <button on:click={saveDeploymentState}>Save State</button>
           <button on:click={restoreDeploymentState}>Restore State</button>
           <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
@@ -770,7 +802,7 @@
       </div>
       <div class="info">
         <p>Battlefield: 60" x 44" | {$player1Models.length} P1 models | {$player2Models.length} P2 models</p>
-        <p class="hint">Press 1/2 to switch player | Press L to toggle LoS | Drag models to move</p>
+        <p class="hint">Press 1/2 to switch player | Press L to toggle LoS | Ctrl+Z to undo | Ctrl+Y to redo</p>
       </div>
     </div>
   </div>
@@ -844,6 +876,15 @@
     flex-direction: column;
   }
 
+  .button-row {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .button-row button {
+    flex: 1;
+  }
+
   button {
     padding: 0.5rem 0.75rem;
     border: 1px solid #444;
@@ -858,6 +899,11 @@
   button:hover:not(:disabled) {
     background: #444;
     border-color: #555;
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   button.danger {

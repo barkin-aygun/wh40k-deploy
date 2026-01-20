@@ -1,4 +1,5 @@
 import { writable, derived, get } from 'svelte/store';
+import { history, debugHistory } from './history.js';
 
 // Convert mm to inches
 const MM_TO_INCH = 1 / 25.4;
@@ -63,7 +64,7 @@ function generateId() {
 }
 
 // Create models store
-function createModelsStore() {
+function createModelsStore(historyStore) {
   const { subscribe, set, update } = writable([]);
 
   return {
@@ -72,7 +73,7 @@ function createModelsStore() {
     update,
 
     // Add a new model
-    add(baseType, playerId, x, y, customSize = null) {
+    add(baseType, playerId, x, y, customSize = null, skipHistory = false) {
       const id = generateId();
       const model = {
         id,
@@ -90,19 +91,81 @@ function createModelsStore() {
       }
 
       update(models => [...models, model]);
+
+      // Track in history
+      if (!skipHistory && historyStore) {
+        historyStore.push({
+          type: 'add',
+          modelId: id,
+          model: { ...model }
+        });
+      }
+
       return id;
     },
 
     // Update a model
-    updateModel(id, changes) {
+    updateModel(id, changes, skipHistory = false) {
+      let before = null;
+      let actionType = null;
+
+      // Get current state before update
+      if (!skipHistory && historyStore) {
+        const models = get({ subscribe });
+        const model = models.find(m => m.id === id);
+        if (model) {
+          before = { ...model };
+
+          // Determine action type
+          if ('x' in changes || 'y' in changes) {
+            actionType = 'move';
+          } else if ('rotation' in changes) {
+            actionType = 'rotate';
+          }
+        }
+      }
+
       update(models => models.map(m =>
         m.id === id ? { ...m, ...changes } : m
       ));
+
+      // Track in history (only for move/rotate)
+      if (!skipHistory && historyStore && actionType && before) {
+        const models = get({ subscribe });
+        const after = models.find(m => m.id === id);
+
+        historyStore.push({
+          type: actionType,
+          modelId: id,
+          before: actionType === 'move'
+            ? { x: before.x, y: before.y }
+            : { rotation: before.rotation },
+          after: actionType === 'move'
+            ? { x: after.x, y: after.y }
+            : { rotation: after.rotation }
+        });
+      }
     },
 
     // Remove a model
-    remove(id) {
+    remove(id, skipHistory = false) {
+      let removedModel = null;
+
+      if (!skipHistory && historyStore) {
+        const models = get({ subscribe });
+        removedModel = models.find(m => m.id === id);
+      }
+
       update(models => models.filter(m => m.id !== id));
+
+      // Track in history
+      if (!skipHistory && historyStore && removedModel) {
+        historyStore.push({
+          type: 'remove',
+          modelId: id,
+          model: { ...removedModel }
+        });
+      }
     },
 
     // Remove all models for a player
@@ -113,11 +176,72 @@ function createModelsStore() {
     // Clear all models
     clear() {
       set([]);
+      if (historyStore) {
+        historyStore.clear();
+      }
+    },
+
+    // Undo last action
+    undo() {
+      if (!historyStore) return;
+      const action = historyStore.undo();
+      if (!action) return;
+
+      switch (action.type) {
+        case 'add':
+          // Undo add by removing the model
+          this.remove(action.modelId, true);
+          break;
+
+        case 'remove':
+          // Undo remove by adding the model back
+          update(models => [...models, action.model]);
+          break;
+
+        case 'move':
+          // Undo move by restoring previous position
+          this.updateModel(action.modelId, action.before, true);
+          break;
+
+        case 'rotate':
+          // Undo rotate by restoring previous rotation
+          this.updateModel(action.modelId, action.before, true);
+          break;
+      }
+    },
+
+    // Redo last undone action
+    redo() {
+      if (!historyStore) return;
+      const action = historyStore.redo();
+      if (!action) return;
+
+      switch (action.type) {
+        case 'add':
+          // Redo add by adding the model back
+          update(models => [...models, action.model]);
+          break;
+
+        case 'remove':
+          // Redo remove by removing the model
+          this.remove(action.modelId, true);
+          break;
+
+        case 'move':
+          // Redo move by applying new position
+          this.updateModel(action.modelId, action.after, true);
+          break;
+
+        case 'rotate':
+          // Redo rotate by applying new rotation
+          this.updateModel(action.modelId, action.after, true);
+          break;
+      }
     }
   };
 }
 
-export const models = createModelsStore();
+export const models = createModelsStore(history);
 
 // Derived stores for filtering by player
 export const player1Models = derived(models, $models =>
@@ -141,7 +265,7 @@ export const selectedModel = derived(
 );
 
 // Debug mode models (separate from deployment models)
-export const debugModels = createModelsStore();
+export const debugModels = createModelsStore(debugHistory);
 export const debugSelectedModelId = writable(null);
 export const debugSelectedModel = derived(
   [debugModels, debugSelectedModelId],
