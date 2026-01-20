@@ -18,7 +18,7 @@
     getBaseSize,
     isOvalBase
   } from '../stores/models.js';
-  import { selectedDeployment, loadedTerrain } from '../stores/battlefieldSetup.js';
+  import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
   import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
   import { canSee } from '../lib/visibility/lineOfSight.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
@@ -29,6 +29,37 @@
   let isDraggingFromPalette = false;
   let screenToSvgRef = null;
   let losVisualizationEnabled = false;
+
+  const DEPLOYMENT_SAVE_KEY = 'warhammer-deployment-state';
+
+  function saveDeploymentState() {
+    const state = {
+      deployment: $selectedDeployment?.name || null,
+      layout: $selectedLayoutName || null,
+      layoutType: $selectedLayoutType || null,
+      models: $models
+    };
+    localStorage.setItem(DEPLOYMENT_SAVE_KEY, JSON.stringify(state));
+  }
+
+  function restoreDeploymentState() {
+    const saved = localStorage.getItem(DEPLOYMENT_SAVE_KEY);
+    if (saved) {
+      try {
+        const state = JSON.parse(saved);
+        if (state.models && Array.isArray(state.models)) {
+          models.set(state.models);
+        }
+      } catch (err) {
+        console.error('Failed to restore deployment state:', err);
+      }
+    }
+  }
+
+  function clearDeploymentState() {
+    localStorage.removeItem(DEPLOYMENT_SAVE_KEY);
+    models.clear();
+  }
 
   onMount(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -330,7 +361,10 @@
       <section>
         <h3>Actions</h3>
         <div class="button-group vertical">
+          <button on:click={saveDeploymentState}>Save State</button>
+          <button on:click={restoreDeploymentState}>Restore State</button>
           <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
+          <button class="secondary" on:click={clearDeploymentState}>Clear Saved State</button>
         </div>
       </section>
     </div>
@@ -389,7 +423,7 @@
           {/if}
 
           <!-- Render terrain (read-only) -->
-          {#each $loadedTerrain.terrains as terrain (terrain.id)}
+          {#each $loadedTerrain.terrains as terrain, idx (idx)}
             <g transform="rotate({terrain.rotation}, {terrain.x + terrain.width/2}, {terrain.y + terrain.height/2})">
               <rect
                 x={terrain.x}
@@ -405,7 +439,7 @@
           {/each}
 
           <!-- Render walls (read-only) -->
-          {#each $loadedTerrain.walls as wall (wall.id)}
+          {#each $loadedTerrain.walls as wall, idx (idx)}
             <g opacity="0.5" pointer-events="none">
               <WallPiece
                 id={wall.id}
