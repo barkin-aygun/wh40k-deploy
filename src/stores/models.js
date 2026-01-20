@@ -23,9 +23,11 @@ export const BASE_SIZES = {
   ovals: [
     { type: '60x35.5mm', width: 60 * MM_TO_INCH, height: 35.5 * MM_TO_INCH, label: '60×35.5mm' },
     { type: '75x42mm', width: 75 * MM_TO_INCH, height: 42 * MM_TO_INCH, label: '75×42mm' },
+    { type: 'Small Flying Base', width: 75 * MM_TO_INCH, height: 42 * MM_TO_INCH, label: 'Small Flying' },
     { type: '90x52.5mm', width: 90 * MM_TO_INCH, height: 52.5 * MM_TO_INCH, label: '90×52.5mm' },
+    { type: 'Large Flying Base', width: 90 * MM_TO_INCH, height: 52.5 * MM_TO_INCH, label: 'Large Flying' },
     { type: '105x70mm', width: 105 * MM_TO_INCH, height: 70 * MM_TO_INCH, label: '105×70mm' },
-    { type: '120x90mm', width: 120 * MM_TO_INCH, height: 90 * MM_TO_INCH, label: '120×90mm' },
+    { type: '120x92mm', width: 120 * MM_TO_INCH, height: 92 * MM_TO_INCH, label: '120×92mm' },
     { type: '150x95mm', width: 150 * MM_TO_INCH, height: 95 * MM_TO_INCH, label: '150×95mm' },
     { type: '170x109mm', width: 170 * MM_TO_INCH, height: 109 * MM_TO_INCH, label: '170×109mm' }
   ]

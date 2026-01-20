@@ -1,0 +1,3499 @@
+{
+  "ADEPTA SORORITAS": {
+    "Aestred Thurga and Agathae Dolan: Aestred Thurga": {
+      "baseType": "32mm"
+    },
+    "Aestred Thurga and Agathae Dolan: Agathae Dolan": {
+      "baseType": "25mm"
+    },
+    "Arco-flagellants": {
+      "baseType": "25mm"
+    },
+    "Battle Sisters Squad": {
+      "baseType": "32mm"
+    },
+    "Canoness": {
+      "baseType": "32mm"
+    },
+    "Canoness with Jump Pack": {
+      "baseType": "32mm"
+    },
+    "Castigator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Celestian Sacresants": {
+      "baseType": "32mm"
+    },
+    "Daemonifuge": {
+      "baseType": "32mm"
+    },
+    "Dialogus": {
+      "baseType": "40mm"
+    },
+    "Dogmata": {
+      "baseType": "32mm"
+    },
+    "Dominion Squad": {
+      "baseType": "32mm"
+    },
+    "Exorcist": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Hospitaller": {
+      "baseType": "50mm"
+    },
+    "Imagifier": {
+      "baseType": "32mm"
+    },
+    "Immolator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Junith Eruita": {
+      "baseType": "50mm"
+    },
+    "Ministorum Priest": {
+      "baseType": "32mm"
+    },
+    "Mortifiers": {
+      "baseType": "50mm"
+    },
+    "Morvenn Vahl": {
+      "baseType": "60mm"
+    },
+    "Palatine": {
+      "baseType": "32mm"
+    },
+    "Paragon Warsuits": {
+      "baseType": "50mm"
+    },
+    "Penitent Engines": {
+      "baseType": "50mm"
+    },
+    "Repentia Squad: Repentia Superior": {
+      "baseType": "32mm"
+    },
+    "Repentia Squad: Sister Repentia": {
+      "baseType": "28.5mm"
+    },
+    "Retributor Squad": {
+      "baseType": "32mm"
+    },
+    "Saint Celestine": {
+      "baseType": "40mm"
+    },
+    "Saint Celestine: Geminae Superia": {
+      "baseType": "32mm"
+    },
+    "Sanctifiers": {
+      "baseType": "25mm"
+    },
+    "Seraphim Squad": {
+      "baseType": "32mm"
+    },
+    "Sisters Novitiate Squad: Novitiate Superior": {
+      "baseType": "32mm"
+    },
+    "Sisters Novitiate Squad: Sister Novitiate": {
+      "baseType": "28.5mm"
+    },
+    "Sororitas Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Triumph of Saint Katherine": {
+      "baseType": "120x92mm"
+    },
+    "Zephyrim Squad": {
+      "baseType": "32mm"
+    }
+  },
+  "ADEPTUS CUSTODES": {
+    "Aleya": {
+      "baseType": "32mm"
+    },
+    "Allarus Custodians": {
+      "baseType": "40mm"
+    },
+    "Anathema Psykana Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Blade Champion": {
+      "baseType": "40mm"
+    },
+    "Custodian Guard": {
+      "baseType": "40mm"
+    },
+    "Custodian Wardens": {
+      "baseType": "40mm"
+    },
+    "Knight-Centura": {
+      "baseType": "32mm"
+    },
+    "Prosecutors": {
+      "baseType": "32mm"
+    },
+    "Shield-Captain": {
+      "baseType": "40mm"
+    },
+    "Shield-Captain in Allarus Terminator Armour": {
+      "baseType": "40mm"
+    },
+    "Shield-Captain on Dawneagle Jetbike": {
+      "baseType": "75x42mm"
+    },
+    "Trajann Valoris": {
+      "baseType": "40mm"
+    },
+    "Valerian": {
+      "baseType": "40mm"
+    },
+    "Venerable Contemptor Dreadnought": {
+      "baseType": "60mm"
+    },
+    "Venerable Land Raider": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Vertus Praetors": {
+      "baseType": "75x42mm"
+    },
+    "Vigilators": {
+      "baseType": "32mm"
+    },
+    "Witchseekers": {
+      "baseType": "32mm"
+    },
+    "Agamatus Custodians": {
+      "baseType": "75x42mm"
+    },
+    "Aquilon Custodians": {
+      "baseType": "50mm"
+    },
+    "Ares Gunship": {
+      "baseType": "160mm"
+    },
+    "Caladius Grav-tank": {
+      "baseType": "170x109mm"
+    },
+    "Contemptor-Achillus Dreadnought": {
+      "baseType": "60mm"
+    },
+    "Contemptor-Galatus Dreadnought": {
+      "baseType": "60mm"
+    },
+    "Coronus Grav-carrier": {
+      "baseType": "170x109mm"
+    },
+    "Custodian Guard with Adrasite and Pyrithite Spears": {
+      "baseType": "40mm"
+    },
+    "Orion Assault Dropship": {
+      "baseType": "160mm"
+    },
+    "Pallas Grav-attack": {
+      "baseType": "105x70mm"
+    },
+    "Sagittarum Custodians": {
+      "baseType": "40mm"
+    },
+    "Telemon Heavy Dreadnought": {
+      "baseType": "100mm"
+    },
+    "Venatari Custodians": {
+      "baseType": "40mm"
+    }
+  },
+  "ADEPTUS MECHANICUS": {
+    "Archaeopter Fusilave": {
+      "baseType": "170x109mm"
+    },
+    "Archaeopter Stratoraptor": {
+      "baseType": "170x109mm"
+    },
+    "Archaeopter Transvector": {
+      "baseType": "170x109mm"
+    },
+    "Belisarius Cawl": {
+      "baseType": "105x70mm"
+    },
+    "Corpuscarii Electro-Priests": {
+      "baseType": "32mm"
+    },
+    "Cybernetica Datasmith": {
+      "baseType": "32mm"
+    },
+    "Fulgurite Electro-Priests": {
+      "baseType": "32mm"
+    },
+    "Ironstrider Ballistarii": {
+      "baseType": "105x70mm"
+    },
+    "Kastelan Robots": {
+      "baseType": "60mm"
+    },
+    "Kataphron Breachers": {
+      "baseType": "60mm"
+    },
+    "Kataphron Destroyers": {
+      "baseType": "60mm"
+    },
+    "Onager Dunecrawler": {
+      "baseType": "130mm"
+    },
+    "Pteraxii Skystalkers": {
+      "baseType": "40mm"
+    },
+    "Pteraxii Sterylizors": {
+      "baseType": "40mm"
+    },
+    "Serberys Raiders": {
+      "baseType": "60x35.5mm"
+    },
+    "Serberys Sulphurhounds": {
+      "baseType": "60x35.5mm"
+    },
+    "Sicarian Infiltrators": {
+      "baseType": "40mm"
+    },
+    "Sicarian Ruststalkers": {
+      "baseType": "40mm"
+    },
+    "Skitarii Marshal": {
+      "baseType": "32mm"
+    },
+    "Skitarii Rangers": {
+      "baseType": "25mm"
+    },
+    "Skitarii Rangers/Skitarii Vanguard: Transuranic Arquebus": {
+      "baseType": "60x35.5mm"
+    },
+    "Skitarii Vanguard": {
+      "baseType": "25mm"
+    },
+    "Skorpius Disintegrator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Skorpius Dunerider": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Sydonian Dragoons with Radium Jezzails": {
+      "baseType": "105x70mm"
+    },
+    "Sydonian Dragoons with Taser Lances": {
+      "baseType": "105x70mm"
+    },
+    "Sydonian Skatros": {
+      "baseType": "40mm"
+    },
+    "Tech-Priest Dominus": {
+      "baseType": "50mm"
+    },
+    "Tech-Priest Enginseer": {
+      "baseType": "32mm"
+    },
+    "Tech-Priest Manipulus": {
+      "baseType": "50mm"
+    },
+    "Technoarcheologist": {
+      "baseType": "32mm"
+    }
+  },
+  "ADEPTUS TITANICUS": {
+    "Reaver Titan": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Warbringer Nemesis Titan": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Warhound Titan": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Warlord Titan": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    }
+  },
+  "AELDARI": {
+    "Asurmen": {
+      "baseType": "40mm"
+    },
+    "Autarch": {
+      "baseType": "32mm"
+    },
+    "Autarch wayleaper": {
+      "baseType": "32mm"
+    },
+    "Avatar of Khaine": {
+      "baseType": "80mm"
+    },
+    "Baharroth": {
+      "baseType": "40mm"
+    },
+    "Corsair Voidreavers": {
+      "baseType": "28.5mm"
+    },
+    "Corsair Voidscarred": {
+      "baseType": "28.5mm"
+    },
+    "Crimson Hunter": {
+      "baseType": "120x92mm"
+    },
+    "D-cannon Platform": {
+      "baseType": "40mm"
+    },
+    "Dark Reapers": {
+      "baseType": "28.5mm"
+    },
+    "Death Jester": {
+      "baseType": "25mm"
+    },
+    "Dire Avengers": {
+      "baseType": "28.5mm"
+    },
+    "Eldrad Ulthran": {
+      "baseType": "32mm"
+    },
+    "Falcon": {
+      "baseType": "Large Flying Base"
+    },
+    "Farseer": {
+      "baseType": "25mm"
+    },
+    "Farseer Skyrunner": {
+      "baseType": "Small Flying Base"
+    },
+    "Fire Dragons": {
+      "baseType": "28.5mm"
+    },
+    "Fire Prism": {
+      "baseType": "Large Flying Base"
+    },
+    "Fuegan": {
+      "baseType": "40mm"
+    },
+    "Guardian Defenders": {
+      "baseType": "28.5mm"
+    },
+    "Guardian Defenders: Heavy Weapon Platform": {
+      "baseType": "40mm"
+    },
+    "Hemlock Wraithfighter": {
+      "baseType": "120x92mm"
+    },
+    "Howling Banshees": {
+      "baseType": "28.5mm"
+    },
+    "Jain Zar": {
+      "baseType": "40mm"
+    },
+    "Lhykhis": {
+      "baseType": "40mm"
+    },
+    "Maugan Ra": {
+      "baseType": "40mm"
+    },
+    "Night Spinner": {
+      "baseType": "Large Flying Base"
+    },
+    "Rangers": {
+      "baseType": "28.5mm"
+    },
+    "Shadow Weaver Platform": {
+      "baseType": "40mm"
+    },
+    "Shadowseer": {
+      "baseType": "25mm"
+    },
+    "Shining Spears": {
+      "baseType": "Large Flying Base"
+    },
+    "Shroud Runners": {
+      "baseType": "Large Flying Base"
+    },
+    "Skyweavers": {
+      "baseType": "Large Flying Base"
+    },
+    "Solitaire": {
+      "baseType": "25mm"
+    },
+    "Spiritseer": {
+      "baseType": "25mm"
+    },
+    "Starweaver": {
+      "baseType": "Large Flying Base"
+    },
+    "Storm Guardians": {
+      "baseType": "28.5mm"
+    },
+    "Storm Guardians: Serpent’s Scale Platform": {
+      "baseType": "40mm"
+    },
+    "Striking Scorpions": {
+      "baseType": "28.5mm"
+    },
+    "Swooping Hawks": {
+      "baseType": "28.5mm"
+    },
+    "The Visarch": {
+      "baseType": "32mm"
+    }
+  },
+  "ASTRA MILITARUM": {
+    "Aegis Defence Line": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Armoured Sentinels": {
+      "baseType": "80mm"
+    },
+    "Artillery Team": {
+      "baseType": "130mm"
+    },
+    "Attilan Rough Riders": {
+      "baseType": "60x35.5mm"
+    },
+    "Baneblade": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Banehammer": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Banesword": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Basilisk": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Bullgryn squad": {
+      "baseType": "40mm"
+    },
+    "Cadian Castellan": {
+      "baseType": "28.5mm"
+    },
+    "Cadian Command Squad": {
+      "baseType": "28.5mm"
+    },
+    "Cadian Heavy Weapons Squad": {
+      "baseType": "50mm"
+    },
+    "Cadian Shock Troops": {
+      "baseType": "25mm"
+    },
+    "Catachan Command Squad": {
+      "baseType": "25mm"
+    },
+    "Catachan Heavy Weapons Squad": {
+      "baseType": "60mm"
+    },
+    "Catachan Jungle Fighters": {
+      "baseType": "25mm"
+    },
+    "Chimera": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Commissar": {
+      "baseType": "28.5mm"
+    },
+    "Death Korps of Krieg": {
+      "baseType": "25mm"
+    },
+    "Death Riders": {
+      "baseType": "60x35.5mm"
+    },
+    "Deathstrike": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Doomhammer": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Field Ordnance Battery": {
+      "baseType": "100mm"
+    },
+    "Gaunt’s Ghosts": {
+      "baseType": "28.5mm"
+    },
+    "Hellhammer": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Hellhound": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Hydra": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Kasrkin": {
+      "baseType": "28.5mm"
+    },
+    "Krieg Combat Engineers": {
+      "baseType": "25mm"
+    },
+    "Krieg Command Squad": {
+      "baseType": "25mm"
+    },
+    "Krieg Command Squad: Lord Commissar": {
+      "baseType": "32mm"
+    },
+    "Krieg Heavy Weapons Squad": {
+      "baseType": "50mm"
+    },
+    "Krieg Heavy Weapons Squad: Fire Coordinator": {
+      "baseType": "25mm"
+    },
+    "Leman Russ Battle Tank": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Leman Russ Commander": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Leman Russ Demolisher": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Leman Russ Eradicator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Leman Russ Executioner": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Leman Russ Exterminator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Leman Russ Punisher": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Leman Russ Vanquisher": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Lord Marshal Dreir": {
+      "baseType": "75x42mm"
+    },
+    "Lord Solar Leontus": {
+      "baseType": "80mm"
+    },
+    "Manticore": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Militarum Tempestus Command Squad": {
+      "baseType": "25mm"
+    },
+    "Ministorum Priest": {
+      "baseType": "32mm"
+    },
+    "Nork Deddog": {
+      "baseType": "40mm"
+    },
+    "Ogryn Bodyguard": {
+      "baseType": "40mm"
+    },
+    "Ogryn squad": {
+      "baseType": "40mm"
+    },
+    "Primaris Psyker": {
+      "baseType": "32mm"
+    },
+    "Ratlings": {
+      "baseType": "25mm"
+    },
+    "Rogal Dorn Battle Tank": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Rogal Dorn Commander": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Scout Sentinels": {
+      "baseType": "80mm"
+    },
+    "Shadowsword": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Sly Marbo": {
+      "baseType": "32mm"
+    },
+    "Stormlord": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Stormsword": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Taurox": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Taurox Prime": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Tech-Priest Enginseer": {
+      "baseType": "32mm"
+    },
+    "Tempestus Aquilons": {
+      "baseType": "28.5mm"
+    },
+    "Tempestus Scions": {
+      "baseType": "25mm"
+    },
+    "Ursula Creed": {
+      "baseType": "32mm"
+    },
+    "Valkyrie": {
+      "baseType": "120x92mm"
+    },
+    "Wyvern": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Avenger Strike Fighter": {
+      "baseType": "120x92mm"
+    },
+    "Cyclops Demolition Vehicle": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    }
+  },
+  "BLACK TEMPLARS": {
+    "Black Templars Gladiator Lancer": {
+      "baseType": "100mm"
+    },
+    "Black Templars Gladiator Reaper": {
+      "baseType": "100mm"
+    },
+    "Black Templars Gladiator Valiant": {
+      "baseType": "100mm"
+    },
+    "Black Templars Impulsor": {
+      "baseType": "100mm"
+    },
+    "Black Templars Repulsor": {
+      "baseType": "100mm"
+    },
+    "Black Templars Repulsor Executioner": {
+      "baseType": "100mm"
+    },
+    "Castellan": {
+      "baseType": "40mm"
+    },
+    "Chaplain Grimaldus": {
+      "baseType": "40mm"
+    },
+    "Chaplain Grimaldus: Cenobyte Servitors": {
+      "baseType": "28.5mm"
+    },
+    "Crusader Squad: Neophytes": {
+      "baseType": "28.5mm"
+    },
+    "Crusader Squad: Sword Brother/Initiates": {
+      "baseType": "32mm"
+    },
+    "High Marshal Helbrecht": {
+      "baseType": "60mm"
+    },
+    "Marshal": {
+      "baseType": "40mm"
+    },
+    "Primaris Crusader Squad: Initiates": {
+      "baseType": "32mm"
+    },
+    "Primaris Crusader Squad: Neophytes": {
+      "baseType": "28.5mm"
+    },
+    "Primaris Crusader Squad: Sword Brother": {
+      "baseType": "40mm"
+    },
+    "Primaris Sword Brethren": {
+      "baseType": "40mm"
+    },
+    "The Emperor’s Champion": {
+      "baseType": "40mm"
+    }
+  },
+  "BLOOD ANGELS": {
+    "Astorath": {
+      "baseType": "40mm"
+    },
+    "Baal Predator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Blood Angels Captain": {
+      "baseType": "40mm"
+    },
+    "Chief Librarian Mephiston": {
+      "baseType": "40mm"
+    },
+    "Commander Dante": {
+      "baseType": "50mm"
+    },
+    "Death Company Captain": {
+      "baseType": "40mm"
+    },
+    "Death Company Captain with Jump Pack": {
+      "baseType": "40mm"
+    },
+    "Death Company Dreadnought": {
+      "baseType": "90mm"
+    },
+    "Death Company Marines": {
+      "baseType": "32mm"
+    },
+    "Death Company Marines with Bolt Rifles": {
+      "baseType": "32mm"
+    },
+    "Death Company Marines with Jump Packs": {
+      "baseType": "32mm"
+    },
+    "Lemartes": {
+      "baseType": "40mm"
+    },
+    "Sanguinary Guard": {
+      "baseType": "40mm"
+    },
+    "Sanguinary Priest": {
+      "baseType": "40mm"
+    },
+    "The Sanguinor": {
+      "baseType": "40mm"
+    }
+  },
+  "CHAOS DAEMONS": {
+    "Be’lakor": {
+      "baseType": "100mm"
+    },
+    "Beasts of Nurgle": {
+      "baseType": "60mm"
+    },
+    "Bloodcrushers": {
+      "baseType": "90x52.5mm"
+    },
+    "Bloodletters": {
+      "baseType": "32mm"
+    },
+    "Bloodmaster": {
+      "baseType": "40mm"
+    },
+    "Bloodthirster": {
+      "baseType": "120x92mm"
+    },
+    "Blue Horrors": {
+      "baseType": "25mm"
+    },
+    "Burning Chariot": {
+      "baseType": "120x92mm"
+    },
+    "Changecaster": {
+      "baseType": "32mm"
+    },
+    "Contorted Epitome": {
+      "baseType": "75x42mm"
+    },
+    "Daemon Prince of Chaos": {
+      "baseType": "60mm"
+    },
+    "Daemon Prince of Chaos with Wings": {
+      "baseType": "60mm"
+    },
+    "Daemonettes": {
+      "baseType": "25mm"
+    },
+    "Epidemius": {
+      "baseType": "60mm"
+    },
+    "Exalted Flamer": {
+      "baseType": "75x42mm"
+    },
+    "Fateskimmer": {
+      "baseType": "120x92mm"
+    },
+    "Feculent Gnarlmaw": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Fiends": {
+      "baseType": "75x42mm"
+    },
+    "Flamers": {
+      "baseType": "32mm"
+    },
+    "Flesh Hounds": {
+      "baseType": "60x35.5mm"
+    },
+    "Fluxmaster": {
+      "baseType": "Large Flying Base"
+    },
+    "Great Unclean One": {
+      "baseType": "130mm"
+    },
+    "Hellflayers": {
+      "baseType": "120x92mm"
+    },
+    "Horticulous Slimux": {
+      "baseType": "105x70mm"
+    },
+    "Infernal Enrapturess": {
+      "baseType": "60x35.5mm"
+    },
+    "Kairos Fateweaver": {
+      "baseType": "100mm"
+    },
+    "Karanak": {
+      "baseType": "75x42mm"
+    },
+    "Keeper of Secrets": {
+      "baseType": "100mm"
+    },
+    "Lord of Change": {
+      "baseType": "100mm"
+    },
+    "Nurglings": {
+      "baseType": "40mm"
+    },
+    "Pink Horrors": {
+      "baseType": "32mm"
+    },
+    "Plague Drones": {
+      "baseType": "Large Flying Base"
+    },
+    "Plaguebearers": {
+      "baseType": "32mm"
+    },
+    "Poxbringer": {
+      "baseType": "32mm"
+    },
+    "Rendmaster on Blood Throne": {
+      "baseType": "120x92mm"
+    },
+    "Rotigus": {
+      "baseType": "130mm"
+    },
+    "Screamers": {
+      "baseType": "Small Flying Base"
+    },
+    "Seekers": {
+      "baseType": "60x35.5mm"
+    },
+    "Shalaxi Helbane": {
+      "baseType": "100mm"
+    },
+    "Skarbrand": {
+      "baseType": "100mm"
+    },
+    "Skull Altar": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Skull Cannon": {
+      "baseType": "120x92mm"
+    },
+    "Skullmaster": {
+      "baseType": "90x52.5mm"
+    },
+    "Skulltaker": {
+      "baseType": "40mm"
+    },
+    "Sloppity Bilepiper": {
+      "baseType": "32mm"
+    },
+    "Soul Grinder": {
+      "baseType": "160mm"
+    },
+    "Spoilpox Scrivener": {
+      "baseType": "40mm"
+    },
+    "Syll’esske": {
+      "baseType": "50mm"
+    },
+    "The Blue Scribes": {
+      "baseType": "Large Flying Base"
+    },
+    "The Changeling": {
+      "baseType": "40mm"
+    },
+    "The Masque of Slaanesh": {
+      "baseType": "32mm"
+    },
+    "Tormentbringer": {
+      "baseType": "120x92mm"
+    },
+    "Tranceweaver": {
+      "baseType": "32mm"
+    }
+  },
+  "CHAOS KNIGHTS": {
+    "Knight Abominant": {
+      "baseType": "170x109mm"
+    },
+    "Knight Desecrator": {
+      "baseType": "170x109mm"
+    },
+    "Knight Despoiler": {
+      "baseType": "170x109mm"
+    },
+    "Knight Rampager": {
+      "baseType": "170x109mm"
+    },
+    "Knight Tyrant": {
+      "baseType": "170x109mm"
+    },
+    "War Dog Brigand": {
+      "baseType": "100mm"
+    },
+    "War Dog Executioner": {
+      "baseType": "100mm"
+    },
+    "War Dog Huntsman": {
+      "baseType": "100mm"
+    },
+    "War Dog Karnivore": {
+      "baseType": "100mm"
+    },
+    "War Dog Stalker": {
+      "baseType": "100mm"
+    },
+    "Chaos Acastus Knight Asterius": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Acastus Knight Porphyrion": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Cerastus Knight Acheron": {
+      "baseType": "170x109mm"
+    },
+    "Chaos Cerastus Knight Atrapos": {
+      "baseType": "170x109mm"
+    },
+    "Chaos Cerastus Knight Castigator": {
+      "baseType": "170x109mm"
+    },
+    "Chaos Cerastus Knight Lancer": {
+      "baseType": "170x109mm"
+    },
+    "Chaos Questoris Knight Magaera": {
+      "baseType": "170x109mm"
+    },
+    "Chaos Questoris Knight Styrix": {
+      "baseType": "170x109mm"
+    },
+    "War Dog Moirax": {
+      "baseType": "100mm"
+    }
+  },
+  "CHAOS SPACE MARINES": {
+    "Abaddon the Despoiler": {
+      "baseType": "60mm"
+    },
+    "Accursed Cultists: Mutant": {
+      "baseType": "25mm"
+    },
+    "Accursed Cultists: Torment": {
+      "baseType": "40mm"
+    },
+    "Chaos Bikers": {
+      "baseType": "75x42mm"
+    },
+    "Chaos Land Raider": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Lord": {
+      "baseType": "40mm"
+    },
+    "Chaos Lord in Terminator Armour": {
+      "baseType": "40mm"
+    },
+    "Chaos Lord with Jump Pack": {
+      "baseType": "40mm"
+    },
+    "Chaos Predator Annihilator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Predator Destructor": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Spawn": {
+      "baseType": "50mm"
+    },
+    "Chaos Terminator Squad": {
+      "baseType": "40mm"
+    },
+    "Chaos Vindicator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chosen": {
+      "baseType": "32mm"
+    },
+    "Cultist Firebrand": {
+      "baseType": "32mm"
+    },
+    "Cultist Mob": {
+      "baseType": "25mm"
+    },
+    "Cypher": {
+      "baseType": "32mm"
+    },
+    "Dark Apostle": {
+      "baseType": "40mm"
+    },
+    "Dark Apostle: Dark Disciple": {
+      "baseType": "25mm"
+    },
+    "Dark Commune: Blessed Blade": {
+      "baseType": "28.5mm"
+    },
+    "Dark Commune: Cult Demagogue, Mindwitch, Iconarch": {
+      "baseType": "32mm"
+    },
+    "Defiler": {
+      "baseType": "160mm"
+    },
+    "Fabius Bile": {
+      "baseType": "40mm"
+    },
+    "Fabius Bile: Surgeon Acolyte": {
+      "baseType": "32mm"
+    },
+    "Fellgor beastmen": {
+      "baseType": "32mm"
+    },
+    "Forgefiend": {
+      "baseType": "120x92mm"
+    },
+    "Haarken Worldclaimer": {
+      "baseType": "40mm"
+    },
+    "Havocs": {
+      "baseType": "40mm"
+    },
+    "Helbrute": {
+      "baseType": "60mm"
+    },
+    "Heldrake": {
+      "baseType": "120x92mm"
+    },
+    "Heretic Astartes Daemon Prince": {
+      "baseType": "60mm"
+    },
+    "Heretic Astartes Daemon Prince with Wings": {
+      "baseType": "60mm"
+    },
+    "Huron Blackheart": {
+      "baseType": "32mm"
+    },
+    "Khorne Lord of Skulls": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Legionaries": {
+      "baseType": "32mm"
+    },
+    "Lord Discordant on Helstalker": {
+      "baseType": "120x92mm"
+    },
+    "Master of Executions": {
+      "baseType": "40mm"
+    },
+    "Master of Possession": {
+      "baseType": "40mm"
+    },
+    "Maulerfiend": {
+      "baseType": "120x92mm"
+    },
+    "Nemesis Claw": {
+      "baseType": "32mm"
+    },
+    "Noctilith Crown": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Obliterators": {
+      "baseType": "50mm"
+    },
+    "Possessed": {
+      "baseType": "40mm"
+    },
+    "Raptors": {
+      "baseType": "32mm"
+    },
+    "Sorcerer": {
+      "baseType": "40mm"
+    },
+    "Sorcerer in Terminator Armour": {
+      "baseType": "40mm"
+    },
+    "Traitor Enforcer": {
+      "baseType": "32mm"
+    },
+    "Traitor Enforcer: Traitor Ogryn": {
+      "baseType": "40mm"
+    },
+    "Traitor Guardsmen Squad": {
+      "baseType": "25mm"
+    },
+    "Vashtorr the Arkifane": {
+      "baseType": "80mm"
+    },
+    "Venomcrawler": {
+      "baseType": "100mm"
+    },
+    "Warp Talons": {
+      "baseType": "32mm"
+    },
+    "Warpsmith": {
+      "baseType": "60x35.5mm"
+    }
+  },
+  "DARK ANGELS": {
+    "Asmodai": {
+      "baseType": "50mm"
+    },
+    "Azrael": {
+      "baseType": "50mm"
+    },
+    "Belial": {
+      "baseType": "50mm"
+    },
+    "Deathwing Knights": {
+      "baseType": "40mm"
+    },
+    "Deathwing Terminator Squad": {
+      "baseType": "40mm"
+    },
+    "Ezekiel": {
+      "baseType": "25mm"
+    },
+    "Inner Circle Companions": {
+      "baseType": "40mm"
+    },
+    "Land Speeder Vengeance": {
+      "baseType": "Large Flying Base"
+    },
+    "Lazarus": {
+      "baseType": "40mm"
+    },
+    "Lion El’Jonson": {
+      "baseType": "60mm"
+    },
+    "Nephilim Jetfighter": {
+      "baseType": "120x92mm"
+    },
+    "Ravenwing Black Knights": {
+      "baseType": "75x42mm"
+    },
+    "Ravenwing Command Squad": {
+      "baseType": "75x42mm"
+    },
+    "Ravenwing Dark Talon": {
+      "baseType": "120x92mm"
+    },
+    "Ravenwing Darkshroud": {
+      "baseType": "Large Flying Base"
+    },
+    "Sammael": {
+      "baseType": "Large Flying Base"
+    }
+  },
+  "DEATH GUARD": {
+    "Biologus Putrifier": {
+      "baseType": "40mm"
+    },
+    "Blightlord Terminators": {
+      "baseType": "40mm"
+    },
+    "Chaos Land Raider": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Predator Annihilator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Predator Destructor": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Spawn": {
+      "baseType": "50mm"
+    },
+    "Daemon Prince of Nurgle": {
+      "baseType": "60mm"
+    },
+    "Daemon Prince of Nurgle with Wings": {
+      "baseType": "60mm"
+    },
+    "Deathshroud Terminators": {
+      "baseType": "40mm"
+    },
+    "Defiler": {
+      "baseType": "160mm"
+    },
+    "Foetid Bloat-Drone": {
+      "baseType": "60mm"
+    },
+    "Foetid Bloat-drone with Heavy Blight Launcher": {
+      "baseType": "60mm"
+    },
+    "Foul Blightspawn": {
+      "baseType": "40mm"
+    },
+    "Helbrute": {
+      "baseType": "60mm"
+    },
+    "Icon Bearer": {
+      "baseType": "32mm"
+    },
+    "Lord of Contagion": {
+      "baseType": "50mm"
+    },
+    "Lord of Poxes": {
+      "baseType": "40mm"
+    },
+    "Lord of Virulence": {
+      "baseType": "50mm"
+    },
+    "Malignant Plaguecaster": {
+      "baseType": "32mm"
+    },
+    "Miasmic Malignifier": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Mortarion": {
+      "baseType": "100mm"
+    },
+    "Myphitic Blight-Haulers": {
+      "baseType": "80mm"
+    },
+    "Noxious Blightbringer": {
+      "baseType": "40mm"
+    },
+    "Plague Marines": {
+      "baseType": "32mm"
+    },
+    "Plague Surgeon": {
+      "baseType": "40mm"
+    },
+    "Plagueburst Crawler": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Poxwalkers": {
+      "baseType": "25mm"
+    },
+    "Tallyman": {
+      "baseType": "40mm"
+    },
+    "Typhus": {
+      "baseType": "50mm"
+    },
+    "Beasts of Nurgle": {
+      "baseType": "60mm"
+    },
+    "Great Unclean One": {
+      "baseType": "130mm"
+    },
+    "Nurglings": {
+      "baseType": "40mm"
+    },
+    "Plague Drones": {
+      "baseType": "Large Flying Base"
+    },
+    "Plaguebearers": {
+      "baseType": "32mm"
+    },
+    "Rotigus": {
+      "baseType": "130mm"
+    }
+  },
+  "DEATHWATCH": {
+    "Corvus Blackstar": {
+      "baseType": "120x92mm"
+    },
+    "Deathwatch Terminator Squad": {
+      "baseType": "40mm"
+    },
+    "Deathwatch Veterans": {
+      "baseType": "32mm"
+    },
+    "Fortis Kill Team": {
+      "baseType": "32mm"
+    },
+    "Indomitor Kill Team": {
+      "baseType": "40mm"
+    },
+    "Spectrus Kill Team": {
+      "baseType": "32mm"
+    },
+    "Spectrus Kill Team: Kill Team Infiltrators with bolt sniper rifles": {
+      "baseType": "40mm"
+    },
+    "Talonstrike Kill Team": {
+      "baseType": "32mm"
+    },
+    "Talonstrike Kill Team: Kill Team Heavy Intercessors with Jump Packs": {
+      "baseType": "40mm"
+    },
+    "Watch Captain Artemis": {
+      "baseType": "32mm"
+    },
+    "Watch Master": {
+      "baseType": "32mm"
+    }
+  },
+  "DRUKHARI": {
+    "Archon": {
+      "baseType": "25mm"
+    },
+    "Beastmaster": {
+      "baseType": "Small Flying Base"
+    },
+    "Beastmaster: Clawed Fiends, Khymerae, Razorwing Flocks": {
+      "baseType": "40mm"
+    },
+    "Court of the Archon: Sslyth": {
+      "baseType": "40mm"
+    },
+    "Court of the Archon: Ur-Ghul, Lhamaean, Medusae": {
+      "baseType": "25mm"
+    },
+    "Cronos": {
+      "baseType": "Large Flying Base"
+    },
+    "Drazhar": {
+      "baseType": "40mm"
+    },
+    "Grotesques": {
+      "baseType": "40mm"
+    },
+    "Haemonculus": {
+      "baseType": "25mm"
+    },
+    "Hellions": {
+      "baseType": "Small Flying Base"
+    },
+    "Incubi": {
+      "baseType": "28.5mm"
+    },
+    "Kabalite Warriors": {
+      "baseType": "25mm"
+    },
+    "Lelith Hesperax": {
+      "baseType": "32mm"
+    },
+    "Mandrakes": {
+      "baseType": "28.5mm"
+    },
+    "Raider": {
+      "baseType": "Large Flying Base"
+    },
+    "Ravager": {
+      "baseType": "Large Flying Base"
+    },
+    "Razorwing Jetfighter": {
+      "baseType": "120x92mm"
+    },
+    "Reavers": {
+      "baseType": "Small Flying Base"
+    },
+    "Scourges": {
+      "baseType": "32mm"
+    },
+    "Succubus": {
+      "baseType": "25mm"
+    },
+    "Talos": {
+      "baseType": "Large Flying Base"
+    },
+    "Urien Rakarth": {
+      "baseType": "25mm"
+    },
+    "Venom": {
+      "baseType": "Large Flying Base"
+    },
+    "Voidraven Bomber": {
+      "baseType": "120x92mm"
+    },
+    "Wracks": {
+      "baseType": "25mm"
+    },
+    "Wyches": {
+      "baseType": "25mm"
+    }
+  },
+  "EMPEROR’S CHILDREN": {
+    "Chaos Land Raider": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Spawn": {
+      "baseType": "50mm"
+    },
+    "Chaos Terminators": {
+      "baseType": "40mm"
+    },
+    "Daemon Prince of Slaanesh": {
+      "baseType": "60mm"
+    },
+    "Daemon Prince of Slaanesh with Wings": {
+      "baseType": "60mm"
+    },
+    "Flawless Blades": {
+      "baseType": "40mm"
+    },
+    "Fulgrim": {
+      "baseType": "130mm"
+    },
+    "Heldrake": {
+      "baseType": "120x92mm"
+    },
+    "Infractors": {
+      "baseType": "32mm"
+    },
+    "Lord Exultant": {
+      "baseType": "40mm"
+    },
+    "Lord Kakophonist": {
+      "baseType": "40mm"
+    },
+    "Lucius the Eternal": {
+      "baseType": "50mm"
+    },
+    "Maulerfiend": {
+      "baseType": "120x92mm"
+    },
+    "Noise Marines": {
+      "baseType": "40mm"
+    },
+    "Sorcerer": {
+      "baseType": "40mm"
+    },
+    "Tormentors": {
+      "baseType": "32mm"
+    },
+    "Daemonettes": {
+      "baseType": "25mm"
+    },
+    "Fiends": {
+      "baseType": "75x42mm"
+    },
+    "Keeper of Secrets": {
+      "baseType": "100mm"
+    },
+    "Seekers": {
+      "baseType": "60x35.5mm"
+    },
+    "Shalaxi Helbane": {
+      "baseType": "100mm"
+    }
+  },
+  "GENESTEALER CULTS": {
+    "Aberrants": {
+      "baseType": "32mm"
+    },
+    "Abominant": {
+      "baseType": "40mm"
+    },
+    "Achilles Ridgerunners": {
+      "baseType": "120x92mm"
+    },
+    "Acolyte Hybrids with Autopistols": {
+      "baseType": "32mm"
+    },
+    "Acolyte Hybrids with Hand Flamers": {
+      "baseType": "32mm"
+    },
+    "Acolyte Iconward": {
+      "baseType": "32mm"
+    },
+    "Atalan Jackals": {
+      "baseType": "60x35.5mm"
+    },
+    "Atalan Jackals: Wolfquad": {
+      "baseType": "60mm"
+    },
+    "Benefictus": {
+      "baseType": "32mm"
+    },
+    "Biophagus": {
+      "baseType": "25mm"
+    },
+    "Clamavus": {
+      "baseType": "32mm"
+    },
+    "Goliath Rockgrinder": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Goliath Truck": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Hybrid Metamorphs": {
+      "baseType": "32mm"
+    },
+    "Jackal Alphus": {
+      "baseType": "60x35.5mm"
+    },
+    "Kelermorph": {
+      "baseType": "32mm"
+    },
+    "Locus": {
+      "baseType": "32mm"
+    },
+    "Magus": {
+      "baseType": "32mm"
+    },
+    "Neophyte Hybrids": {
+      "baseType": "25mm"
+    },
+    "Neophyte Hybrids: Heavy stubber, Mining laser, Seismic cannon": {
+      "baseType": "32mm"
+    },
+    "Nexos": {
+      "baseType": "40mm"
+    },
+    "Patriarch": {
+      "baseType": "50mm"
+    },
+    "Primus": {
+      "baseType": "32mm"
+    },
+    "Purestrain Genestealers": {
+      "baseType": "32mm"
+    },
+    "Reductus Saboteur": {
+      "baseType": "32mm"
+    },
+    "Sanctus": {
+      "baseType": "32mm"
+    }
+  },
+  "GREY KNIGHTS": {
+    "Brother-Captain": {
+      "baseType": "40mm"
+    },
+    "Brother-Captain Stern": {
+      "baseType": "40mm"
+    },
+    "Brotherhood Champion": {
+      "baseType": "32mm"
+    },
+    "Brotherhood Chaplain": {
+      "baseType": "40mm"
+    },
+    "Brotherhood Librarian": {
+      "baseType": "40mm"
+    },
+    "Brotherhood Techmarine": {
+      "baseType": "32mm"
+    },
+    "Brotherhood Terminator Squad": {
+      "baseType": "40mm"
+    },
+    "Castellan Crowe": {
+      "baseType": "40mm"
+    },
+    "Grand Master": {
+      "baseType": "40mm"
+    },
+    "Grand Master in Nemesis Dreadknight": {
+      "baseType": "120x92mm"
+    },
+    "Grand Master Voldus": {
+      "baseType": "40mm"
+    },
+    "Grey Knights Land Raider": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Grey knights Land Raider Crusader": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Grey knights Land Raider Redeemer": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Grey knights Razorback": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Grey knights Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Grey knights Stormhawk Interceptor": {
+      "baseType": "120x92mm"
+    },
+    "Grey knights Stormraven Gunship": {
+      "baseType": "120x92mm"
+    },
+    "Grey knights Stormtalon Gunship": {
+      "baseType": "120x92mm"
+    },
+    "Grey Knights Venerable Dreadnought": {
+      "baseType": "60mm"
+    },
+    "Interceptor Squad": {
+      "baseType": "32mm"
+    },
+    "Kaldor Draigo": {
+      "baseType": "40mm"
+    },
+    "Nemesis Dreadknight": {
+      "baseType": "120x92mm"
+    },
+    "Paladin Squad": {
+      "baseType": "40mm"
+    },
+    "Purgation Squad": {
+      "baseType": "32mm"
+    },
+    "Purifier Squad": {
+      "baseType": "32mm"
+    },
+    "Servitors": {
+      "baseType": "25mm"
+    },
+    "Strike Squad": {
+      "baseType": "32mm"
+    },
+    "Grey Knights Thunderhawk Gunship": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 4,
+        "height": 6
+      }
+    },
+    "Land Raider Banisher": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    }
+  },
+  "IMPERIAL AGENTS": {
+    "Callidus Assassin": {
+      "baseType": "32mm"
+    },
+    "Corvus Blackstar": {
+      "baseType": "120x92mm"
+    },
+    "Culexus Assassin": {
+      "baseType": "32mm"
+    },
+    "Deathwatch Kill Team": {
+      "baseType": "32mm"
+    },
+    "Eversor Assassin": {
+      "baseType": "32mm"
+    },
+    "Exaction Squad": {
+      "baseType": "28.5mm"
+    },
+    "Exaction Squad: Cyber-mastiff": {
+      "baseType": "25mm"
+    },
+    "Grey Knights Terminator Squad": {
+      "baseType": "40mm"
+    },
+    "Imperial Navy Breachers": {
+      "baseType": "25mm"
+    },
+    "Imperial Navy Breachers: Navis las-volley, endurant shield": {
+      "baseType": "28.5mm"
+    },
+    "Imperial Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Inquisitor": {
+      "baseType": "32mm"
+    },
+    "Inquisitor Coteaz": {
+      "baseType": "40mm"
+    },
+    "Inquisitor Draxus": {
+      "baseType": "32mm"
+    },
+    "Inquisitor Greyfax": {
+      "baseType": "32mm"
+    },
+    "Inquisitorial Agents": {
+      "baseType": "25mm"
+    },
+    "Inquisitorial Agents: Gun Servitors": {
+      "baseType": "32mm"
+    },
+    "Inquisitorial Chimera": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Ministorum Priest": {
+      "baseType": "32mm"
+    },
+    "Navigator": {
+      "baseType": "32mm"
+    },
+    "Rogue Trader entourage": {
+      "baseType": "25mm"
+    },
+    "Sanctifiers": {
+      "baseType": "25mm"
+    },
+    "Sisters of Battle Immolator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Sisters of Battle Squad": {
+      "baseType": "32mm"
+    },
+    "Subductor Squad": {
+      "baseType": "28.5mm"
+    },
+    "Subductor Squad: Cyber-mastiff": {
+      "baseType": "25mm"
+    },
+    "Vigilant Squad": {
+      "baseType": "28.5mm"
+    },
+    "Vigilant Squad: Cyber-mastiff": {
+      "baseType": "25mm"
+    },
+    "Vindicare Assassin": {
+      "baseType": "32mm"
+    },
+    "Voidsmen-at-Arms": {
+      "baseType": "32mm"
+    },
+    "Watch Captain Artemis": {
+      "baseType": "32mm"
+    },
+    "Watch Master": {
+      "baseType": "32mm"
+    }
+  },
+  "IMPERIAL KNIGHTS": {
+    "Armiger Helverin": {
+      "baseType": "100mm"
+    },
+    "Armiger Warglaive": {
+      "baseType": "100mm"
+    },
+    "Canis Rex": {
+      "baseType": "170x109mm"
+    },
+    "Knight Castellan": {
+      "baseType": "170x109mm"
+    },
+    "Knight Crusader": {
+      "baseType": "170x109mm"
+    },
+    "Knight Errant": {
+      "baseType": "170x109mm"
+    },
+    "Knight Gallant": {
+      "baseType": "170x109mm"
+    },
+    "Knight Paladin": {
+      "baseType": "170x109mm"
+    },
+    "Knight Preceptor": {
+      "baseType": "170x109mm"
+    },
+    "Knight Valiant": {
+      "baseType": "170x109mm"
+    },
+    "Knight Warden": {
+      "baseType": "170x109mm"
+    },
+    "Acastus Knight Asterius": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Acastus Knight Porphyrion": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Armiger Moirax": {
+      "baseType": "100mm"
+    },
+    "Cerastus Knight Acheron": {
+      "baseType": "170x109mm"
+    },
+    "Cerastus Knight Atrapos": {
+      "baseType": "170x109mm"
+    },
+    "Cerastus Knight Castigator": {
+      "baseType": "170x109mm"
+    },
+    "Cerastus Knight Lancer": {
+      "baseType": "170x109mm"
+    },
+    "Questoris Knight Magaera": {
+      "baseType": "170x109mm"
+    },
+    "Questoris Knight Styrix": {
+      "baseType": "170x109mm"
+    }
+  },
+  "LEAGUES OF VOTANN": {
+    "Brôkhyr Iron-master": {
+      "baseType": "32mm"
+    },
+    "Brôkhyr Iron-master: E-COG": {
+      "baseType": "25mm"
+    },
+    "Brôkhyr Iron-master: Ironkin Assistant": {
+      "baseType": "28.5mm"
+    },
+    "Brôkhyr Thunderkyn": {
+      "baseType": "40mm"
+    },
+    "Cthonian Beserks": {
+      "baseType": "28.5mm"
+    },
+    "Cthonian Beserks: Mole grenade launcher": {
+      "baseType": "50mm"
+    },
+    "Einhyr Champion": {
+      "baseType": "40mm"
+    },
+    "Einhyr Hearthguard": {
+      "baseType": "32mm"
+    },
+    "Grimnyr": {
+      "baseType": "40mm"
+    },
+    "Grimnyr: CORV": {
+      "baseType": "25mm"
+    },
+    "Hearthkyn Warriors": {
+      "baseType": "28.5mm"
+    },
+    "Hekaton Land Fortress": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Hernkyn Pioneers": {
+      "baseType": "90x52.5mm"
+    },
+    "Hernkyn Yaegirs": {
+      "baseType": "28.5mm"
+    },
+    "Kâhl": {
+      "baseType": "40mm"
+    },
+    "Sagitaur": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Ûthar the Destined": {
+      "baseType": "40mm"
+    }
+  },
+  "NECRONS": {
+    "Annihilation Barge": {
+      "baseType": "Large Flying Base"
+    },
+    "C’tan Shard of the Deceiver": {
+      "baseType": "40mm"
+    },
+    "C’tan Shard of the Nightbringer": {
+      "baseType": "40mm"
+    },
+    "C’tan Shard of the Void Dragon": {
+      "baseType": "80mm"
+    },
+    "Canoptek Doomstalker": {
+      "baseType": "90mm"
+    },
+    "Canoptek Reanimator": {
+      "baseType": "60mm"
+    },
+    "Canoptek Scarab Swarms": {
+      "baseType": "40mm"
+    },
+    "Canoptek Spyders": {
+      "baseType": "60mm"
+    },
+    "Canoptek Wraiths": {
+      "baseType": "50mm"
+    },
+    "Catacomb Command Barge": {
+      "baseType": "Large Flying Base"
+    },
+    "Chronomancer": {
+      "baseType": "40mm"
+    },
+    "Convergence of Dominion": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Cryptothralls": {
+      "baseType": "32mm"
+    },
+    "Deathmarks": {
+      "baseType": "32mm"
+    },
+    "Doom Scythe": {
+      "baseType": "120x92mm"
+    },
+    "Doomsday Ark": {
+      "baseType": "Large Flying Base"
+    },
+    "Flayed Ones": {
+      "baseType": "28.5mm"
+    },
+    "Ghost Ark": {
+      "baseType": "Large Flying Base"
+    },
+    "Hexmark Destroyer": {
+      "baseType": "50mm"
+    },
+    "Illuminor Szeras": {
+      "baseType": "80mm"
+    },
+    "Immortals": {
+      "baseType": "32mm"
+    },
+    "Imotekh the Stormlord": {
+      "baseType": "40mm"
+    },
+    "Lokhust Destroyers": {
+      "baseType": "Large Flying Base"
+    },
+    "Lokhust Heavy Destroyers": {
+      "baseType": "60mm"
+    },
+    "Lokhust Lord": {
+      "baseType": "Large Flying Base"
+    },
+    "Lychguard": {
+      "baseType": "32mm"
+    },
+    "Monolith": {
+      "baseType": "160mm"
+    },
+    "Necron Warriors": {
+      "baseType": "32mm"
+    },
+    "Night Scythe": {
+      "baseType": "120x92mm"
+    },
+    "Obelisk": {
+      "baseType": "120x92mm"
+    },
+    "Ophydian Destroyers": {
+      "baseType": "50mm"
+    },
+    "Orikan the Diviner": {
+      "baseType": "40mm"
+    },
+    "Overlord": {
+      "baseType": "40mm"
+    },
+    "Overlord with Translocation Shroud": {
+      "baseType": "40mm"
+    },
+    "Plasmancer": {
+      "baseType": "32mm"
+    },
+    "Psychomancer": {
+      "baseType": "40mm"
+    },
+    "Royal Warden": {
+      "baseType": "32mm"
+    },
+    "Skorpekh Destroyers": {
+      "baseType": "50mm"
+    },
+    "Skorpekh Lord": {
+      "baseType": "60mm"
+    },
+    "Technomancer": {
+      "baseType": "50mm"
+    },
+    "Tesseract Vault": {
+      "baseType": "120x92mm"
+    },
+    "The Silent King: Szarekh": {
+      "baseType": "100mm"
+    },
+    "The Silent King: Triarchal Menhir": {
+      "baseType": "50mm"
+    },
+    "Tomb Blades": {
+      "baseType": "Small Flying Base"
+    },
+    "Transcendent C’tan": {
+      "baseType": "60mm"
+    },
+    "Trazyn the Infinite": {
+      "baseType": "40mm"
+    },
+    "Triarch Praetorians": {
+      "baseType": "32mm"
+    },
+    "Triarch Stalker": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Seraptek Heavy Construct": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    }
+  },
+  "ORKS": {
+    "Battlewagon": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Beast Snagga Boyz": {
+      "baseType": "32mm"
+    },
+    "Beastboss": {
+      "baseType": "50mm"
+    },
+    "Beastboss on Squigosaur": {
+      "baseType": "80mm"
+    },
+    "Big Mek": {
+      "baseType": "50mm"
+    },
+    "Big Mek in Mega Armour": {
+      "baseType": "40mm"
+    },
+    "Big Mek with Shokk Attack Gun": {
+      "baseType": "40mm"
+    },
+    "Big’ed Bossbunka": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Blitza-bommer": {
+      "baseType": "120x92mm"
+    },
+    "Boomdakka Snazzwagon": {
+      "baseType": "150x95mm"
+    },
+    "Boss Snikrot": {
+      "baseType": "40mm"
+    },
+    "Boyz": {
+      "baseType": "32mm"
+    },
+    "Breaka Boyz": {
+      "baseType": "32mm"
+    },
+    "Breaka Boyz: Boss Nob": {
+      "baseType": "40mm"
+    },
+    "Burna Boyz": {
+      "baseType": "32mm"
+    },
+    "Burna-bommer": {
+      "baseType": "120x92mm"
+    },
+    "Dakkajet": {
+      "baseType": "120x92mm"
+    },
+    "Deff Dread": {
+      "baseType": "60mm"
+    },
+    "Deffkilla Wartrike": {
+      "baseType": "150x95mm"
+    },
+    "Deffkoptas": {
+      "baseType": "75x42mm"
+    },
+    "Flash Gitz": {
+      "baseType": "40mm"
+    },
+    "Ghazghkull Thraka": {
+      "baseType": "80mm"
+    },
+    "Ghazghkull Thraka: Makari": {
+      "baseType": "25mm"
+    },
+    "Gorkanaut": {
+      "baseType": "170x109mm"
+    },
+    "Gretchin": {
+      "baseType": "25mm"
+    },
+    "Gretchin: Runtherd": {
+      "baseType": "32mm"
+    },
+    "Hunta Rig": {
+      "baseType": "170x109mm"
+    },
+    "Kill Rig": {
+      "baseType": "170x109mm"
+    },
+    "Killa Kans": {
+      "baseType": "60mm"
+    },
+    "Kommandos": {
+      "baseType": "32mm"
+    },
+    "Kustom Boosta-blasta": {
+      "baseType": "150x95mm"
+    },
+    "Lootas": {
+      "baseType": "32mm"
+    },
+    "Meganobz": {
+      "baseType": "40mm"
+    },
+    "Megatrakk Scrapjet": {
+      "baseType": "150x95mm"
+    },
+    "Mek": {
+      "baseType": "32mm"
+    },
+    "Mek Gunz": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Morkanaut": {
+      "baseType": "170x109mm"
+    },
+    "Mozrog Skragbad": {
+      "baseType": "80mm"
+    },
+    "Nobz": {
+      "baseType": "32mm"
+    },
+    "Painboss": {
+      "baseType": "40mm"
+    },
+    "Painboy": {
+      "baseType": "32mm"
+    },
+    "Rukkatrukk Squigbuggy": {
+      "baseType": "150x95mm"
+    },
+    "Shokkjump Dragsta": {
+      "baseType": "150x95mm"
+    },
+    "Squighog Boyz": {
+      "baseType": "75x42mm"
+    },
+    "Squighog Boyz: Nob on Smasha Squig": {
+      "baseType": "90x52.5mm"
+    },
+    "Stompa": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Stormboyz": {
+      "baseType": "32mm"
+    },
+    "Tankbustas": {
+      "baseType": "32mm"
+    },
+    "Tankbustas: Boss Nob": {
+      "baseType": "40mm"
+    },
+    "Trukk": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Warbikers": {
+      "baseType": "75x42mm"
+    },
+    "Warboss": {
+      "baseType": "40mm"
+    },
+    "Warboss in Mega Armour": {
+      "baseType": "50mm"
+    },
+    "Wazbom Blastajet": {
+      "baseType": "150x95mm"
+    },
+    "Weirdboy": {
+      "baseType": "40mm"
+    },
+    "Wurrboy": {
+      "baseType": "32mm"
+    },
+    "Zodgrod Wortsnagga": {
+      "baseType": "50mm"
+    },
+    "Gargantuan Squiggoth": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    }
+  },
+  "SPACE MARINES": {
+    "Adrax Agatone": {
+      "baseType": "40mm"
+    },
+    "Aggressor Squad": {
+      "baseType": "40mm"
+    },
+    "Ancient": {
+      "baseType": "40mm"
+    },
+    "Ancient in Terminator Armour": {
+      "baseType": "40mm"
+    },
+    "Apothecary": {
+      "baseType": "40mm"
+    },
+    "Apothecary Biologis": {
+      "baseType": "40mm"
+    },
+    "Assault Intercessor Squad": {
+      "baseType": "32mm"
+    },
+    "Assault Intercessors with Jump Packs": {
+      "baseType": "32mm"
+    },
+    "Ballistus Dreadnought": {
+      "baseType": "90mm"
+    },
+    "Bladeguard Ancient": {
+      "baseType": "40mm"
+    },
+    "Bladeguard Veteran Squad": {
+      "baseType": "40mm"
+    },
+    "Brutalis Dreadnought": {
+      "baseType": "90mm"
+    },
+    "Captain": {
+      "baseType": "40mm"
+    },
+    "Captain in Gravis Armour": {
+      "baseType": "40mm"
+    },
+    "Captain in Phobos Armour": {
+      "baseType": "40mm"
+    },
+    "Captain in Terminator Armour": {
+      "baseType": "50mm"
+    },
+    "Captain Sicarius": {
+      "baseType": "32mm"
+    },
+    "Captain with Jump Pack": {
+      "baseType": "40mm"
+    },
+    "Centurion Assault Squad": {
+      "baseType": "50mm"
+    },
+    "Centurion Devastator Squad": {
+      "baseType": "50mm"
+    },
+    "Chaplain": {
+      "baseType": "40mm"
+    },
+    "Chaplain in Terminator Armour": {
+      "baseType": "40mm"
+    },
+    "Chaplain on Bike": {
+      "baseType": "90x52.5mm"
+    },
+    "Chaplain with Jump Pack": {
+      "baseType": "32mm"
+    },
+    "Chief Librarian Tigurius": {
+      "baseType": "40mm"
+    },
+    "Company Heroes": {
+      "baseType": "40mm"
+    },
+    "Darnath Lysander": {
+      "baseType": "40mm"
+    },
+    "Desolation Squad": {
+      "baseType": "32mm"
+    },
+    "Devastator Squad": {
+      "baseType": "32mm"
+    },
+    "Dreadnought": {
+      "baseType": "60mm"
+    },
+    "Drop Pod": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Eliminator Squad": {
+      "baseType": "40mm"
+    },
+    "Eradicator Squad": {
+      "baseType": "40mm"
+    },
+    "Firestrike Servo-turrets": {
+      "baseType": "80mm"
+    },
+    "Gladiator Lancer": {
+      "baseType": "100mm"
+    },
+    "Gladiator Reaper": {
+      "baseType": "100mm"
+    },
+    "Gladiator Valiant": {
+      "baseType": "100mm"
+    },
+    "Hammerfall Bunker": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Heavy Intercessor Squad": {
+      "baseType": "40mm"
+    },
+    "Hellblaster Squad": {
+      "baseType": "32mm"
+    },
+    "Impulsor": {
+      "baseType": "100mm"
+    },
+    "Inceptor Squad": {
+      "baseType": "40mm"
+    },
+    "Incursor Squad": {
+      "baseType": "32mm"
+    },
+    "Infernus Squad": {
+      "baseType": "32mm"
+    },
+    "Infiltrator Squad": {
+      "baseType": "32mm"
+    },
+    "Intercessor Squad": {
+      "baseType": "32mm"
+    },
+    "Invader ATV": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Invictor Tactical Warsuit": {
+      "baseType": "90mm"
+    },
+    "Iron Father Feirros": {
+      "baseType": "40mm"
+    },
+    "Judiciar": {
+      "baseType": "40mm"
+    },
+    "Kayvaan Shrike": {
+      "baseType": "40mm"
+    },
+    "Kor’sarro Khan": {
+      "baseType": "40mm"
+    },
+    "Land Raider": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Land Raider Crusader": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Land Raider Redeemer": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Librarian": {
+      "baseType": "40mm"
+    },
+    "Librarian in Phobos Armour": {
+      "baseType": "40mm"
+    },
+    "Librarian in Terminator Armour": {
+      "baseType": "40mm"
+    },
+    "Lieutenant": {
+      "baseType": "40mm"
+    },
+    "Lieutenant in Phobos Armour": {
+      "baseType": "40mm"
+    },
+    "Lieutenant in Reiver Armour": {
+      "baseType": "40mm"
+    },
+    "Lieutenant Titus": {
+      "baseType": "40mm"
+    },
+    "Lieutenant with Combi-weapon": {
+      "baseType": "40mm"
+    },
+    "Marneus Calgar": {
+      "baseType": "50mm"
+    },
+    "Marneus Calgar: Victrix Honour Guard": {
+      "baseType": "40mm"
+    },
+    "Outrider Squad": {
+      "baseType": "90x52.5mm"
+    },
+    "Pedro Kantor": {
+      "baseType": "32mm"
+    },
+    "Predator Annihilator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Predator Destructor": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Razorback": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Redemptor Dreadnought": {
+      "baseType": "90mm"
+    },
+    "Reiver Squad": {
+      "baseType": "32mm"
+    },
+    "Repulsor": {
+      "baseType": "100mm"
+    },
+    "Repulsor Executioner": {
+      "baseType": "100mm"
+    },
+    "Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Roboute Guilliman": {
+      "baseType": "60mm"
+    },
+    "Scout Squad": {
+      "baseType": "28.5mm"
+    },
+    "Sternguard Veteran Squad": {
+      "baseType": "32mm"
+    },
+    "Storm Speeder Hailstrike": {
+      "baseType": "90mm"
+    },
+    "Storm Speeder Hammerstrike": {
+      "baseType": "90mm"
+    },
+    "Storm Speeder Thunderstrike": {
+      "baseType": "90mm"
+    },
+    "Stormhawk Interceptor": {
+      "baseType": "120x92mm"
+    },
+    "Stormraven Gunship": {
+      "baseType": "120x92mm"
+    },
+    "Stormtalon Gunship": {
+      "baseType": "120x92mm"
+    },
+    "Suppressor Squad": {
+      "baseType": "40mm"
+    },
+    "Tactical Squad": {
+      "baseType": "32mm"
+    },
+    "Techmarine": {
+      "baseType": "40mm"
+    },
+    "Terminator Assault Squad": {
+      "baseType": "40mm"
+    },
+    "Terminator Squad": {
+      "baseType": "40mm"
+    },
+    "Tor Garadon": {
+      "baseType": "40mm"
+    },
+    "Uriel Ventris": {
+      "baseType": "40mm"
+    },
+    "Vanguard Veteran Squad with Jump Packs": {
+      "baseType": "32mm"
+    },
+    "Vindicator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Vulkan He’stan": {
+      "baseType": "32mm"
+    },
+    "Whirlwind": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Astraeus": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Thunderhawk Gunship": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 4,
+        "height": 6
+      }
+    }
+  },
+  "SPACE WOLVES": {
+    "Arjac Rockfist": {
+      "baseType": "50mm"
+    },
+    "Bjorn the Fell-handed": {
+      "baseType": "60mm"
+    },
+    "Blood Claws": {
+      "baseType": "32mm"
+    },
+    "Fenrisian Wolves": {
+      "baseType": "40mm"
+    },
+    "Grey Hunters": {
+      "baseType": "32mm"
+    },
+    "Iron Priest": {
+      "baseType": "32mm"
+    },
+    "Logan Grimnar": {
+      "baseType": "80mm"
+    },
+    "Murderfang": {
+      "baseType": "60mm"
+    },
+    "Njal Stormcaller": {
+      "baseType": "40mm"
+    },
+    "Ragnar Blackmane": {
+      "baseType": "40mm"
+    },
+    "Thunderwolf Cavalry": {
+      "baseType": "60mm"
+    },
+    "Ulrik the Slayer": {
+      "baseType": "32mm"
+    },
+    "Venerable Dreadnought": {
+      "baseType": "60mm"
+    },
+    "Wolf Guard Battle Leader": {
+      "baseType": "40mm"
+    },
+    "Wolf Guard Headtakers": {
+      "baseType": "40mm"
+    },
+    "Wolf Guard Headtakers: Hunting Wolves": {
+      "baseType": "60x35.5mm"
+    },
+    "Wolf Guard Terminators": {
+      "baseType": "40mm"
+    },
+    "Wolf Priest": {
+      "baseType": "40mm"
+    },
+    "Wulfen": {
+      "baseType": "40mm"
+    },
+    "Wulfen Dreadnought": {
+      "baseType": "60mm"
+    },
+    "Wulfen with Storm Shields": {
+      "baseType": "40mm"
+    }
+  },
+  "T’AU EMPIRE": {
+    "Breacher Team": {
+      "baseType": "25mm"
+    },
+    "Broadside Battlesuits": {
+      "baseType": "60mm"
+    },
+    "Cadre Fireblade": {
+      "baseType": "25mm"
+    },
+    "Commander Farsight": {
+      "baseType": "60mm"
+    },
+    "Commander in Coldstar Battlesuit": {
+      "baseType": "60mm"
+    },
+    "Commander in Enforcer Battlesuit": {
+      "baseType": "60mm"
+    },
+    "Commander Shadowsun": {
+      "baseType": "50mm"
+    },
+    "Crisis Fireknife Battlesuits": {
+      "baseType": "50mm"
+    },
+    "Crisis Starscythe Battlesuits": {
+      "baseType": "50mm"
+    },
+    "Crisis Sunforge Battlesuits": {
+      "baseType": "50mm"
+    },
+    "Darkstrider": {
+      "baseType": "32mm"
+    },
+    "Devilfish": {
+      "baseType": "Large Flying Base"
+    },
+    "Ethereal": {
+      "baseType": "40mm"
+    },
+    "Firesight Team": {
+      "baseType": "40mm"
+    },
+    "Ghostkeel Battlesuit": {
+      "baseType": "105x70mm"
+    },
+    "Hammerhead Gunship": {
+      "baseType": "Large Flying Base"
+    },
+    "Kroot Carnivores": {
+      "baseType": "28.5mm"
+    },
+    "Kroot Farstalkers": {
+      "baseType": "28.5mm"
+    },
+    "Kroot Farstalkers: Kroot Kill-broker": {
+      "baseType": "32mm"
+    },
+    "Kroot Flesh Shaper": {
+      "baseType": "32mm"
+    },
+    "Kroot Hounds": {
+      "baseType": "28.5mm"
+    },
+    "Kroot Lone-spear": {
+      "baseType": "90x52.5mm"
+    },
+    "Kroot Trail Shaper": {
+      "baseType": "32mm"
+    },
+    "Kroot War Shaper": {
+      "baseType": "32mm"
+    },
+    "Krootox Rampagers": {
+      "baseType": "50mm"
+    },
+    "Krootox Riders": {
+      "baseType": "50mm"
+    },
+    "Pathfinder Team": {
+      "baseType": "25mm"
+    },
+    "Piranhas": {
+      "baseType": "Large Flying Base"
+    },
+    "Razorshark Strike Fighter": {
+      "baseType": "120x92mm"
+    },
+    "Riptide Battlesuit": {
+      "baseType": "120x92mm"
+    },
+    "Sky Ray Gunship": {
+      "baseType": "Large Flying Base"
+    },
+    "Stealth Battlesuits": {
+      "baseType": "32mm"
+    },
+    "Stormsurge": {
+      "baseType": "170x109mm"
+    },
+    "Strike Team": {
+      "baseType": "25mm"
+    },
+    "Sun Shark Bomber": {
+      "baseType": "120x92mm"
+    },
+    "Tidewall Defence Platform": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Tidewall Droneport": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Tidewall Gunrig": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Tidewall Shieldline": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Vespid Stingwings": {
+      "baseType": "28.5mm"
+    },
+    "AX-1-0 Tiger Shark": {
+      "baseType": "160mm"
+    },
+    "Manta": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 4,
+        "height": 6
+      }
+    },
+    "Ta’unar Supremacy Armour": {
+      "baseType": "160mm"
+    },
+    "Tiger Shark": {
+      "baseType": "160mm"
+    }
+  },
+  "THOUSAND SONS": {
+    "Ahriman": {
+      "baseType": "40mm"
+    },
+    "Chaos Land Raider": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Predator Annihilator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Predator Destructor": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Spawn": {
+      "baseType": "50mm"
+    },
+    "Chaos Vindicator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Daemon Prince of Tzeentch": {
+      "baseType": "60mm"
+    },
+    "Daemon Prince of Tzeentch with Wings": {
+      "baseType": "60mm"
+    },
+    "Defiler": {
+      "baseType": "160mm"
+    },
+    "Exalted Sorcerer": {
+      "baseType": "32mm"
+    },
+    "Exalted Sorcerer on Disc of Tzeentch": {
+      "baseType": "40mm"
+    },
+    "Forgefiend": {
+      "baseType": "120x92mm"
+    },
+    "Helbrute": {
+      "baseType": "60mm"
+    },
+    "Heldrake": {
+      "baseType": "120x92mm"
+    },
+    "Infernal Master": {
+      "baseType": "40mm"
+    },
+    "Magnus the Red": {
+      "baseType": "100mm"
+    },
+    "Maulerfiend": {
+      "baseType": "120x92mm"
+    },
+    "Mutalith Vortex Beast": {
+      "baseType": "120x92mm"
+    },
+    "Rubric Marines": {
+      "baseType": "32mm"
+    },
+    "Scarab Occult Terminators": {
+      "baseType": "40mm"
+    },
+    "Sekhetar Robots": {
+      "baseType": "40mm"
+    },
+    "Sorcerer": {
+      "baseType": "40mm"
+    },
+    "Sorcerer in Terminator Armour": {
+      "baseType": "40mm"
+    },
+    "Tzaangor Enlightened": {
+      "baseType": "40mm"
+    },
+    "Tzaangor Enlightened with Fatecaster Greatbows": {
+      "baseType": "40mm"
+    },
+    "Tzaangor Shaman": {
+      "baseType": "40mm"
+    },
+    "Tzaangors": {
+      "baseType": "32mm"
+    },
+    "Blue Horrors": {
+      "baseType": "25mm"
+    },
+    "Flamers": {
+      "baseType": "32mm"
+    },
+    "Kairos Fateweaver": {
+      "baseType": "100mm"
+    },
+    "Lord of Change": {
+      "baseType": "100mm"
+    },
+    "Pink Horrors": {
+      "baseType": "32mm"
+    },
+    "Screamers": {
+      "baseType": "Small Flying Base"
+    }
+  },
+  "TYRANIDS": {
+    "Barbgaunts": {
+      "baseType": "40mm"
+    },
+    "Biovores": {
+      "baseType": "80mm"
+    },
+    "Broodlord": {
+      "baseType": "75x42mm"
+    },
+    "Carnifexes": {
+      "baseType": "105x70mm"
+    },
+    "Deathleaper": {
+      "baseType": "60mm"
+    },
+    "Exocrine": {
+      "baseType": "120x92mm"
+    },
+    "Gargoyles": {
+      "baseType": "Small Flying Base"
+    },
+    "Genestealers": {
+      "baseType": "32mm"
+    },
+    "Harpy": {
+      "baseType": "120x92mm"
+    },
+    "Haruspex": {
+      "baseType": "120x92mm"
+    },
+    "Hive Crone": {
+      "baseType": "120x92mm"
+    },
+    "Hive Guard": {
+      "baseType": "50mm"
+    },
+    "Hive Tyrant": {
+      "baseType": "50mm"
+    },
+    "Hormagaunts": {
+      "baseType": "28.5mm"
+    },
+    "Lictor": {
+      "baseType": "50mm"
+    },
+    "Maleceptor": {
+      "baseType": "120x92mm"
+    },
+    "Mawloc": {
+      "baseType": "120x92mm"
+    },
+    "Mucolid Spores": {
+      "baseType": "40mm"
+    },
+    "Neurogaunts": {
+      "baseType": "25mm"
+    },
+    "Neurogaunts: Nodebeasts": {
+      "baseType": "28.5mm"
+    },
+    "Neurolictor": {
+      "baseType": "50mm"
+    },
+    "Neurotyrant": {
+      "baseType": "50mm"
+    },
+    "Norn Assimilator": {
+      "baseType": "100mm"
+    },
+    "Norn Emissary": {
+      "baseType": "100mm"
+    },
+    "Old One Eye": {
+      "baseType": "105x70mm"
+    },
+    "Parasite of Mortrex": {
+      "baseType": "40mm"
+    },
+    "Psychophage": {
+      "baseType": "120x92mm"
+    },
+    "Pyrovores": {
+      "baseType": "80mm"
+    },
+    "Raveners": {
+      "baseType": "40mm"
+    },
+    "Ripper Swarms": {
+      "baseType": "40mm"
+    },
+    "Screamer-killer": {
+      "baseType": "90mm"
+    },
+    "Spore MInes": {
+      "baseType": "25mm"
+    },
+    "Sporocyst": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Termagants": {
+      "baseType": "28.5mm"
+    },
+    "Tervigon": {
+      "baseType": "120x92mm"
+    },
+    "The Swarmlord": {
+      "baseType": "60mm"
+    },
+    "Toxicrene": {
+      "baseType": "120x92mm"
+    },
+    "Trygon": {
+      "baseType": "120x92mm"
+    },
+    "Tyranid Warriors with Melee Bio-weapons": {
+      "baseType": "50mm"
+    },
+    "Tyranid Warriors with Ranged Bio-weapons": {
+      "baseType": "50mm"
+    },
+    "Tyrannocyte": {
+      "baseType": "100mm"
+    },
+    "Tyrannofex": {
+      "baseType": "120x92mm"
+    },
+    "Tyrant Guard": {
+      "baseType": "50mm"
+    },
+    "Venomthropes": {
+      "baseType": "40mm"
+    },
+    "Von Ryan’s Leapers": {
+      "baseType": "40mm"
+    },
+    "Winged Hive Tyrant": {
+      "baseType": "60mm"
+    },
+    "Winged Tyranid Prime": {
+      "baseType": "50mm"
+    },
+    "Zoanthropes": {
+      "baseType": "40mm"
+    },
+    "Harridan": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 4,
+        "height": 6
+      }
+    },
+    "Hierophant": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    }
+  },
+  "WORLD EATERS": {
+    "Angron": {
+      "baseType": "100mm"
+    },
+    "Chaos Land Raider": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Predator Annihilator": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Predator Destructor": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Rhino": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Chaos Spawn": {
+      "baseType": "50mm"
+    },
+    "Daemon Prince of Khorne": {
+      "baseType": "60mm"
+    },
+    "Daemon Prince of Khorne with Wings": {
+      "baseType": "60mm"
+    },
+    "Defiler": {
+      "baseType": "160mm"
+    },
+    "Eightbound": {
+      "baseType": "40mm"
+    },
+    "Exalted Eightbound": {
+      "baseType": "40mm"
+    },
+    "Forgefiend": {
+      "baseType": "120x92mm"
+    },
+    "Goremongers": {
+      "baseType": "32mm"
+    },
+    "Helbrute": {
+      "baseType": "60mm"
+    },
+    "Heldrake": {
+      "baseType": "120x92mm"
+    },
+    "Jakhals": {
+      "baseType": "28.5mm"
+    },
+    "Jakhals: Dishonoured": {
+      "baseType": "40mm"
+    },
+    "Khârn the Betrayer": {
+      "baseType": "40mm"
+    },
+    "Khorne Berzerkers": {
+      "baseType": "32mm"
+    },
+    "Khorne Lord of Skulls": {
+      "baseType": "hull",
+      "hullDimensions": {
+        "width": 0,
+        "height": 0
+      }
+    },
+    "Lord Invocatus": {
+      "baseType": "90x52.5mm"
+    },
+    "Lord on Juggernaut": {
+      "baseType": "90x52.5mm"
+    },
+    "Master of Executions": {
+      "baseType": "40mm"
+    },
+    "Maulerfiend": {
+      "baseType": "120x92mm"
+    },
+    "Slaughterbound": {
+      "baseType": "50mm"
+    },
+    "Terminator Squad": {
+      "baseType": "40mm"
+    },
+    "Bloodcrushers": {
+      "baseType": "90x52.5mm"
+    },
+    "Bloodletters": {
+      "baseType": "32mm"
+    },
+    "Bloodthirster": {
+      "baseType": "120x92mm"
+    },
+    "Flesh Hounds": {
+      "baseType": "60x35.5mm"
+    },
+    "Skarbrand": {
+      "baseType": "100mm"
+    }
+  }
+}
