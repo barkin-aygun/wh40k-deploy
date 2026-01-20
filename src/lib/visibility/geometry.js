@@ -88,6 +88,81 @@ export function circlePerimeterPoints(cx, cy, r, numPoints = 16) {
 }
 
 /**
+ * Generate evenly spaced points around a rectangle's perimeter
+ * @param {number} cx - Rectangle center x
+ * @param {number} cy - Rectangle center y
+ * @param {number} width - Rectangle width
+ * @param {number} height - Rectangle height
+ * @param {number} rotationDeg - Rotation angle in degrees (0 = no rotation)
+ * @param {number} numPoints - Number of points to generate
+ * @returns {Array} Array of {x, y} points
+ */
+export function rectPerimeterPoints(cx, cy, width, height, rotationDeg = 0, numPoints = 16) {
+  const points = [];
+  const perimeter = 2 * (width + height);
+  const rotationRad = (rotationDeg * Math.PI) / 180;
+  const cos = Math.cos(rotationRad);
+  const sin = Math.sin(rotationRad);
+
+  // Distribute points proportionally along each edge
+  const pointsPerUnit = numPoints / perimeter;
+  const topBottomPoints = Math.max(1, Math.round(width * pointsPerUnit));
+  const leftRightPoints = Math.max(1, Math.round(height * pointsPerUnit));
+  const actualNumPoints = 2 * (topBottomPoints + leftRightPoints);
+
+  // Half dimensions
+  const hw = width / 2;
+  const hh = height / 2;
+
+  // Generate points on each edge (before rotation)
+  const unrotatedPoints = [];
+
+  // Top edge (left to right)
+  for (let i = 0; i < topBottomPoints; i++) {
+    const t = i / topBottomPoints;
+    unrotatedPoints.push({ x: -hw + width * t, y: -hh });
+  }
+
+  // Right edge (top to bottom)
+  for (let i = 0; i < leftRightPoints; i++) {
+    const t = i / leftRightPoints;
+    unrotatedPoints.push({ x: hw, y: -hh + height * t });
+  }
+
+  // Bottom edge (right to left)
+  for (let i = 0; i < topBottomPoints; i++) {
+    const t = i / topBottomPoints;
+    unrotatedPoints.push({ x: hw - width * t, y: hh });
+  }
+
+  // Left edge (bottom to top)
+  for (let i = 0; i < leftRightPoints; i++) {
+    const t = i / leftRightPoints;
+    unrotatedPoints.push({ x: -hw, y: hh - height * t });
+  }
+
+  // Rotate and translate points
+  for (const p of unrotatedPoints) {
+    points.push({
+      x: cx + p.x * cos - p.y * sin,
+      y: cy + p.x * sin + p.y * cos
+    });
+  }
+
+  // Limit to requested number of points by sampling
+  if (points.length > numPoints) {
+    const sampledPoints = [];
+    const step = points.length / numPoints;
+    for (let i = 0; i < numPoints; i++) {
+      sampledPoints.push(points[Math.floor(i * step)]);
+    }
+    return sampledPoints;
+  }
+
+  return points;
+}
+
+/**
  * Generate evenly spaced points around an ellipse's perimeter
  * @param {number} cx - Ellipse center x
  * @param {number} cy - Ellipse center y

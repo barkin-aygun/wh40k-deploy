@@ -6,6 +6,7 @@
 import {
   circlePerimeterPoints,
   ellipsePerimeterPoints,
+  rectPerimeterPoints,
   circleOverlapsPolygon,
   lineIntersectsPolygon,
   findConnectedTerrainGroups,
@@ -15,12 +16,15 @@ import {
 const NUM_SAMPLE_POINTS = 16;
 
 /**
- * Get perimeter points for a model (circle or ellipse)
- * @param {Object} model - Model with either {x, y, radius} or {x, y, rx, ry, rotation}
+ * Get perimeter points for a model (circle, ellipse, or rectangle)
+ * @param {Object} model - Model with either {x, y, radius} or {x, y, rx, ry, rotation} or {x, y, width, height, rotation, isRectangle}
  * @returns {Array} Array of perimeter points
  */
 function getModelPerimeterPoints(model) {
-  if (model.radius !== undefined) {
+  if (model.isRectangle && model.width !== undefined && model.height !== undefined) {
+    // Rectangle
+    return rectPerimeterPoints(model.x, model.y, model.width, model.height, model.rotation || 0, NUM_SAMPLE_POINTS);
+  } else if (model.radius !== undefined) {
     // Circle
     return circlePerimeterPoints(model.x, model.y, model.radius, NUM_SAMPLE_POINTS);
   } else if (model.rx !== undefined && model.ry !== undefined) {
@@ -85,8 +89,8 @@ function pointInPolygon(point, vertices) {
  * - Terrain footprints block vision UNLESS viewer (A) has ANY part on that terrain
  * - Walls always block vision (even if model is on terrain)
  *
- * @param {Object} modelA - Viewing model {x, y, radius}
- * @param {Object} modelB - Target model {x, y, radius}
+ * @param {Object} modelA - Viewing model (circle: {x, y, radius}, ellipse: {x, y, rx, ry, rotation}, rect: {x, y, width, height, rotation, isRectangle})
+ * @param {Object} modelB - Target model (same formats as modelA)
  * @param {Array} terrainPolygons - Array of {id, vertices} for each terrain footprint
  * @param {Array} walls - Array of wall polygons (each is array of vertices)
  * @returns {Object} { canSee: boolean, rays: Array } rays included for debug visualization

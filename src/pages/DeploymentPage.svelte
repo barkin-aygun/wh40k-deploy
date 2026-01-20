@@ -17,7 +17,8 @@
     player2Models,
     BASE_SIZES,
     getBaseSize,
-    isOvalBase
+    isOvalBase,
+    isRectangularBase
   } from '../stores/models.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
   import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
@@ -34,6 +35,10 @@
   let showDebugRays = false;
   let showP1Denial = false;
   let showP2Denial = false;
+
+  // Rectangle hull state
+  let rectWidth = 5.5;  // Default width in inches
+  let rectHeight = 3.0; // Default height in inches
 
   const DRAG_THRESHOLD = 5; // pixels - movement below this is considered a click
   const DEEP_STRIKE_DENIAL_RADIUS = 9; // 9" radius around each model
@@ -198,7 +203,12 @@
       y = phantomModel.y;
     }
 
-    const id = models.add(phantomModel.baseType, currentPlayer, x, y);
+    // Add custom size for rectangles
+    const customSize = phantomModel.customWidth && phantomModel.customHeight
+      ? { width: phantomModel.customWidth, height: phantomModel.customHeight }
+      : null;
+
+    const id = models.add(phantomModel.baseType, currentPlayer, x, y, customSize);
     selectedModelId.set(id);
 
     phantomModel = null;
@@ -206,6 +216,15 @@
     dragStartPos = null;
     window.removeEventListener('mousemove', handlePaletteDragMove);
     window.removeEventListener('mouseup', handlePaletteDrop);
+  }
+
+  // Add rectangular hull
+  function handleAddRectHull() {
+    const x = 30;
+    const y = 22;
+    const customSize = { width: rectWidth, height: rectHeight };
+    const id = models.add('rect-custom', currentPlayer, x, y, customSize);
+    selectedModelId.set(id);
   }
 
   function handleSelectModel(id) {
@@ -240,7 +259,19 @@
 
   // Convert model to LoS format
   function modelToLosFormat(model) {
-    const baseSize = getBaseSize(model.baseType);
+    if (isRectangularBase(model.baseType)) {
+      // For rectangles, return as a rotated rectangle
+      return {
+        x: model.x,
+        y: model.y,
+        width: model.customWidth,
+        height: model.customHeight,
+        rotation: model.rotation || 0,
+        isRectangle: true
+      };
+    }
+
+    const baseSize = getBaseSize(model.baseType, model);
     if (isOvalBase(model.baseType)) {
       return {
         x: model.x,
@@ -348,6 +379,37 @@
         </div>
       </CollapsibleSection>
 
+      <!-- Add Rectangular Hull Section -->
+      <CollapsibleSection title="Add Hull (Vehicle)">
+        <div class="rect-hull-form">
+          <div class="field">
+            <label for="rect-width">Width (inches)</label>
+            <input
+              id="rect-width"
+              type="number"
+              bind:value={rectWidth}
+              min="1"
+              max="20"
+              step="0.5"
+            />
+          </div>
+          <div class="field">
+            <label for="rect-height">Height (inches)</label>
+            <input
+              id="rect-height"
+              type="number"
+              bind:value={rectHeight}
+              min="1"
+              max="20"
+              step="0.5"
+            />
+          </div>
+          <button on:click={handleAddRectHull}>
+            Add {rectWidth}" × {rectHeight}" Hull
+          </button>
+        </div>
+      </CollapsibleSection>
+
       <!-- Selected Model Section -->
       <CollapsibleSection title="Selected Model">
         {#if selectedModel}
@@ -363,7 +425,7 @@
             </div>
             <div class="field">
               <span class="label-text">Base Type</span>
-              <span class="value">{getBaseSize(selectedModel.baseType).label}</span>
+              <span class="value">{getBaseSize(selectedModel.baseType, selectedModel)?.label || 'Unknown'}</span>
             </div>
             <div class="field">
               <span class="label-text">Player</span>
@@ -489,9 +551,24 @@
           <!-- Deep Strike Denial Zones -->
           {#if showP1Denial}
             {#each $player1Models as model (model.id)}
-              {@const baseSize = getBaseSize(model.baseType)}
+              {@const baseSize = getBaseSize(model.baseType, model)}
               {@const isOval = isOvalBase(model.baseType)}
-              {#if isOval}
+              {@const isRect = isRectangularBase(model.baseType)}
+              {#if isRect}
+                <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
+                  <rect
+                    x={model.x - (model.customWidth / 2 + DEEP_STRIKE_DENIAL_RADIUS)}
+                    y={model.y - (model.customHeight / 2 + DEEP_STRIKE_DENIAL_RADIUS)}
+                    width={model.customWidth + 2 * DEEP_STRIKE_DENIAL_RADIUS}
+                    height={model.customHeight + 2 * DEEP_STRIKE_DENIAL_RADIUS}
+                    fill="rgba(59, 130, 246, 0.1)"
+                    stroke="rgba(59, 130, 246, 0.3)"
+                    stroke-width="0.1"
+                    stroke-dasharray="0.5,0.3"
+                    pointer-events="none"
+                  />
+                </g>
+              {:else if isOval}
                 <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
                   <ellipse
                     cx={model.x}
@@ -521,9 +598,24 @@
           {/if}
           {#if showP2Denial}
             {#each $player2Models as model (model.id)}
-              {@const baseSize = getBaseSize(model.baseType)}
+              {@const baseSize = getBaseSize(model.baseType, model)}
               {@const isOval = isOvalBase(model.baseType)}
-              {#if isOval}
+              {@const isRect = isRectangularBase(model.baseType)}
+              {#if isRect}
+                <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
+                  <rect
+                    x={model.x - (model.customWidth / 2 + DEEP_STRIKE_DENIAL_RADIUS)}
+                    y={model.y - (model.customHeight / 2 + DEEP_STRIKE_DENIAL_RADIUS)}
+                    width={model.customWidth + 2 * DEEP_STRIKE_DENIAL_RADIUS}
+                    height={model.customHeight + 2 * DEEP_STRIKE_DENIAL_RADIUS}
+                    fill="rgba(239, 68, 68, 0.1)"
+                    stroke="rgba(239, 68, 68, 0.3)"
+                    stroke-width="0.1"
+                    stroke-dasharray="0.5,0.3"
+                    pointer-events="none"
+                  />
+                </g>
+              {:else if isOval}
                 <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
                   <ellipse
                     cx={model.x}
@@ -596,6 +688,8 @@
               playerId={model.playerId}
               rotation={model.rotation}
               name={model.name || ''}
+              customWidth={model.customWidth}
+              customHeight={model.customHeight}
               selected={model.id === $selectedModelId}
               {screenToSvg}
               onSelect={handleSelectModel}
@@ -614,6 +708,8 @@
               baseType={phantomModel.baseType}
               playerId={currentPlayer}
               rotation={0}
+              customWidth={phantomModel.customWidth}
+              customHeight={phantomModel.customHeight}
               selected={false}
               {screenToSvg}
               onSelect={() => {}}
@@ -912,5 +1008,31 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .rect-hull-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .rect-hull-form input[type="number"] {
+    width: 100%;
+    padding: 0.375rem;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 0.875rem;
+  }
+
+  .rect-hull-form input[type="number"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+
+  .rect-hull-form label {
+    font-size: 0.75rem;
+    color: #888;
   }
 </style>

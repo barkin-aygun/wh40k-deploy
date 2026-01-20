@@ -1,5 +1,5 @@
 <script>
-  import { getBaseSize, isOvalBase } from '../stores/models.js';
+  import { getBaseSize, isOvalBase, isRectangularBase } from '../stores/models.js';
 
   export let id;
   export let x;
@@ -9,6 +9,8 @@
   export let rotation = 0;
   export let selected = false;
   export let name = '';
+  export let customWidth = null;
+  export let customHeight = null;
   export let screenToSvg;
   export let onSelect = () => {};
   export let onDrag = () => {};
@@ -19,8 +21,11 @@
   let isRotating = false;
   let dragOffset = { x: 0, y: 0 };
 
-  $: baseSize = getBaseSize(baseType);
+  // Create a model object for getBaseSize
+  $: modelObj = { customWidth, customHeight };
+  $: baseSize = getBaseSize(baseType, modelObj);
   $: isOval = isOvalBase(baseType);
+  $: isRect = isRectangularBase(baseType);
   $: playerColor = playerId === 1 ? '#3b82f6' : '#ef4444';
   $: playerFill = playerId === 1 ? 'rgba(59, 130, 246, 0.5)' : 'rgba(239, 68, 68, 0.5)';
   $: strokeWidth = selected ? 0.15 : 0.1;
@@ -32,8 +37,12 @@
   $: rx = baseSize?.width ? baseSize.width / 2 : 0;
   $: ry = baseSize?.height ? baseSize.height / 2 : 0;
 
-  // Rotation handle position (for ovals)
-  $: handleDistance = isOval ? Math.max(rx, ry) + 1 : 0;
+  // For rectangles
+  $: rectWidth = isRect ? (customWidth || 0) : 0;
+  $: rectHeight = isRect ? (customHeight || 0) : 0;
+
+  // Rotation handle position (for ovals and rectangles)
+  $: handleDistance = isOval ? Math.max(rx, ry) + 1 : (isRect ? Math.max(rectWidth, rectHeight) / 2 + 1 : 0);
   $: handleX = x + handleDistance * Math.cos((rotation - 45) * Math.PI / 180);
   $: handleY = y + handleDistance * Math.sin((rotation - 45) * Math.PI / 180);
 
@@ -114,7 +123,25 @@
 </script>
 
 <g class="model-base" class:selected class:dragging={isDragging}>
-  {#if isOval}
+  {#if isRect}
+    <!-- Rectangle base (vehicle hull) -->
+    <g transform="rotate({rotation}, {x}, {y})">
+      <rect
+        x={x - rectWidth / 2}
+        y={y - rectHeight / 2}
+        width={rectWidth}
+        height={rectHeight}
+        fill={selected ? playerColor : playerFill}
+        stroke={playerColor}
+        stroke-width={strokeWidth}
+        on:click={handleClick}
+        on:dblclick={handleDoubleClick}
+        on:mousedown={handleMouseDown}
+        role="button"
+        tabindex="0"
+      />
+    </g>
+  {:else if isOval}
     <!-- Oval base (ellipse) -->
     <g transform="rotate({rotation}, {x}, {y})">
       <ellipse
@@ -166,8 +193,8 @@
     </text>
   {/if}
 
-  <!-- Rotation handle (only for ovals when selected) -->
-  {#if selected && isOval}
+  <!-- Rotation handle (for ovals and rectangles when selected) -->
+  {#if selected && (isOval || isRect)}
     <line
       x1={x}
       y1={y}
@@ -194,15 +221,18 @@
 
 <style>
   .model-base circle,
-  .model-base ellipse {
+  .model-base ellipse,
+  .model-base rect {
     cursor: grab;
   }
   .model-base.dragging circle,
-  .model-base.dragging ellipse {
+  .model-base.dragging ellipse,
+  .model-base.dragging rect {
     cursor: grabbing;
   }
   .model-base.selected circle,
-  .model-base.selected ellipse {
+  .model-base.selected ellipse,
+  .model-base.selected rect {
     filter: drop-shadow(0 0 0.3px currentColor);
   }
   .rotate-handle {

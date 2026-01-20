@@ -28,16 +28,33 @@ export const BASE_SIZES = {
 };
 
 // Helper function to get base size info by type
-export function getBaseSize(baseType) {
+export function getBaseSize(baseType, model = null) {
   const circle = BASE_SIZES.circles.find(b => b.type === baseType);
   if (circle) return circle;
   const oval = BASE_SIZES.ovals.find(b => b.type === baseType);
-  return oval;
+  if (oval) return oval;
+
+  // For rectangular bases, return custom dimensions from the model
+  if (isRectangularBase(baseType) && model) {
+    return {
+      type: baseType,
+      width: model.customWidth,
+      height: model.customHeight,
+      label: `${model.customWidth.toFixed(1)}"×${model.customHeight.toFixed(1)}"`
+    };
+  }
+
+  return null;
 }
 
 // Helper function to check if base is oval
 export function isOvalBase(baseType) {
   return BASE_SIZES.ovals.some(b => b.type === baseType);
+}
+
+// Helper function to check if base is rectangular
+export function isRectangularBase(baseType) {
+  return baseType && baseType.startsWith('rect-');
 }
 
 // Generate unique ID
@@ -55,7 +72,7 @@ function createModelsStore() {
     update,
 
     // Add a new model
-    add(baseType, playerId, x, y) {
+    add(baseType, playerId, x, y, customSize = null) {
       const id = generateId();
       const model = {
         id,
@@ -65,6 +82,13 @@ function createModelsStore() {
         y,
         rotation: 0
       };
+
+      // For rectangular bases, store custom dimensions
+      if (customSize && customSize.width && customSize.height) {
+        model.customWidth = customSize.width;
+        model.customHeight = customSize.height;
+      }
+
       update(models => [...models, model]);
       return id;
     },

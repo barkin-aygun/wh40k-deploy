@@ -6,12 +6,6 @@ This app is there to load your armies, layouts and practice deployment.
 
 ## To Do
 
-### Deep Strike Denial
-
-In the game, units can come from reserves onto the battlefield. Some units can do this anywhere on the field that is 9" away from any enemy models. So what we need is a way to render a 9" shape/circle around the base of a model indicating the areas where an enemy can not fit. This shape should be the collection of all points that are 9" or less close to the model.
-
-There should be a button that does this for the entire army, allowing us to get a overview of what parts of battlefield are covered and not.
-
 ### Drag Move Ruler
 
 While a model is being dragged, a line with a label should be drawn from where the model was to where it's moving, showing exactly how far the model is moving. This helps users visualize how far their model is moving and the limits.
