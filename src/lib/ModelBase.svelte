@@ -1,5 +1,4 @@
 <script>
-  import { BATTLEFIELD } from '../stores/elements.js';
   import { getBaseSize, isOvalBase } from '../stores/models.js';
 
   export let id;
@@ -73,22 +72,7 @@
     let newX = svgCoords.x - dragOffset.x;
     let newY = svgCoords.y - dragOffset.y;
 
-    // Constrain to battlefield
-    let marginX, marginY;
-    if (isOval) {
-      // For rotated ellipse, calculate axis-aligned bounding box extent
-      const rotRad = (rotation * Math.PI) / 180;
-      const cosR = Math.cos(rotRad);
-      const sinR = Math.sin(rotRad);
-      marginX = Math.sqrt((rx * cosR) ** 2 + (ry * sinR) ** 2);
-      marginY = Math.sqrt((rx * sinR) ** 2 + (ry * cosR) ** 2);
-    } else {
-      marginX = marginY = radius;
-    }
-
-    newX = Math.max(marginX, Math.min(BATTLEFIELD.width - marginX, newX));
-    newY = Math.max(marginY, Math.min(BATTLEFIELD.height - marginY, newY));
-
+    // No battlefield constraints - models can be dragged anywhere
     onDrag(id, newX, newY);
   }
 

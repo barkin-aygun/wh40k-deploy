@@ -1,6 +1,4 @@
 <script>
-  import { BATTLEFIELD } from '../stores/elements.js';
-
   export let x;
   export let y;
   export let radius;
@@ -21,11 +19,8 @@
     if (!isDragging) return;
     const svgCoords = screenToSvg(event.clientX, event.clientY);
 
-    // Constrain to battlefield bounds
-    const newX = Math.max(radius, Math.min(BATTLEFIELD.width - radius, svgCoords.x));
-    const newY = Math.max(radius, Math.min(BATTLEFIELD.height - radius, svgCoords.y));
-
-    onDrag(newX, newY);
+    // No battlefield constraints - models can be dragged anywhere
+    onDrag(svgCoords.x, svgCoords.y);
   }
 
   function handleMouseUp() {

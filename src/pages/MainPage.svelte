@@ -3,6 +3,7 @@
   import Battlefield from '../lib/Battlefield.svelte';
   import TerrainRect from '../lib/TerrainRect.svelte';
   import WallPiece from '../lib/WallPiece.svelte';
+  import CollapsibleSection from '../lib/CollapsibleSection.svelte';
   import {
     layoutTerrains,
     layoutWalls,
@@ -347,8 +348,7 @@
   <div class="layout">
     <div class="sidebar">
       <!-- Add Terrain Section -->
-      <section>
-        <h3>Add Terrain</h3>
+      <CollapsibleSection title="Add Terrain">
         <div class="button-group">
           {#each TERRAIN_SIZES as size}
             <button on:click={() => handleAddTerrain(size.width, size.height)}>
@@ -356,11 +356,10 @@
             </button>
           {/each}
         </div>
-      </section>
+      </CollapsibleSection>
 
       <!-- Add Wall Section -->
-      <section>
-        <h3>Add Wall</h3>
+      <CollapsibleSection title="Add Wall">
         <div class="button-group">
           {#each WALL_SHAPES as wallShape}
             <button on:click={() => handleAddWall(wallShape.shape)}>
@@ -368,11 +367,10 @@
             </button>
           {/each}
         </div>
-      </section>
+      </CollapsibleSection>
 
       <!-- Selected Item Section -->
-      <section>
-        <h3>Selected {selectedTerrain ? 'Terrain' : selectedWall ? 'Wall' : 'Item'}</h3>
+      <CollapsibleSection title="Selected {selectedTerrain ? 'Terrain' : selectedWall ? 'Wall' : 'Item'}">
         {#if selectedTerrain || selectedWall}
           <div class="edit-form">
             <div class="field">
@@ -421,11 +419,10 @@
         {:else}
           <p class="hint">Click a piece to select it</p>
         {/if}
-      </section>
+      </CollapsibleSection>
 
       <!-- Save/Load Section -->
-      <section>
-        <h3>Layout</h3>
+      <CollapsibleSection title="Layout">
         <div class="button-group vertical">
           <button on:click={openSaveModal}>Save Layout</button>
           <button on:click={openLoadModal} disabled={$savedLayoutsList.length === 0}>
@@ -437,7 +434,7 @@
           </div>
           <button class="secondary" on:click={handleClear}>Clear All</button>
         </div>
-      </section>
+      </CollapsibleSection>
 
       <!-- Hidden file input for import -->
       <input

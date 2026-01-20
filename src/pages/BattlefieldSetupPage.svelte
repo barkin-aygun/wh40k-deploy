@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import Battlefield from '../lib/Battlefield.svelte';
+  import CollapsibleSection from '../lib/CollapsibleSection.svelte';
   import { DEPLOYMENT_PRESETS, pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
   import { savedLayoutsList, refreshSavedLayouts, TERRAIN_LAYOUT_PRESETS } from '../stores/layout.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
@@ -116,8 +117,7 @@
   <div class="layout">
     <div class="sidebar">
       <!-- Deployment Selection -->
-      <section>
-        <h3>Deployment</h3>
+      <CollapsibleSection title="Deployment">
         {#if $selectedDeployment}
           <div class="selected-item">
             <span class="selected-name">{$selectedDeployment.name}</span>
@@ -132,11 +132,10 @@
             {/each}
           </div>
         {/if}
-      </section>
+      </CollapsibleSection>
 
       <!-- Terrain Layout Selection -->
-      <section>
-        <h3>Terrain Layout</h3>
+      <CollapsibleSection title="Terrain Layout">
         {#if $selectedLayoutName}
           <div class="selected-item">
             <span class="selected-name">{$selectedLayoutName}</span>
@@ -168,11 +167,10 @@
             {/if}
           </div>
         {/if}
-      </section>
+      </CollapsibleSection>
 
       <!-- Summary -->
-      <section>
-        <h3>Summary</h3>
+      <CollapsibleSection title="Summary">
         <div class="summary">
           <div class="summary-row">
             <span class="label">Deployment:</span>
@@ -195,7 +193,7 @@
             </div>
           {/if}
         </div>
-      </section>
+      </CollapsibleSection>
     </div>
 
     <div class="battlefield-area">
@@ -338,19 +336,6 @@
     gap: 1.5rem;
   }
 
-  section {
-    background: #252525;
-    border-radius: 8px;
-    padding: 1rem;
-  }
-
-  section h3 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.875rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
 
   .button-group {
     display: flex;

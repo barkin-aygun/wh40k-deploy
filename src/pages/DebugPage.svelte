@@ -5,6 +5,7 @@
   import WallPiece from '../lib/WallPiece.svelte';
   import ModelBase from '../lib/ModelBase.svelte';
   import ModelPaletteItem from '../lib/ModelPaletteItem.svelte';
+  import CollapsibleSection from '../lib/CollapsibleSection.svelte';
   import { debugMode } from '../stores/elements.js';
   import { checkLineOfSight } from '../lib/visibility/index.js';
   import {
@@ -67,7 +68,10 @@
   let currentPlayer = 1;
   let phantomModel = null;
   let isDraggingFromPalette = false;
+  let dragStartPos = null;
   let screenToSvgRef = null;
+
+  const DRAG_THRESHOLD = 5; // pixels - movement below this is considered a click
 
   // Initialize debug mode with two models (one for each player)
   onMount(() => {
@@ -84,6 +88,8 @@
     if (!screenToSvgRef) return;
 
     isDraggingFromPalette = true;
+    dragStartPos = { x: event.clientX, y: event.clientY };
+
     const svgCoords = screenToSvgRef(event.clientX, event.clientY);
     phantomModel = {
       baseType: baseSize.type,
@@ -109,16 +115,34 @@
     if (!isDraggingFromPalette || !phantomModel) {
       isDraggingFromPalette = false;
       phantomModel = null;
+      dragStartPos = null;
       window.removeEventListener('mousemove', handlePaletteDragMove);
       window.removeEventListener('mouseup', handlePaletteDrop);
       return;
     }
 
-    const id = debugModels.add(phantomModel.baseType, currentPlayer, phantomModel.x, phantomModel.y);
+    // Check if this was a click (no significant movement) or a drag
+    const dx = event.clientX - dragStartPos.x;
+    const dy = event.clientY - dragStartPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    let x, y;
+    if (distance < DRAG_THRESHOLD) {
+      // Just a click - place at default position (battlefield center)
+      x = 30;
+      y = 22;
+    } else {
+      // Actual drag - use phantom model position
+      x = phantomModel.x;
+      y = phantomModel.y;
+    }
+
+    const id = debugModels.add(phantomModel.baseType, currentPlayer, x, y);
     debugSelectedModelId.set(id);
 
     phantomModel = null;
     isDraggingFromPalette = false;
+    dragStartPos = null;
     window.removeEventListener('mousemove', handlePaletteDragMove);
     window.removeEventListener('mouseup', handlePaletteDrop);
   }
@@ -206,8 +230,7 @@
   <div class="layout">
     <div class="sidebar">
       <!-- Debug Controls -->
-      <section>
-        <h3>LOS Debug</h3>
+      <CollapsibleSection title="LOS Debug">
         <div class="controls">
           <label>
             <input type="checkbox" bind:checked={$debugMode} />
@@ -221,11 +244,10 @@
             <span class="los-status">No enemies</span>
           {/if}
         </div>
-      </section>
+      </CollapsibleSection>
 
       <!-- Add Terrain Section -->
-      <section>
-        <h3>Add Terrain</h3>
+      <CollapsibleSection title="Add Terrain" defaultOpen={false}>
         <div class="button-group">
           {#each TERRAIN_SIZES as size}
             <button on:click={() => handleAddTerrain(size.width, size.height)}>
@@ -233,11 +255,10 @@
             </button>
           {/each}
         </div>
-      </section>
+      </CollapsibleSection>
 
       <!-- Add Wall Section -->
-      <section>
-        <h3>Add Wall</h3>
+      <CollapsibleSection title="Add Wall" defaultOpen={false}>
         <div class="button-group">
           {#each WALL_SHAPES as wallShape}
             <button on:click={() => handleAddWall(wallShape.shape)}>
@@ -245,11 +266,10 @@
             </button>
           {/each}
         </div>
-      </section>
+      </CollapsibleSection>
 
       <!-- Add Models Section -->
-      <section>
-        <h3>Add Models</h3>
+      <CollapsibleSection title="Add Models" defaultOpen={false}>
         <div class="player-toggle">
           <button
             class="toggle-btn"
@@ -292,7 +312,7 @@
             </div>
           </div>
         </div>
-      </section>
+      </CollapsibleSection>
     </div>
 
     <div class="battlefield-area">
@@ -489,19 +509,6 @@
     overflow-y: auto;
   }
 
-  section {
-    background: #252525;
-    border-radius: 8px;
-    padding: 1rem;
-  }
-
-  section h3 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.875rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
 
   .button-group {
     display: flex;

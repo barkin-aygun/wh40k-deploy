@@ -7,15 +7,21 @@ const MM_TO_INCH = 1 / 25.4;
 export const BASE_SIZES = {
   circles: [
     { type: '25mm', radius: (25 * MM_TO_INCH) / 2, label: '25mm' },
-    { type: '28mm', radius: (28 * MM_TO_INCH) / 2, label: '28mm' },
+    { type: '28.5mm', radius: (28.5 * MM_TO_INCH) / 2, label: '28mm.5' },
     { type: '32mm', radius: (32 * MM_TO_INCH) / 2, label: '32mm' },
     { type: '40mm', radius: (40 * MM_TO_INCH) / 2, label: '40mm' },
     { type: '50mm', radius: (50 * MM_TO_INCH) / 2, label: '50mm' },
     { type: '60mm', radius: (60 * MM_TO_INCH) / 2, label: '60mm' },
-    { type: '80mm', radius: (80 * MM_TO_INCH) / 2, label: '80mm' }
+    { type: '80mm', radius: (80 * MM_TO_INCH) / 2, label: '80mm' },
+    { type: '90mm', radius: (90 * MM_TO_INCH) / 2, label: '90mm' },
+    { type: '100mm', radius: (100 * MM_TO_INCH) / 2, label: '100mm' },
+    { type: '130mm', radius: (130 * MM_TO_INCH) / 2, label: '130mm' },
+    
   ],
   ovals: [
-    { type: '90x25mm', width: 90 * MM_TO_INCH, height: 25 * MM_TO_INCH, label: '90×25mm' },
+    { type: '60x35.5mm', width: 60 * MM_TO_INCH, height: 35.5 * MM_TO_INCH, label: '60×35.5mm' },
+    { type: '75x42mm', width: 75 * MM_TO_INCH, height: 42 * MM_TO_INCH, label: '75×42mm' },
+    { type: '90x52.5mm', width: 90 * MM_TO_INCH, height: 52.5 * MM_TO_INCH, label: '90×52.5mm' },
     { type: '105x70mm', width: 105 * MM_TO_INCH, height: 70 * MM_TO_INCH, label: '105×70mm' },
     { type: '120x90mm', width: 120 * MM_TO_INCH, height: 90 * MM_TO_INCH, label: '120×90mm' }
   ]

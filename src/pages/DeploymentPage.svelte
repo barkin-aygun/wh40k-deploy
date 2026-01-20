@@ -5,6 +5,7 @@
   import WallPiece from '../lib/WallPiece.svelte';
   import ModelBase from '../lib/ModelBase.svelte';
   import ModelPaletteItem from '../lib/ModelPaletteItem.svelte';
+  import CollapsibleSection from '../lib/CollapsibleSection.svelte';
   import {
     getWallVertices,
     transformWallVertices
@@ -27,9 +28,12 @@
   let currentPlayer = 1;
   let phantomModel = null;
   let isDraggingFromPalette = false;
+  let dragStartPos = null;
   let screenToSvgRef = null;
   let losVisualizationEnabled = false;
   let showDebugRays = false;
+
+  const DRAG_THRESHOLD = 5; // pixels - movement below this is considered a click
 
   const DEPLOYMENT_SAVE_KEY = 'warhammer-deployment-state';
 
@@ -142,6 +146,8 @@
     if (!screenToSvgRef) return;
 
     isDraggingFromPalette = true;
+    dragStartPos = { x: event.clientX, y: event.clientY };
+
     const svgCoords = screenToSvgRef(event.clientX, event.clientY);
     phantomModel = {
       baseType: baseSize.type,
@@ -167,16 +173,34 @@
     if (!isDraggingFromPalette || !phantomModel) {
       isDraggingFromPalette = false;
       phantomModel = null;
+      dragStartPos = null;
       window.removeEventListener('mousemove', handlePaletteDragMove);
       window.removeEventListener('mouseup', handlePaletteDrop);
       return;
     }
 
-    const id = models.add(phantomModel.baseType, currentPlayer, phantomModel.x, phantomModel.y);
+    // Check if this was a click (no significant movement) or a drag
+    const dx = event.clientX - dragStartPos.x;
+    const dy = event.clientY - dragStartPos.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    let x, y;
+    if (distance < DRAG_THRESHOLD) {
+      // Just a click - place at default position (battlefield center)
+      x = 30;
+      y = 22;
+    } else {
+      // Actual drag - use phantom model position
+      x = phantomModel.x;
+      y = phantomModel.y;
+    }
+
+    const id = models.add(phantomModel.baseType, currentPlayer, x, y);
     selectedModelId.set(id);
 
     phantomModel = null;
     isDraggingFromPalette = false;
+    dragStartPos = null;
     window.removeEventListener('mousemove', handlePaletteDragMove);
     window.removeEventListener('mouseup', handlePaletteDrop);
   }
@@ -276,8 +300,7 @@
   <div class="layout">
     <div class="sidebar">
       <!-- Add Models Section -->
-      <section>
-        <h3>Add Models</h3>
+      <CollapsibleSection title="Add Models">
         <div class="player-toggle">
           <button
             class="toggle-btn"
@@ -320,11 +343,10 @@
             </div>
           </div>
         </div>
-      </section>
+      </CollapsibleSection>
 
       <!-- Selected Model Section -->
-      <section>
-        <h3>Selected Model</h3>
+      <CollapsibleSection title="Selected Model">
         {#if selectedModel}
           <div class="edit-form">
             <div class="field">
@@ -381,18 +403,17 @@
         {:else}
           <p class="hint">Click a model to select it</p>
         {/if}
-      </section>
+      </CollapsibleSection>
 
       <!-- Actions -->
-      <section>
-        <h3>Actions</h3>
+      <CollapsibleSection title="Actions">
         <div class="button-group vertical">
           <button on:click={saveDeploymentState}>Save State</button>
           <button on:click={restoreDeploymentState}>Restore State</button>
           <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
           <button class="secondary" on:click={clearDeploymentState}>Clear Saved State</button>
         </div>
-      </section>
+      </CollapsibleSection>
     </div>
 
     <div class="battlefield-area">
@@ -633,19 +654,6 @@
     gap: 1.5rem;
   }
 
-  section {
-    background: #252525;
-    border-radius: 8px;
-    padding: 1rem;
-  }
-
-  section h3 {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.875rem;
-    color: #888;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
 
   .button-group {
     display: flex;
