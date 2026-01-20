@@ -25,6 +25,7 @@
     getBaseSize,
     isOvalBase
   } from '../stores/models.js';
+  import { debugHistory } from '../stores/history.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
 
   // Terrain/wall/model handlers
@@ -154,11 +155,33 @@
   }
 
   function handleDragModel(id, x, y) {
-    debugModels.updateModel(id, { x, y });
+    // Update during drag without saving to history
+    debugModels.updateModel(id, { x, y }, true);
+  }
+
+  function handleDragModelEnd(id, startX, startY, endX, endY) {
+    // Save to history when drag ends
+    debugHistory.push({
+      type: 'move',
+      modelId: id,
+      before: { x: startX, y: startY },
+      after: { x: endX, y: endY }
+    });
   }
 
   function handleRotateModel(id, rotation) {
-    debugModels.updateModel(id, { rotation });
+    // Update during rotation without saving to history
+    debugModels.updateModel(id, { rotation }, true);
+  }
+
+  function handleRotateModelEnd(id, startRotation, endRotation) {
+    // Save to history when rotation ends
+    debugHistory.push({
+      type: 'rotate',
+      modelId: id,
+      before: { rotation: startRotation },
+      after: { rotation: endRotation }
+    });
   }
 
   function handleRenameModel(id, name) {
@@ -385,7 +408,9 @@
               {screenToSvg}
               onSelect={handleSelectModel}
               onDrag={handleDragModel}
+              onDragEnd={handleDragModelEnd}
               onRotate={handleRotateModel}
+              onRotateEnd={handleRotateModelEnd}
               onRename={handleRenameModel}
             />
           {/each}

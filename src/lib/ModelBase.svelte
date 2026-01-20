@@ -14,12 +14,16 @@
   export let screenToSvg;
   export let onSelect = () => {};
   export let onDrag = () => {};
+  export let onDragEnd = () => {};
   export let onRotate = () => {};
+  export let onRotateEnd = () => {};
   export let onRename = () => {};
 
   let isDragging = false;
   let isRotating = false;
   let dragOffset = { x: 0, y: 0 };
+  let dragStartState = null;
+  let rotateStartState = null;
 
   // Create a model object for getBaseSize
   $: modelObj = { customWidth, customHeight };
@@ -67,6 +71,9 @@
     onSelect(id);
     isDragging = true;
 
+    // Capture starting position for history
+    dragStartState = { x, y };
+
     const svgCoords = screenToSvg(event.clientX, event.clientY);
     dragOffset = { x: svgCoords.x - x, y: svgCoords.y - y };
 
@@ -86,6 +93,14 @@
   }
 
   function handleMouseUp() {
+    if (isDragging && dragStartState) {
+      // Only save to history if position actually changed
+      if (dragStartState.x !== x || dragStartState.y !== y) {
+        onDragEnd(id, dragStartState.x, dragStartState.y, x, y);
+      }
+      dragStartState = null;
+    }
+
     isDragging = false;
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
@@ -95,6 +110,9 @@
     event.preventDefault();
     event.stopPropagation();
     isRotating = true;
+
+    // Capture starting rotation for history
+    rotateStartState = rotation;
 
     window.addEventListener('mousemove', handleRotateMouseMove);
     window.addEventListener('mouseup', handleRotateMouseUp);
@@ -116,6 +134,14 @@
   }
 
   function handleRotateMouseUp() {
+    if (isRotating && rotateStartState !== null) {
+      // Only save to history if rotation actually changed
+      if (rotateStartState !== rotation) {
+        onRotateEnd(id, rotateStartState, rotation);
+      }
+      rotateStartState = null;
+    }
+
     isRotating = false;
     window.removeEventListener('mousemove', handleRotateMouseMove);
     window.removeEventListener('mouseup', handleRotateMouseUp);

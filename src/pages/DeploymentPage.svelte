@@ -145,10 +145,11 @@
       if ($selectedModelId) {
         const model = $models.find(m => m.id === $selectedModelId);
         if (model) {
+          // Arrow key moves should save to history (each keypress is one action)
           models.updateModel($selectedModelId, {
             x: model.x + dx,
             y: model.y + dy
-          });
+          }, false);
         }
       }
       return;
@@ -248,11 +249,33 @@
   }
 
   function handleDragModel(id, x, y) {
-    models.updateModel(id, { x, y });
+    // Update during drag without saving to history
+    models.updateModel(id, { x, y }, true);
+  }
+
+  function handleDragModelEnd(id, startX, startY, endX, endY) {
+    // Save to history when drag ends
+    history.push({
+      type: 'move',
+      modelId: id,
+      before: { x: startX, y: startY },
+      after: { x: endX, y: endY }
+    });
   }
 
   function handleRotateModel(id, rotation) {
-    models.updateModel(id, { rotation });
+    // Update during rotation without saving to history
+    models.updateModel(id, { rotation }, true);
+  }
+
+  function handleRotateModelEnd(id, startRotation, endRotation) {
+    // Save to history when rotation ends
+    history.push({
+      type: 'rotate',
+      modelId: id,
+      before: { rotation: startRotation },
+      after: { rotation: endRotation }
+    });
   }
 
   function handleRenameModel(id, newName) {
@@ -726,7 +749,9 @@
               {screenToSvg}
               onSelect={handleSelectModel}
               onDrag={handleDragModel}
+              onDragEnd={handleDragModelEnd}
               onRotate={handleRotateModel}
+              onRotateEnd={handleRotateModelEnd}
               onRename={handleRenameModel}
             />
           {/each}
