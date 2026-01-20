@@ -32,8 +32,11 @@
   let screenToSvgRef = null;
   let losVisualizationEnabled = false;
   let showDebugRays = false;
+  let showP1Denial = false;
+  let showP2Denial = false;
 
   const DRAG_THRESHOLD = 5; // pixels - movement below this is considered a click
+  const DEEP_STRIKE_DENIAL_RADIUS = 9; // 9" radius around each model
 
   const DEPLOYMENT_SAVE_KEY = 'warhammer-deployment-state';
 
@@ -405,6 +408,20 @@
         {/if}
       </CollapsibleSection>
 
+      <!-- Visualization Options -->
+      <CollapsibleSection title="Visualization">
+        <div class="visualization-options">
+          <label class="checkbox-label">
+            <input type="checkbox" bind:checked={showP1Denial} />
+            P1 Denial Zones (9")
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" bind:checked={showP2Denial} />
+            P2 Denial Zones (9")
+          </label>
+        </div>
+      </CollapsibleSection>
+
       <!-- Actions -->
       <CollapsibleSection title="Actions">
         <div class="button-group vertical">
@@ -466,6 +483,72 @@
                 fill="#000"
                 pointer-events="none"
               />
+            {/each}
+          {/if}
+
+          <!-- Deep Strike Denial Zones -->
+          {#if showP1Denial}
+            {#each $player1Models as model (model.id)}
+              {@const baseSize = getBaseSize(model.baseType)}
+              {@const isOval = isOvalBase(model.baseType)}
+              {#if isOval}
+                <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
+                  <ellipse
+                    cx={model.x}
+                    cy={model.y}
+                    rx={baseSize.width / 2 + DEEP_STRIKE_DENIAL_RADIUS}
+                    ry={baseSize.height / 2 + DEEP_STRIKE_DENIAL_RADIUS}
+                    fill="rgba(59, 130, 246, 0.1)"
+                    stroke="rgba(59, 130, 246, 0.3)"
+                    stroke-width="0.1"
+                    stroke-dasharray="0.5,0.3"
+                    pointer-events="none"
+                  />
+                </g>
+              {:else}
+                <circle
+                  cx={model.x}
+                  cy={model.y}
+                  r={baseSize.radius + DEEP_STRIKE_DENIAL_RADIUS}
+                  fill="rgba(59, 130, 246, 0.1)"
+                  stroke="rgba(59, 130, 246, 0.3)"
+                  stroke-width="0.1"
+                  stroke-dasharray="0.5,0.3"
+                  pointer-events="none"
+                />
+              {/if}
+            {/each}
+          {/if}
+          {#if showP2Denial}
+            {#each $player2Models as model (model.id)}
+              {@const baseSize = getBaseSize(model.baseType)}
+              {@const isOval = isOvalBase(model.baseType)}
+              {#if isOval}
+                <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
+                  <ellipse
+                    cx={model.x}
+                    cy={model.y}
+                    rx={baseSize.width / 2 + DEEP_STRIKE_DENIAL_RADIUS}
+                    ry={baseSize.height / 2 + DEEP_STRIKE_DENIAL_RADIUS}
+                    fill="rgba(239, 68, 68, 0.1)"
+                    stroke="rgba(239, 68, 68, 0.3)"
+                    stroke-width="0.1"
+                    stroke-dasharray="0.5,0.3"
+                    pointer-events="none"
+                  />
+                </g>
+              {:else}
+                <circle
+                  cx={model.x}
+                  cy={model.y}
+                  r={baseSize.radius + DEEP_STRIKE_DENIAL_RADIUS}
+                  fill="rgba(239, 68, 68, 0.1)"
+                  stroke="rgba(239, 68, 68, 0.3)"
+                  stroke-width="0.1"
+                  stroke-dasharray="0.5,0.3"
+                  pointer-events="none"
+                />
+              {/if}
             {/each}
           {/if}
 
@@ -823,5 +906,11 @@
 
   .checkbox-label input[type="checkbox"] {
     cursor: pointer;
+  }
+
+  .visualization-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
   }
 </style>
