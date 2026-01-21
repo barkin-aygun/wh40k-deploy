@@ -218,7 +218,7 @@
     vertices: getRotatedRectVertices(t)
   }));
   $: debugWallPolygons = $debugWalls.map(wall =>
-    transformWallVertices(getWallVertices(wall.shape), wall.x, wall.y, wall.rotation)
+    transformWallVertices(getWallVertices(wall.shape, wall.segments), wall.x, wall.y, wall.rotation)
   );
   $: modelLosResults = selectedModel && enemyModels.length > 0
     ? enemyModels.map(enemy => {
@@ -385,6 +385,7 @@
               x={wall.x}
               y={wall.y}
               shape={wall.shape}
+              segments={wall.segments}
               rotation={wall.rotation}
               selected={wall.id === $debugSelectedWallId}
               {screenToSvg}

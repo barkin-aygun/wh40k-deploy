@@ -15,7 +15,8 @@
     refreshSavedLayouts,
     saveLayout,
     loadLayout,
-    deleteLayout
+    deleteLayout,
+    parseWallShape
   } from '../stores/layout.js';
 
   // Modal state
@@ -149,14 +150,40 @@
   // Local editing values (bound to inputs)
   let editX = '';
   let editY = '';
+  let editWidth = '';
+  let editHeight = '';
+  let editRotation = '';
+  let editSegment1 = '';
+  let editSegment2 = '';
+  let editSegment3 = '';
+
+  // Get wall segment info
+  function getWallSegments(wall) {
+    if (wall.segments) return wall.segments;
+    const parsed = parseWallShape(wall.shape);
+    return parsed.segments;
+  }
+
+  function getWallType(wall) {
+    const parsed = parseWallShape(wall.shape);
+    return parsed.type;
+  }
 
   // Update edit fields when selection changes
   $: if (selectedTerrain) {
     editX = selectedTerrain.x.toFixed(1);
     editY = selectedTerrain.y.toFixed(1);
+    editWidth = selectedTerrain.width.toString();
+    editHeight = selectedTerrain.height.toString();
+    editRotation = Math.round(selectedTerrain.rotation).toString();
   } else if (selectedWall) {
     editX = selectedWall.x.toFixed(1);
     editY = selectedWall.y.toFixed(1);
+    editRotation = Math.round(selectedWall.rotation).toString();
+    const segments = getWallSegments(selectedWall);
+    editSegment1 = segments[0]?.toString() || '';
+    editSegment2 = segments[1]?.toString() || '';
+    editSegment3 = segments[2]?.toString() || '';
   }
 
   function handleAddTerrain(width, height) {
@@ -220,6 +247,46 @@
     }
   }
 
+  function handleUpdateSize() {
+    if (!$selectedTerrainId) return;
+    const width = parseFloat(editWidth);
+    const height = parseFloat(editHeight);
+    if (!isNaN(width) && !isNaN(height) && width > 0 && height > 0) {
+      layoutTerrains.updateTerrain($selectedTerrainId, { width, height });
+    }
+  }
+
+  function handleUpdateRotation() {
+    const rotation = parseFloat(editRotation);
+    if (isNaN(rotation)) return;
+    if ($selectedTerrainId) {
+      layoutTerrains.updateTerrain($selectedTerrainId, { rotation });
+    } else if ($selectedWallId) {
+      layoutWalls.updateWall($selectedWallId, { rotation });
+    }
+  }
+
+  function handleUpdateWallSegments() {
+    if (!$selectedWallId || !selectedWall) return;
+    const wallType = getWallType(selectedWall);
+
+    const seg1 = parseFloat(editSegment1);
+    const seg2 = parseFloat(editSegment2);
+
+    if (isNaN(seg1) || isNaN(seg2) || seg1 <= 0 || seg2 <= 0) return;
+
+    let segments;
+    if (wallType === 'C') {
+      const seg3 = parseFloat(editSegment3);
+      if (isNaN(seg3) || seg3 <= 0) return;
+      segments = [seg1, seg2, seg3];
+    } else {
+      segments = [seg1, seg2];
+    }
+
+    layoutWalls.updateWall($selectedWallId, { segments });
+  }
+
   function openSaveModal() {
     saveLayoutName = '';
     showSaveModal = true;
@@ -280,11 +347,17 @@
 
   // Export current layout to JSON file
   function handleExport() {
+    const layoutName = prompt('Layout name (for the recipient):', 'Custom Layout');
+    if (layoutName === null) return; // User cancelled
+
     const terrains = $layoutTerrains;
     const walls = $layoutWalls;
     const data = {
       version: 1,
-      exportedAt: Date.now(),
+      name: layoutName || 'Custom Layout',
+      exportedAt: new Date().toISOString(),
+      terrainCount: terrains.length,
+      wallCount: walls.length,
       terrains,
       walls
     };
@@ -293,7 +366,8 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `layout-${new Date().toISOString().slice(0, 10)}.json`;
+    const safeName = (layoutName || 'layout').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    a.download = `${safeName}-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -323,6 +397,12 @@
         }
         selectedTerrainId.set(null);
         selectedWallId.set(null);
+
+        // Show info about imported layout
+        const name = data.name || 'Unknown';
+        const terrainCount = data.terrains?.length || 0;
+        const wallCount = data.walls?.length || 0;
+        alert(`Imported "${name}"\n${terrainCount} terrain(s), ${wallCount} wall(s)`);
       } catch (err) {
         alert('Failed to import layout: Invalid file format');
         console.error('Import error:', err);
@@ -395,21 +475,109 @@
             </div>
             {#if selectedTerrain}
               <div class="field">
-                <span class="label-text">Size</span>
-                <span class="value">{selectedTerrain.width}" x {selectedTerrain.height}"</span>
+                <label for="edit-width">Width (inches)</label>
+                <input
+                  id="edit-width"
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  bind:value={editWidth}
+                  on:change={handleUpdateSize}
+                />
               </div>
               <div class="field">
-                <span class="label-text">Rotation</span>
-                <span class="value">{Math.round(selectedTerrain.rotation)}°</span>
+                <label for="edit-height">Height (inches)</label>
+                <input
+                  id="edit-height"
+                  type="number"
+                  step="0.5"
+                  min="1"
+                  bind:value={editHeight}
+                  on:change={handleUpdateSize}
+                />
+              </div>
+              <div class="field">
+                <label for="edit-rotation">Rotation (°)</label>
+                <input
+                  id="edit-rotation"
+                  type="number"
+                  step="15"
+                  bind:value={editRotation}
+                  on:change={handleUpdateRotation}
+                />
               </div>
             {:else if selectedWall}
               <div class="field">
                 <span class="label-text">Shape</span>
                 <span class="value">{getShapeName(selectedWall.shape)}</span>
               </div>
+              {#if getWallType(selectedWall) === 'L'}
+                <div class="field">
+                  <label for="edit-seg1">Horizontal (inches)</label>
+                  <input
+                    id="edit-seg1"
+                    type="number"
+                    step="0.5"
+                    min="1"
+                    bind:value={editSegment1}
+                    on:change={handleUpdateWallSegments}
+                  />
+                </div>
+                <div class="field">
+                  <label for="edit-seg2">Vertical (inches)</label>
+                  <input
+                    id="edit-seg2"
+                    type="number"
+                    step="0.5"
+                    min="1"
+                    bind:value={editSegment2}
+                    on:change={handleUpdateWallSegments}
+                  />
+                </div>
+              {:else if getWallType(selectedWall) === 'C'}
+                <div class="field">
+                  <label for="edit-seg1">Top Width (inches)</label>
+                  <input
+                    id="edit-seg1"
+                    type="number"
+                    step="0.5"
+                    min="1"
+                    bind:value={editSegment1}
+                    on:change={handleUpdateWallSegments}
+                  />
+                </div>
+                <div class="field">
+                  <label for="edit-seg2">Height (inches)</label>
+                  <input
+                    id="edit-seg2"
+                    type="number"
+                    step="0.5"
+                    min="1"
+                    bind:value={editSegment2}
+                    on:change={handleUpdateWallSegments}
+                  />
+                </div>
+                <div class="field">
+                  <label for="edit-seg3">Bottom Width (inches)</label>
+                  <input
+                    id="edit-seg3"
+                    type="number"
+                    step="0.5"
+                    min="1"
+                    bind:value={editSegment3}
+                    on:change={handleUpdateWallSegments}
+                  />
+                </div>
+              {/if}
               <div class="field">
-                <span class="label-text">Rotation</span>
-                <span class="value">{Math.round(selectedWall.rotation)}°</span>
+                <label for="edit-rotation">Rotation (°)</label>
+                <input
+                  id="edit-rotation"
+                  type="number"
+                  step="15"
+                  bind:value={editRotation}
+                  on:change={handleUpdateRotation}
+                />
               </div>
             {/if}
             <button class="danger" on:click={handleRemoveSelected}>
@@ -470,6 +638,7 @@
               x={wall.x}
               y={wall.y}
               shape={wall.shape}
+              segments={wall.segments}
               rotation={wall.rotation}
               selected={wall.id === $selectedWallId}
               {screenToSvg}

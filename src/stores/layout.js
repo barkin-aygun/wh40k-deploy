@@ -405,82 +405,84 @@ export const debugWalls = createWallStore();
 export const debugSelectedTerrainId = writable(null);
 export const debugSelectedWallId = writable(null);
 
-// Get wall vertices based on shape type (relative to origin 0,0)
-export function getWallVertices(shapeType) {
+// Parse shape string to get base type and default segments
+export function parseWallShape(shapeType) {
+  const mirrored = shapeType.includes('-mirror');
+  const baseShape = shapeType.replace('-mirror', '');
+
+  if (baseShape.startsWith('L-')) {
+    // L-4x8 -> [4, 8]
+    const match = baseShape.match(/L-(\d+)x(\d+)/);
+    if (match) {
+      return {
+        type: 'L',
+        segments: [parseInt(match[1]), parseInt(match[2])],
+        mirrored
+      };
+    }
+  } else if (baseShape.startsWith('C-')) {
+    // C-4-8-4 -> [4, 8, 4]
+    const match = baseShape.match(/C-(\d+)-(\d+)-(\d+)/);
+    if (match) {
+      return {
+        type: 'C',
+        segments: [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])],
+        mirrored
+      };
+    }
+  }
+
+  return { type: 'L', segments: [4, 8], mirrored: false };
+}
+
+// Get wall vertices based on shape type or custom segments (relative to origin 0,0)
+export function getWallVertices(shapeType, customSegments = null) {
   const WALL_THICKNESS = 0.5;
   const t = WALL_THICKNESS;
 
-  switch (shapeType) {
-    case 'L-4x8':
+  const parsed = parseWallShape(shapeType);
+  const segments = customSegments || parsed.segments;
+  const mirrored = parsed.mirrored;
+
+  if (parsed.type === 'L') {
+    const [width, height] = segments;
+    if (mirrored) {
       return [
         { x: 0, y: 0 },
         { x: t, y: 0 },
-        { x: t, y: 8 - t },
-        { x: 4, y: 8 - t },
-        { x: 4, y: 8 },
-        { x: 0, y: 8 }
+        { x: t, y: height },
+        { x: -width + t, y: height },
+        { x: -width + t, y: height - t },
+        { x: 0, y: height - t }
       ];
-    case 'L-4x8-mirror':
+    } else {
       return [
         { x: 0, y: 0 },
         { x: t, y: 0 },
-        { x: t, y: 8 },
-        { x: -4 + t, y: 8 },
-        { x: -4 + t, y: 8 - t },
-        { x: 0, y: 8 - t }
+        { x: t, y: height - t },
+        { x: width, y: height - t },
+        { x: width, y: height },
+        { x: 0, y: height }
       ];
-    case 'C-4-8-4':
-      // C shape as a simple concave polygon tracing the filled area
-      // Traces outer edge, then inner edge to form a C opening to the right
-      return [
-        { x: 0, y: 0 },      // bottom-left corner
-        { x: 4, y: 0 },      // bottom-right corner
-        { x: 4, y: t },      // inner bottom-right
-        { x: t, y: t },      // inner bottom-left
-        { x: t, y: 8 - t },  // inner top-left
-        { x: 4, y: 8 - t },  // inner top-right
-        { x: 4, y: 8 },      // top-right corner
-        { x: 0, y: 8 }       // top-left corner (closes back to start)
-      ];
-    case 'L-5x6':
-      return [
-        { x: 0, y: 0 },
-        { x: t, y: 0 },
-        { x: t, y: 6 - t },
-        { x: 5, y: 6 - t },
-        { x: 5, y: 6 },
-        { x: 0, y: 6 }
-      ];
-    case 'L-5x6-mirror':
-      return [
-        { x: 0, y: 0 },
-        { x: t, y: 0 },
-        { x: t, y: 6 },
-        { x: -5 + t, y: 6 },
-        { x: -5 + t, y: 6 - t },
-        { x: 0, y: 6 - t }
-      ];
-    case 'L-4x6':
-      return [
-        { x: 0, y: 0 },
-        { x: t, y: 0 },
-        { x: t, y: 6 - t },
-        { x: 4, y: 6 - t },
-        { x: 4, y: 6 },
-        { x: 0, y: 6 }
-      ];
-    case 'L-4x6-mirror':
-      return [
-        { x: 0, y: 0 },
-        { x: t, y: 0 },
-        { x: t, y: 6 },
-        { x: -4 + t, y: 6 },
-        { x: -4 + t, y: 6 - t },
-        { x: 0, y: 6 - t }
-      ];
-    default:
-      return [];
+    }
+  } else if (parsed.type === 'C') {
+    const [topWidth, height, bottomWidth] = segments;
+    const width = Math.max(topWidth, bottomWidth);
+    // C shape as a simple concave polygon tracing the filled area
+    // Traces outer edge, then inner edge to form a C opening to the right
+    return [
+      { x: 0, y: 0 },           // bottom-left corner
+      { x: bottomWidth, y: 0 }, // bottom-right corner
+      { x: bottomWidth, y: t }, // inner bottom-right
+      { x: t, y: t },           // inner bottom-left
+      { x: t, y: height - t },  // inner top-left
+      { x: topWidth, y: height - t },  // inner top-right
+      { x: topWidth, y: height },      // top-right corner
+      { x: 0, y: height }       // top-left corner (closes back to start)
+    ];
   }
+
+  return [];
 }
 
 // Rotate and translate wall vertices
@@ -526,7 +528,7 @@ export function transformWallVertices(vertices, x, y, rotation) {
 // Derived store for all wall polygons (for LoS checking)
 export const allLayoutWallPolygons = derived(layoutWalls, ($walls) => {
   return $walls.map(wall =>
-    transformWallVertices(getWallVertices(wall.shape), wall.x, wall.y, wall.rotation)
+    transformWallVertices(getWallVertices(wall.shape, wall.segments), wall.x, wall.y, wall.rotation)
   );
 });
 

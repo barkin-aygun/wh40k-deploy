@@ -864,7 +864,7 @@
     vertices: getRotatedRectVertices(t)
   }));
   $: allWallPolygons = $loadedTerrain.walls.map(wall =>
-    transformWallVertices(getWallVertices(wall.shape), wall.x, wall.y, wall.rotation)
+    transformWallVertices(getWallVertices(wall.shape, wall.segments), wall.x, wall.y, wall.rotation)
   );
   // Calculate LOS from each selected model to each enemy
   $: losResults = selectedModels.length > 0 && losVisualizationEnabled && enemyModels.length > 0
@@ -1311,6 +1311,7 @@
                 x={wall.x}
                 y={wall.y}
                 shape={wall.shape}
+                segments={wall.segments}
                 rotation={wall.rotation}
                 selected={false}
                 {screenToSvg}

@@ -6,6 +6,7 @@
   export let x;
   export let y;
   export let shape; // 'L-4x8', 'L-4x8-mirror', 'C-4-8-4', 'L-5x6', 'L-5x6-mirror'
+  export let segments = null; // Custom segment lengths, e.g., [4, 8] for L or [4, 8, 4] for C
   export let rotation = 0;
   export let selected = false;
   export let screenToSvg;
@@ -25,7 +26,7 @@
     };
   }
 
-  $: vertices = getWallVertices(shape);
+  $: vertices = getWallVertices(shape, segments);
   $: bounds = getBoundingBox(vertices);
   $: wallWidth = bounds.maxX - bounds.minX;
   $: wallHeight = bounds.maxY - bounds.minY;

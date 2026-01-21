@@ -15,6 +15,8 @@
       currentPage = 'setup';
     } else if (hash === '#/deployment') {
       currentPage = 'deployment';
+    } else if (hash === '#/' || hash === '#/layout') {
+      currentPage = 'main';
     } else {
       currentPage = 'setup';
     }
