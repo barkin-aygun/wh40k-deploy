@@ -486,7 +486,7 @@
                 />
               </div>
               <div class="field">
-                <label for="edit-height">Height (inches)</label>
+                <label for="edit-height">Length (inches)</label>
                 <input
                   id="edit-height"
                   type="number"
@@ -547,7 +547,7 @@
                   />
                 </div>
                 <div class="field">
-                  <label for="edit-seg2">Height (inches)</label>
+                  <label for="edit-seg2">Length (inches)</label>
                   <input
                     id="edit-seg2"
                     type="number"

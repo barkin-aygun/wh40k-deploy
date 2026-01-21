@@ -67,6 +67,16 @@
   let groupDragStart = null;
   let isRotatingGroup = false;
   let groupRotationCenter = null;
+  let groupRotationStartAngle = 0;
+  let groupStartStates = null;
+
+  // Line tool state
+  let measurementLines = [];
+  let selectedLineId = null;
+  let isDrawingLine = false;
+  let lineDrawStart = null;
+  let lineDrawEnd = null;
+  let lineToolActive = false;
 
   const DRAG_THRESHOLD = 5; // pixels - movement below this is considered a click
   const DEEP_STRIKE_DENIAL_RADIUS = 9; // 9" radius around each model
@@ -394,9 +404,26 @@
       return;
     }
 
-    // Delete selected models (Delete or Backspace)
+    // Toggle line tool (M key for measure)
+    if (event.key === 'm' || event.key === 'M') {
+      event.preventDefault();
+      lineToolActive = !lineToolActive;
+      if (!lineToolActive) {
+        isDrawingLine = false;
+        lineDrawStart = null;
+        lineDrawEnd = null;
+      }
+      return;
+    }
+
+    // Delete selected models or lines (Delete or Backspace)
     if (event.key === 'Delete' || event.key === 'Backspace') {
       event.preventDefault();
+      if (selectedLineId) {
+        measurementLines = measurementLines.filter(l => l.id !== selectedLineId);
+        selectedLineId = null;
+        return;
+      }
       if (selectedModelIds.length > 0) {
         selectedModelIds.forEach(id => {
           models.remove(id);
@@ -445,26 +472,183 @@
       return;
     }
 
-    // Don't deselect if click originated from a model
-    if (event?.target?.closest('.model-base')) {
+    // Don't deselect if click originated from a model or line
+    if (event?.target?.closest('.model-base') || event?.target?.closest('.measurement-line')) {
       return;
     }
-    
+
     selectedModelIds = [];
+    selectedLineId = null;
+  }
+
+  // Line tool functions
+  function generateLineId() {
+    return 'line-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+  }
+
+  function calculateLineLength(x1, y1, x2, y2) {
+    return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+  }
+
+  function handleLineMouseDown(event) {
+    if (!screenToSvgRef) return;
+    event.preventDefault();
+
+    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+    isDrawingLine = true;
+    lineDrawStart = { x: svgCoords.x, y: svgCoords.y };
+    lineDrawEnd = { x: svgCoords.x, y: svgCoords.y };
+
+    window.addEventListener('mousemove', handleLineMouseMove);
+    window.addEventListener('mouseup', handleLineMouseUp);
+  }
+
+  function handleLineMouseMove(event) {
+    if (!isDrawingLine || !screenToSvgRef) return;
+    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+    lineDrawEnd = { x: svgCoords.x, y: svgCoords.y };
+  }
+
+  function handleLineMouseUp(event) {
+    if (!isDrawingLine) return;
+
+    // Only create line if it has some length
+    const length = calculateLineLength(lineDrawStart.x, lineDrawStart.y, lineDrawEnd.x, lineDrawEnd.y);
+    if (length > 0.5) {
+      const newLine = {
+        id: generateLineId(),
+        x1: lineDrawStart.x,
+        y1: lineDrawStart.y,
+        x2: lineDrawEnd.x,
+        y2: lineDrawEnd.y
+      };
+      measurementLines = [...measurementLines, newLine];
+      selectedLineId = newLine.id;
+      selectedModelIds = [];
+    }
+
+    isDrawingLine = false;
+    lineDrawStart = null;
+    lineDrawEnd = null;
+    window.removeEventListener('mousemove', handleLineMouseMove);
+    window.removeEventListener('mouseup', handleLineMouseUp);
+  }
+
+  function handleSelectLine(lineId, event) {
+    event?.stopPropagation();
+    selectedLineId = lineId;
+    selectedModelIds = [];
+  }
+
+  // Line dragging state
+  let isDraggingLine = false;
+  let lineDragOffset = { x: 0, y: 0 };
+  let draggingLineId = null;
+  let draggingEndpoint = null; // null, 1, or 2 (for which endpoint)
+
+  function handleLineDragStart(lineId, event) {
+    if (!lineToolActive || !screenToSvgRef) return;
+    event.stopPropagation();
+    event.preventDefault();
+
+    const line = measurementLines.find(l => l.id === lineId);
+    if (!line) return;
+
+    isDraggingLine = true;
+    draggingLineId = lineId;
+    draggingEndpoint = null; // Dragging whole line
+    selectedLineId = lineId;
+    selectedModelIds = [];
+
+    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+    const midX = (line.x1 + line.x2) / 2;
+    const midY = (line.y1 + line.y2) / 2;
+    lineDragOffset = { x: svgCoords.x - midX, y: svgCoords.y - midY };
+
+    window.addEventListener('mousemove', handleLineDragMove);
+    window.addEventListener('mouseup', handleLineDragEnd);
+  }
+
+  function handleEndpointDragStart(lineId, endpoint, event) {
+    if (!lineToolActive || !screenToSvgRef) return;
+    event.stopPropagation();
+    event.preventDefault();
+
+    isDraggingLine = true;
+    draggingLineId = lineId;
+    draggingEndpoint = endpoint; // 1 or 2
+    selectedLineId = lineId;
+    selectedModelIds = [];
+
+    window.addEventListener('mousemove', handleLineDragMove);
+    window.addEventListener('mouseup', handleLineDragEnd);
+  }
+
+  function handleLineDragMove(event) {
+    if (!isDraggingLine || !screenToSvgRef || !draggingLineId) return;
+
+    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+
+    measurementLines = measurementLines.map(line => {
+      if (line.id !== draggingLineId) return line;
+
+      if (draggingEndpoint === 1) {
+        // Dragging first endpoint
+        return { ...line, x1: svgCoords.x, y1: svgCoords.y };
+      } else if (draggingEndpoint === 2) {
+        // Dragging second endpoint
+        return { ...line, x2: svgCoords.x, y2: svgCoords.y };
+      } else {
+        // Dragging whole line
+        const newMidX = svgCoords.x - lineDragOffset.x;
+        const newMidY = svgCoords.y - lineDragOffset.y;
+        const oldMidX = (line.x1 + line.x2) / 2;
+        const oldMidY = (line.y1 + line.y2) / 2;
+        const dx = newMidX - oldMidX;
+        const dy = newMidY - oldMidY;
+
+        return {
+          ...line,
+          x1: line.x1 + dx,
+          y1: line.y1 + dy,
+          x2: line.x2 + dx,
+          y2: line.y2 + dy
+        };
+      }
+    });
+  }
+
+  function handleLineDragEnd() {
+    isDraggingLine = false;
+    draggingLineId = null;
+    draggingEndpoint = null;
+    window.removeEventListener('mousemove', handleLineDragMove);
+    window.removeEventListener('mouseup', handleLineDragEnd);
+  }
+
+  function handleClearAllLines() {
+    measurementLines = [];
+    selectedLineId = null;
   }
 
   // Marquee selection handlers
   function handleBattlefieldMouseDown(event) {
-    // Only start marquee if clicking on battlefield (not on a model)
-    // Check if click is inside a model-base group
+    // Only start marquee if clicking on battlefield (not on a model or line)
     const target = event.target;
     const isModelClick = target.closest('.model-base');
+    const isLineClick = target.closest('.measurement-line');
 
-    if (isModelClick) return;
+    if (isModelClick || isLineClick) return;
     if (!screenToSvgRef) return;
 
     // Prevent text selection during drag
     event.preventDefault();
+
+    // If line tool is active, start drawing a line
+    if (lineToolActive) {
+      handleLineMouseDown(event);
+      return;
+    }
 
     const svgCoords = screenToSvgRef(event.clientX, event.clientY);
     marqueeStart = { x: svgCoords.x, y: svgCoords.y };
@@ -799,6 +983,102 @@
     models.updateModel(id, { name: newName });
   }
 
+  // Group rotation handle functions
+  function handleGroupRotateMouseDown(event) {
+    if (!screenToSvgRef || selectedModels.length < 2) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    isRotatingGroup = true;
+
+    // Store starting states for all selected models
+    groupStartStates = {};
+    selectedModels.forEach(model => {
+      groupStartStates[model.id] = {
+        x: model.x,
+        y: model.y,
+        rotation: model.rotation || 0
+      };
+    });
+
+    // Calculate initial angle from center to mouse
+    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+    groupRotationStartAngle = Math.atan2(svgCoords.y - groupCenter.y, svgCoords.x - groupCenter.x) * 180 / Math.PI;
+
+    window.addEventListener('mousemove', handleGroupRotateMouseMove);
+    window.addEventListener('mouseup', handleGroupRotateMouseUp);
+  }
+
+  function handleGroupRotateMouseMove(event) {
+    if (!isRotatingGroup || !screenToSvgRef || !groupCenter) return;
+
+    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+    let currentAngle = Math.atan2(svgCoords.y - groupCenter.y, svgCoords.x - groupCenter.x) * 180 / Math.PI;
+
+    // Snap to 15 degree increments unless Shift is held
+    let rotationDelta = currentAngle - groupRotationStartAngle;
+    if (!event.shiftKey) {
+      rotationDelta = Math.round(rotationDelta / 15) * 15;
+    }
+
+    // Update handle angle for visual feedback
+    groupHandleAngle = -45 + rotationDelta;
+
+    // Rotate all selected models around the center
+    const angleRad = (rotationDelta * Math.PI) / 180;
+    const cosAngle = Math.cos(angleRad);
+    const sinAngle = Math.sin(angleRad);
+
+    selectedModels.forEach(model => {
+      const startState = groupStartStates[model.id];
+      if (startState) {
+        // Rotate position around center
+        const relX = startState.x - groupCenter.x;
+        const relY = startState.y - groupCenter.y;
+        const newRelX = relX * cosAngle - relY * sinAngle;
+        const newRelY = relX * sinAngle + relY * cosAngle;
+
+        models.updateModel(model.id, {
+          x: groupCenter.x + newRelX,
+          y: groupCenter.y + newRelY,
+          rotation: startState.rotation + rotationDelta
+        }, true);
+      }
+    });
+  }
+
+  function handleGroupRotateMouseUp() {
+    if (isRotatingGroup && groupStartStates) {
+      // Save group rotation to history
+      selectedModels.forEach(model => {
+        const startState = groupStartStates[model.id];
+        if (startState) {
+          history.push({
+            type: 'rotate',
+            modelId: model.id,
+            before: {
+              x: startState.x,
+              y: startState.y,
+              rotation: startState.rotation
+            },
+            after: {
+              x: model.x,
+              y: model.y,
+              rotation: model.rotation || 0
+            }
+          });
+        }
+      });
+    }
+
+    isRotatingGroup = false;
+    groupStartStates = null;
+    groupHandleAngle = -45; // Reset handle angle
+
+    window.removeEventListener('mousemove', handleGroupRotateMouseMove);
+    window.removeEventListener('mouseup', handleGroupRotateMouseUp);
+  }
+
   function handleRemoveSelected() {
     if (selectedModelIds.length > 0) {
       selectedModelIds.forEach(id => {
@@ -854,6 +1134,36 @@
     .filter(Boolean);
   // selectedModel is only set for single selection (for info panel)
   $: selectedModel = selectedModels.length === 1 ? selectedModels[0] : null;
+
+  // Group rotation handle calculations (only when multiple models selected)
+  $: groupCenter = selectedModels.length > 1 ? (() => {
+    let sumX = 0, sumY = 0;
+    selectedModels.forEach(m => { sumX += m.x; sumY += m.y; });
+    return { x: sumX / selectedModels.length, y: sumY / selectedModels.length };
+  })() : null;
+
+  $: groupHandleDistance = selectedModels.length > 1 ? (() => {
+    // Calculate max distance from center to any selected model, then add offset
+    let maxDist = 0;
+    selectedModels.forEach(m => {
+      const dist = Math.sqrt(Math.pow(m.x - groupCenter.x, 2) + Math.pow(m.y - groupCenter.y, 2));
+      // Add base radius to account for model size
+      const baseSize = getBaseSize(m.baseType, m);
+      const modelRadius = isRectangularBase(m.baseType)
+        ? Math.max(m.customWidth, m.customHeight) / 2
+        : (isOvalBase(m.baseType) ? Math.max(baseSize.width, baseSize.height) / 2 : baseSize.radius);
+      maxDist = Math.max(maxDist, dist + modelRadius);
+    });
+    return maxDist + 2; // Add 2 inches offset for the handle
+  })() : 0;
+
+  // Group rotation handle angle (stored separately to allow rotation during drag)
+  let groupHandleAngle = -45; // Default angle in degrees
+
+  $: groupHandleX = groupCenter ? groupCenter.x + groupHandleDistance * Math.cos(groupHandleAngle * Math.PI / 180) : 0;
+  $: groupHandleY = groupCenter ? groupCenter.y + groupHandleDistance * Math.sin(groupHandleAngle * Math.PI / 180) : 0;
+  // Selected line
+  $: selectedLine = selectedLineId ? measurementLines.find(l => l.id === selectedLineId) : null;
   // Get enemy models based on selected models' player IDs
   $: selectedPlayerIds = [...new Set(selectedModels.map(m => m.playerId))];
   $: enemyModels = selectedModels.length > 0
@@ -993,15 +1303,40 @@
         {/if}
       </CollapsibleSection>
 
-            <!-- Army Import -->
-      <CollapsibleSection title="Import Army List" startOpen={false}>
-        <ArmyImportPanel
-          bind:this={importPanelRef}
-          {currentPlayer}
-          on:parse={handleArmyListParse}
-        />
+      <!-- Measure Tool Section -->
+      <CollapsibleSection title="Measure Tool">
+        <div class="edit-form">
+          <div class="field">
+            <label class="checkbox-label">
+              <input type="checkbox" bind:checked={lineToolActive} />
+              Line Tool Active (M)
+            </label>
+          </div>
+          {#if lineToolActive}
+            <p class="hint">Click and drag on battlefield to draw a measurement line</p>
+          {/if}
+          {#if selectedLine}
+            <div class="field">
+              <span class="label-text">Length</span>
+              <span class="value">{calculateLineLength(selectedLine.x1, selectedLine.y1, selectedLine.x2, selectedLine.y2).toFixed(2)}"</span>
+            </div>
+            <button class="danger" on:click={() => { measurementLines = measurementLines.filter(l => l.id !== selectedLineId); selectedLineId = null; }}>
+              Remove Line
+            </button>
+          {/if}
+          {#if measurementLines.length > 0}
+            <div class="field">
+              <span class="label-text">Lines</span>
+              <span class="value">{measurementLines.length} line{measurementLines.length !== 1 ? 's' : ''}</span>
+            </div>
+            <button class="secondary" on:click={handleClearAllLines}>
+              Clear All Lines
+            </button>
+          {/if}
+        </div>
       </CollapsibleSection>
 
+      
       <!-- Actions -->
       <CollapsibleSection title="Actions">
         <div class="button-group vertical">
@@ -1041,6 +1376,15 @@
           <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
           <button class="secondary" on:click={clearDeploymentState}>Clear Saved State</button>
         </div>
+      </CollapsibleSection>
+
+            <!-- Army Import -->
+      <CollapsibleSection title="Import Army List" startOpen={false}>
+        <ArmyImportPanel
+          bind:this={importPanelRef}
+          {currentPlayer}
+          on:parse={handleArmyListParse}
+        />
       </CollapsibleSection>
 
       <!-- Add Models Section -->
@@ -1365,6 +1709,178 @@
             />
           {/if}
 
+          <!-- Group rotation handle (when multiple models selected) -->
+          {#if groupCenter && selectedModels.length > 1}
+            <!-- Center marker -->
+            <circle
+              cx={groupCenter.x}
+              cy={groupCenter.y}
+              r="0.4"
+              fill="rgba(147, 51, 234, 0.5)"
+              stroke="#9333ea"
+              stroke-width="0.1"
+              pointer-events="none"
+            />
+            <!-- Line from center to handle -->
+            <line
+              x1={groupCenter.x}
+              y1={groupCenter.y}
+              x2={groupHandleX}
+              y2={groupHandleY}
+              stroke="#9333ea"
+              stroke-width="0.1"
+              stroke-dasharray="0.3,0.15"
+              pointer-events="none"
+            />
+            <!-- Rotation handle -->
+            <circle
+              cx={groupHandleX}
+              cy={groupHandleY}
+              r="0.8"
+              fill="#9333ea"
+              stroke="#7e22ce"
+              stroke-width="0.1"
+              on:mousedown={handleGroupRotateMouseDown}
+              role="button"
+              tabindex="0"
+              class="group-rotate-handle"
+            />
+            <!-- Rotate icon on handle -->
+            <g transform="translate({groupHandleX}, {groupHandleY})" pointer-events="none">
+              <path
+                d="M -0.3 0 A 0.3 0.3 0 1 1 0.3 0"
+                fill="none"
+                stroke="white"
+                stroke-width="0.08"
+              />
+              <path
+                d="M 0.22 -0.15 L 0.3 0 L 0.15 0.08"
+                fill="none"
+                stroke="white"
+                stroke-width="0.08"
+              />
+            </g>
+          {/if}
+
+          <!-- Measurement lines -->
+          {#each measurementLines as line (line.id)}
+            {@const length = calculateLineLength(line.x1, line.y1, line.x2, line.y2)}
+            {@const midX = (line.x1 + line.x2) / 2}
+            {@const midY = (line.y1 + line.y2) / 2}
+            {@const isSelected = line.id === selectedLineId}
+            <g class="measurement-line" class:selected={isSelected} class:tool-active={lineToolActive}>
+              <line
+                x1={line.x1}
+                y1={line.y1}
+                x2={line.x2}
+                y2={line.y2}
+                stroke={isSelected && lineToolActive ? '#3b82f6' : '#f59e0b'}
+                stroke-width={isSelected && lineToolActive ? 0.2 : 0.15}
+                stroke-linecap="round"
+                on:click={(e) => lineToolActive && handleSelectLine(line.id, e)}
+                on:mousedown={(e) => lineToolActive ? handleLineDragStart(line.id, e) : e.stopPropagation()}
+                role={lineToolActive ? "button" : "presentation"}
+                tabindex={lineToolActive ? 0 : -1}
+              />
+              <!-- End markers (only when tool is active) -->
+              {#if lineToolActive}
+                <circle
+                  cx={line.x1}
+                  cy={line.y1}
+                  r="0.4"
+                  fill={isSelected ? '#3b82f6' : '#f59e0b'}
+                  stroke="#000"
+                  stroke-width="0.05"
+                  class="endpoint"
+                  on:mousedown={(e) => handleEndpointDragStart(line.id, 1, e)}
+                  role="button"
+                  tabindex="0"
+                />
+                <circle
+                  cx={line.x2}
+                  cy={line.y2}
+                  r="0.4"
+                  fill={isSelected ? '#3b82f6' : '#f59e0b'}
+                  stroke="#000"
+                  stroke-width="0.05"
+                  class="endpoint"
+                  on:mousedown={(e) => handleEndpointDragStart(line.id, 2, e)}
+                  role="button"
+                  tabindex="0"
+                />
+              {/if}
+              <!-- Length label -->
+              <g transform="translate({midX}, {midY})">
+                <rect
+                  x="-2"
+                  y="-0.6"
+                  width="4"
+                  height="1.2"
+                  fill="rgba(0,0,0,0.75)"
+                  rx="0.3"
+                  pointer-events="none"
+                />
+                <text
+                  x="0"
+                  y="0.35"
+                  text-anchor="middle"
+                  fill={isSelected && lineToolActive ? '#3b82f6' : '#f59e0b'}
+                  font-size="0.8"
+                  font-weight="bold"
+                  pointer-events="none"
+                >
+                  {length.toFixed(1)}"
+                </text>
+              </g>
+            </g>
+          {/each}
+
+          <!-- Line being drawn -->
+          {#if isDrawingLine && lineDrawStart && lineDrawEnd}
+            {@const length = calculateLineLength(lineDrawStart.x, lineDrawStart.y, lineDrawEnd.x, lineDrawEnd.y)}
+            {@const midX = (lineDrawStart.x + lineDrawEnd.x) / 2}
+            {@const midY = (lineDrawStart.y + lineDrawEnd.y) / 2}
+            <g class="measurement-line drawing">
+              <line
+                x1={lineDrawStart.x}
+                y1={lineDrawStart.y}
+                x2={lineDrawEnd.x}
+                y2={lineDrawEnd.y}
+                stroke="#f59e0b"
+                stroke-width="0.15"
+                stroke-dasharray="0.3,0.15"
+                stroke-linecap="round"
+                pointer-events="none"
+              />
+              <circle cx={lineDrawStart.x} cy={lineDrawStart.y} r="0.3" fill="#f59e0b" pointer-events="none" />
+              <circle cx={lineDrawEnd.x} cy={lineDrawEnd.y} r="0.3" fill="#f59e0b" pointer-events="none" />
+              {#if length > 0.5}
+                <g transform="translate({midX}, {midY})">
+                  <rect
+                    x="-2"
+                    y="-0.6"
+                    width="4"
+                    height="1.2"
+                    fill="rgba(0,0,0,0.75)"
+                    rx="0.3"
+                    pointer-events="none"
+                  />
+                  <text
+                    x="0"
+                    y="0.35"
+                    text-anchor="middle"
+                    fill="#f59e0b"
+                    font-size="0.8"
+                    font-weight="bold"
+                    pointer-events="none"
+                  >
+                    {length.toFixed(1)}"
+                  </text>
+                </g>
+              {/if}
+            </g>
+          {/if}
+
           <!-- Debug rays (render behind LoS lines) -->
           {#if showDebugRays && losVisualizationEnabled && selectedModels.length > 0 && losResults.length > 0}
             {#each losResults as result}
@@ -1436,7 +1952,7 @@
       </div>
         <div class="info">
           <p>Battlefield: 60" x 44" | {$player1Models.length} P1 models | {$player2Models.length} P2 models</p>
-          <p class="hint">Drag to select multiple | Ctrl+Click for multi-select | Delete to remove | 1/2 to switch player | L for LoS</p>
+          <p class="hint">Drag to select | Ctrl+Click multi-select | Del remove | 1/2 player | L LoS | M measure</p>
         </div>
       </div>
 
@@ -1748,5 +2264,32 @@
   .rect-hull-form label {
     font-size: 0.75rem;
     color: #888;
+  }
+
+  /* Measurement line styles - these are global since they're in SVG */
+  :global(.measurement-line line) {
+    pointer-events: stroke;
+  }
+
+  :global(.measurement-line.tool-active line) {
+    cursor: move;
+  }
+
+  :global(.measurement-line.tool-active.selected line) {
+    filter: drop-shadow(0 0 2px #3b82f6);
+  }
+
+  :global(.measurement-line .endpoint) {
+    cursor: crosshair;
+  }
+
+  :global(.group-rotate-handle) {
+    cursor: grab;
+    filter: drop-shadow(0.1px 0.1px 0.2px rgba(0,0,0,0.5));
+    transition: filter 0.15s;
+  }
+
+  :global(.group-rotate-handle:hover) {
+    filter: drop-shadow(0 0 0.5px #9333ea);
   }
 </style>

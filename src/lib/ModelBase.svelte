@@ -72,8 +72,8 @@
   })();
 
   function handleClick(event) {
+    // Just stop propagation - selection is handled in mousedown
     event.stopPropagation();
-    onSelect(id, event);
   }
 
   function handleDoubleClick(event) {
@@ -250,22 +250,37 @@
       y1={y}
       x2={handleX}
       y2={handleY}
-      stroke={playerColor}
-      stroke-width="0.08"
-      stroke-dasharray="0.2,0.1"
+      stroke="#9333ea"
+      stroke-width="0.1"
+      stroke-dasharray="0.3,0.15"
     />
     <circle
       cx={handleX}
       cy={handleY}
-      r="0.6"
-      fill={playerColor}
-      stroke={playerId === 1 ? '#1d4ed8' : '#b91c1c'}
-      stroke-width="0.08"
+      r="0.8"
+      fill="#9333ea"
+      stroke="#7e22ce"
+      stroke-width="0.1"
       on:mousedown={handleRotateMouseDown}
       role="button"
       tabindex="0"
       class="rotate-handle"
     />
+    <!-- Rotate icon on handle -->
+    <g transform="translate({handleX}, {handleY})" pointer-events="none">
+      <path
+        d="M -0.3 0 A 0.3 0.3 0 1 1 0.3 0"
+        fill="none"
+        stroke="white"
+        stroke-width="0.08"
+      />
+      <path
+        d="M 0.22 -0.15 L 0.3 0 L 0.15 0.08"
+        fill="none"
+        stroke="white"
+        stroke-width="0.08"
+      />
+    </g>
   {/if}
 
   <!-- Drag move ruler -->
@@ -324,7 +339,11 @@
   }
   .rotate-handle {
     cursor: grab;
-    filter: drop-shadow(0.05px 0.05px 0.1px rgba(0,0,0,0.5));
+    filter: drop-shadow(0.1px 0.1px 0.2px rgba(0,0,0,0.5));
+    transition: filter 0.15s;
+  }
+  .rotate-handle:hover {
+    filter: drop-shadow(0 0 0.5px #9333ea);
   }
   .drag-ruler-label {
     filter: drop-shadow(0.05px 0.05px 0.1px rgba(0,0,0,0.8));
