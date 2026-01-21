@@ -6,6 +6,9 @@
   import ModelBase from '../lib/ModelBase.svelte';
   import ModelPaletteItem from '../lib/ModelPaletteItem.svelte';
   import CollapsibleSection from '../lib/CollapsibleSection.svelte';
+  import ArmyImportPanel from '../lib/ArmyImportPanel.svelte';
+  import UnmatchedUnitsDialog from '../lib/UnmatchedUnitsDialog.svelte';
+  import StagingArea from '../lib/StagingArea.svelte';
   import {
     getWallVertices,
     transformWallVertices
@@ -25,6 +28,10 @@
   import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
   import { checkLineOfSight } from '../lib/visibility/lineOfSight.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
+  import { armyImports } from '../stores/armyImports.js';
+  import { stagingModels, addStagingModels, deployToMain } from '../stores/staging.js';
+  import { parseArmyList } from '../lib/services/armyParser.js';
+  import { mapParsedUnitsToModels, calculateStagingPositions } from '../lib/services/unitMapper.js';
 
   // Model palette state
   let currentPlayer = 1;
@@ -40,6 +47,26 @@
   // Rectangle hull state
   let rectWidth = 5.5;  // Default width in inches
   let rectHeight = 3.0; // Default height in inches
+
+  // Army import state
+  let showUnmatchedDialog = false;
+  let unmatchedUnits = [];
+  let pendingMatched = [];
+  let importPanelRef = null;
+
+  // Marquee selection state
+  let isMarqueeSelecting = false;
+  let marqueeStart = null;
+  let marqueeEnd = null;
+  let selectedModelIds = new Set();
+  let marqueePreviewIds = new Set(); // Models currently in marquee preview
+  let justCompletedMarquee = false; // Flag to prevent click handler after marquee
+
+  // Group drag/rotate state
+  let isDraggingGroup = false;
+  let groupDragStart = null;
+  let isRotatingGroup = false;
+  let groupRotationCenter = null;
 
   const DRAG_THRESHOLD = 5; // pixels - movement below this is considered a click
   const DEEP_STRIKE_DENIAL_RADIUS = 9; // 9" radius around each model
@@ -74,6 +101,108 @@
   function clearDeploymentState() {
     localStorage.removeItem(DEPLOYMENT_SAVE_KEY);
     models.clear();
+  }
+
+  // Army import handlers
+  async function handleArmyListParse(event) {
+    const { text, playerId } = event.detail;
+
+    try {
+      if (importPanelRef) {
+        importPanelRef.setLoading(true);
+      }
+
+      // Parse army list
+      const { format, data } = await parseArmyList(text);
+
+      // Map to models
+      const { matched, unmatched } = mapParsedUnitsToModels(data, playerId);
+
+      // Save import metadata
+      const importName = data.LIST_TITLE || `${data.FACTION_KEYWORD} Army`;
+      armyImports.addImport(importName, text, data, playerId);
+
+      // Handle unmatched units
+      if (unmatched.length > 0) {
+        unmatchedUnits = unmatched;
+        pendingMatched = matched;
+        showUnmatchedDialog = true;
+
+        if (importPanelRef) {
+          importPanelRef.setLoading(false);
+        }
+      } else {
+        // Add all matched models to staging
+        addStagingModels(matched, data.FACTION_KEYWORD);
+
+        if (importPanelRef) {
+          importPanelRef.setSuccess(
+            `Imported ${matched.length} models from ${data.FACTION_KEYWORD} (${format})`
+          );
+          importPanelRef.clearText();
+        }
+      }
+    } catch (err) {
+      console.error('Failed to parse army list:', err);
+      if (importPanelRef) {
+        importPanelRef.setError(err.message || 'Failed to parse army list');
+      }
+    }
+  }
+
+  function handleUnmatchedImport(event) {
+    const { selected } = event.detail;
+
+    // Create models for selected units with user-specified base sizes
+    const additionalModels = [];
+
+    for (const selection of selected) {
+      const quantity = typeof selection.quantity === 'string'
+        ? parseInt(selection.quantity.replace(/x/i, ''), 10) || 1
+        : selection.quantity || 1;
+
+      const unitId = 'unit-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+      for (let i = 0; i < quantity; i++) {
+        additionalModels.push({
+          id: 'model-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+          baseType: selection.baseType,
+          playerId: currentPlayer,
+          x: 0,
+          y: 0,
+          rotation: 0,
+          unitId,
+          unitName: selection.unitName,
+          imported: true,
+          inStaging: true
+        });
+      }
+    }
+
+    // Combine with pending matched models
+    const allModels = [...pendingMatched, ...additionalModels];
+
+    // Recalculate positions
+    const modelsWithPositions = calculateStagingPositions(allModels);
+    addStagingModels(modelsWithPositions, 'imported');
+
+    if (importPanelRef) {
+      importPanelRef.setSuccess(`Imported ${allModels.length} models to staging area`);
+      importPanelRef.clearText();
+    }
+
+    // Reset state
+    unmatchedUnits = [];
+    pendingMatched = [];
+  }
+
+  function handleDeployFromStaging(event) {
+    const { modelIds } = event.detail;
+    deployToMain(modelIds, 30, 22);
+  }
+
+  function handleClearStaging() {
+    // Handled by the StagingArea component
   }
 
   onMount(() => {
@@ -122,6 +251,24 @@
       return;
     }
 
+    // Delete selected models (Delete or Backspace)
+    if (event.key === 'Delete' || event.key === 'Backspace') {
+      event.preventDefault();
+      if (selectedModelIds.size > 0) {
+        // Delete all selected models
+        selectedModelIds.forEach(id => {
+          models.remove(id);
+        });
+        selectedModelIds.clear();
+        selectedModelIds = selectedModelIds; // Trigger reactivity
+      } else if ($selectedModelId) {
+        // Delete single selected model
+        models.remove($selectedModelId);
+        selectedModelId.set(null);
+      }
+      return;
+    }
+
     // Delete/Backspace - remove selected piece
     if ((event.key === 'Delete' || event.key === 'Backspace') && hasSelection) {
       event.preventDefault();
@@ -162,8 +309,102 @@
     }
   }
 
-  function handleDeselectAll() {
+  function handleDeselectAll(event) {
+    // Don't deselect if we just completed a marquee selection
+    if (justCompletedMarquee) {
+      justCompletedMarquee = false;
+      return;
+    }
+
     selectedModelId.set(null);
+    selectedModelIds.clear();
+    selectedModelIds = selectedModelIds; // Trigger reactivity
+  }
+
+  // Marquee selection handlers
+  function handleBattlefieldMouseDown(event) {
+    // Only start marquee if clicking on battlefield (not on a model)
+    // Check if click is inside a model-base group
+    const target = event.target;
+    const isModelClick = target.closest('.model-base');
+
+    if (isModelClick) return;
+    if (!screenToSvgRef) return;
+
+    // Prevent text selection during drag
+    event.preventDefault();
+
+    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+    marqueeStart = { x: svgCoords.x, y: svgCoords.y };
+    marqueeEnd = { x: svgCoords.x, y: svgCoords.y };
+    isMarqueeSelecting = true;
+
+    window.addEventListener('mousemove', handleMarqueeMove);
+    window.addEventListener('mouseup', handleMarqueeEnd);
+  }
+
+  function handleMarqueeMove(event) {
+    if (!isMarqueeSelecting || !screenToSvgRef) return;
+    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+    marqueeEnd = { x: svgCoords.x, y: svgCoords.y };
+
+    // Update preview of models that will be selected
+    const minX = Math.min(marqueeStart.x, marqueeEnd.x);
+    const maxX = Math.max(marqueeStart.x, marqueeEnd.x);
+    const minY = Math.min(marqueeStart.y, marqueeEnd.y);
+    const maxY = Math.max(marqueeStart.y, marqueeEnd.y);
+
+    const preview = new Set();
+    $models.forEach(model => {
+      if (model.x >= minX && model.x <= maxX &&
+          model.y >= minY && model.y <= maxY) {
+        preview.add(model.id);
+      }
+    });
+    marqueePreviewIds = preview;
+  }
+
+  function handleMarqueeEnd(event) {
+    if (!isMarqueeSelecting) return;
+
+    // Calculate marquee bounds
+    const minX = Math.min(marqueeStart.x, marqueeEnd.x);
+    const maxX = Math.max(marqueeStart.x, marqueeEnd.x);
+    const minY = Math.min(marqueeStart.y, marqueeEnd.y);
+    const maxY = Math.max(marqueeStart.y, marqueeEnd.y);
+
+    // Check if this was just a click (no significant drag)
+    const width = maxX - minX;
+    const height = maxY - minY;
+    if (width < 0.5 && height < 0.5) {
+      // Just a click - deselect all (will be handled by click event)
+      selectedModelIds.clear();
+      selectedModelId.set(null);
+    } else {
+      // Actual marquee selection - select all models inside
+      const newSelection = new Set();
+      $models.forEach(model => {
+        if (model.x >= minX && model.x <= maxX &&
+            model.y >= minY && model.y <= maxY) {
+          newSelection.add(model.id);
+        }
+      });
+      selectedModelIds = newSelection;
+      // Clear single selection if we have marquee selection
+      if (selectedModelIds.size > 0) {
+        selectedModelId.set(null);
+      }
+      // Mark that we just completed a marquee to prevent click handler
+      justCompletedMarquee = true;
+    }
+
+    isMarqueeSelecting = false;
+    marqueeStart = null;
+    marqueeEnd = null;
+    marqueePreviewIds.clear();
+    marqueePreviewIds = marqueePreviewIds; // Trigger reactivity
+    window.removeEventListener('mousemove', handleMarqueeMove);
+    window.removeEventListener('mouseup', handleMarqueeEnd);
   }
 
   // Model handlers
@@ -244,38 +485,193 @@
     selectedModelId.set(id);
   }
 
-  function handleSelectModel(id) {
-    selectedModelId.set(id);
+  function handleSelectModel(id, event) {
+    // Support Ctrl/Cmd/Shift for multi-select
+    if (event && (event.ctrlKey || event.metaKey || event.shiftKey)) {
+      if (selectedModelIds.has(id)) {
+        selectedModelIds.delete(id);
+      } else {
+        selectedModelIds.add(id);
+      }
+      selectedModelIds = selectedModelIds; // Trigger reactivity
+      selectedModelId.set(null); // Clear single selection
+    } else if (selectedModelIds.has(id) && selectedModelIds.size > 1) {
+      // Clicking on a model that's already in a multi-selection - keep the selection
+      // This allows group dragging to work
+      selectedModelId.set(null);
+    } else {
+      // Single selection
+      selectedModelIds.clear();
+      selectedModelIds.add(id);
+      selectedModelIds = selectedModelIds;
+      selectedModelId.set(null);
+    }
   }
 
   function handleDragModel(id, x, y) {
-    // Update during drag without saving to history
-    models.updateModel(id, { x, y }, true);
+    // Check if this is part of a multi-selection
+    if (selectedModelIds.size > 1 && selectedModelIds.has(id)) {
+      // Group drag - move all selected models together
+      if (!isDraggingGroup) {
+        // First drag event - record starting positions
+        isDraggingGroup = true;
+        groupDragStart = {};
+        selectedModelIds.forEach(modelId => {
+          const model = $models.find(m => m.id === modelId);
+          if (model) {
+            groupDragStart[modelId] = { x: model.x, y: model.y };
+          }
+        });
+      }
+
+      // Calculate offset from original position
+      const originalPos = groupDragStart[id];
+      if (originalPos) {
+        const dx = x - originalPos.x;
+        const dy = y - originalPos.y;
+
+        // Apply offset to all selected models
+        selectedModelIds.forEach(modelId => {
+          const startPos = groupDragStart[modelId];
+          if (startPos) {
+            models.updateModel(modelId, {
+              x: startPos.x + dx,
+              y: startPos.y + dy
+            }, true);
+          }
+        });
+      }
+    } else {
+      // Single model drag
+      models.updateModel(id, { x, y }, true);
+    }
   }
 
   function handleDragModelEnd(id, startX, startY, endX, endY) {
-    // Save to history when drag ends
-    history.push({
-      type: 'move',
-      modelId: id,
-      before: { x: startX, y: startY },
-      after: { x: endX, y: endY }
-    });
+    if (isDraggingGroup) {
+      // Save group move to history
+      selectedModelIds.forEach(modelId => {
+        const startPos = groupDragStart[modelId];
+        const model = $models.find(m => m.id === modelId);
+        if (startPos && model) {
+          history.push({
+            type: 'move',
+            modelId: modelId,
+            before: { x: startPos.x, y: startPos.y },
+            after: { x: model.x, y: model.y }
+          });
+        }
+      });
+      isDraggingGroup = false;
+      groupDragStart = null;
+    } else {
+      // Save single move to history
+      history.push({
+        type: 'move',
+        modelId: id,
+        before: { x: startX, y: startY },
+        after: { x: endX, y: endY }
+      });
+    }
   }
 
   function handleRotateModel(id, rotation) {
-    // Update during rotation without saving to history
-    models.updateModel(id, { rotation }, true);
+    // Check if this is part of a multi-selection
+    if (selectedModelIds.size > 1 && selectedModelIds.has(id)) {
+      // Group rotation - rotate all selected models around their center
+      if (!isRotatingGroup) {
+        // First rotation event - calculate center and record starting states
+        isRotatingGroup = true;
+
+        // Calculate center of all selected models
+        let sumX = 0, sumY = 0, count = 0;
+        const startStates = {};
+        selectedModelIds.forEach(modelId => {
+          const model = $models.find(m => m.id === modelId);
+          if (model) {
+            sumX += model.x;
+            sumY += model.y;
+            count++;
+            startStates[modelId] = {
+              x: model.x,
+              y: model.y,
+              rotation: model.rotation || 0
+            };
+          }
+        });
+
+        groupRotationCenter = { x: sumX / count, y: sumY / count };
+        groupDragStart = startStates; // Reuse for rotation tracking
+      }
+
+      // Calculate rotation delta from the rotating model
+      const rotatingModel = $models.find(m => m.id === id);
+      const startState = groupDragStart[id];
+      if (!rotatingModel || !startState) return;
+
+      const rotationDelta = rotation - startState.rotation;
+
+      // Apply rotation to all selected models around the center
+      selectedModelIds.forEach(modelId => {
+        const startPos = groupDragStart[modelId];
+        if (startPos) {
+          // Rotate position around center
+          const relX = startPos.x - groupRotationCenter.x;
+          const relY = startPos.y - groupRotationCenter.y;
+          const angleRad = (rotationDelta * Math.PI) / 180;
+          const cosAngle = Math.cos(angleRad);
+          const sinAngle = Math.sin(angleRad);
+          const newRelX = relX * cosAngle - relY * sinAngle;
+          const newRelY = relX * sinAngle + relY * cosAngle;
+
+          models.updateModel(modelId, {
+            x: groupRotationCenter.x + newRelX,
+            y: groupRotationCenter.y + newRelY,
+            rotation: startPos.rotation + rotationDelta
+          }, true);
+        }
+      });
+    } else {
+      // Single model rotation
+      models.updateModel(id, { rotation }, true);
+    }
   }
 
   function handleRotateModelEnd(id, startRotation, endRotation) {
-    // Save to history when rotation ends
-    history.push({
-      type: 'rotate',
-      modelId: id,
-      before: { rotation: startRotation },
-      after: { rotation: endRotation }
-    });
+    if (isRotatingGroup) {
+      // Save group rotation to history
+      selectedModelIds.forEach(modelId => {
+        const startState = groupDragStart[modelId];
+        const model = $models.find(m => m.id === modelId);
+        if (startState && model) {
+          history.push({
+            type: 'rotate',
+            modelId: modelId,
+            before: {
+              x: startState.x,
+              y: startState.y,
+              rotation: startState.rotation
+            },
+            after: {
+              x: model.x,
+              y: model.y,
+              rotation: model.rotation || 0
+            }
+          });
+        }
+      });
+      isRotatingGroup = false;
+      groupRotationCenter = null;
+      groupDragStart = null;
+    } else {
+      // Save single rotation to history
+      history.push({
+        type: 'rotate',
+        modelId: id,
+        before: { rotation: startRotation },
+        after: { rotation: endRotation }
+      });
+    }
   }
 
   function handleRenameModel(id, newName) {
@@ -283,7 +679,13 @@
   }
 
   function handleRemoveSelected() {
-    if ($selectedModelId) {
+    if (selectedModelIds.size > 0) {
+      selectedModelIds.forEach(id => {
+        models.remove(id);
+      });
+      selectedModelIds.clear();
+      selectedModelIds = selectedModelIds; // Trigger reactivity
+    } else if ($selectedModelId) {
       models.remove($selectedModelId);
       selectedModelId.set(null);
     }
@@ -372,6 +774,111 @@
 
   <div class="layout">
     <div class="sidebar">
+      <!-- Selected Model Section -->
+      <CollapsibleSection title="Selected Model">
+        {#if selectedModelIds.size > 1}
+          <div class="edit-form">
+            <div class="field">
+              <span class="label-text">Selected</span>
+              <span class="value">{selectedModelIds.size} models</span>
+            </div>
+            <button class="danger" on:click={handleRemoveSelected}>
+              Remove All ({selectedModelIds.size})
+            </button>
+          </div>
+        {:else if selectedModel}
+          <div class="edit-form">
+            <div class="field">
+              <label for="model-name">Name</label>
+              <input
+                id="model-name"
+                type="text"
+                value={selectedModel.name || ''}
+                on:change={(e) => handleRenameModel(selectedModel.id, e.target.value)}
+              />
+            </div>
+            <div class="field">
+              <span class="label-text">Base Type</span>
+              <span class="value">{getBaseSize(selectedModel.baseType, selectedModel)?.label || 'Unknown'}</span>
+            </div>
+            <div class="field">
+              <span class="label-text">Player</span>
+              <span class="value">Player {selectedModel.playerId}</span>
+            </div>
+            <div class="field">
+              <span class="label-text">Position</span>
+              <span class="value">{selectedModel.x.toFixed(1)}", {selectedModel.y.toFixed(1)}"</span>
+            </div>
+            {#if isOvalBase(selectedModel.baseType)}
+              <div class="field">
+                <span class="label-text">Rotation</span>
+                <span class="value">{Math.round(selectedModel.rotation || 0)}°</span>
+              </div>
+            {/if}
+            <div class="field">
+              <label class="checkbox-label">
+                <input type="checkbox" bind:checked={losVisualizationEnabled} />
+                Show Line of Sight
+              </label>
+            </div>
+            {#if losVisualizationEnabled}
+              <div class="field">
+                <label class="checkbox-label">
+                  <input type="checkbox" bind:checked={showDebugRays} />
+                  Show Debug Rays
+                </label>
+              </div>
+            {/if}
+            {#if losVisualizationEnabled && losResults.length > 0}
+              <div class="field">
+                <span class="label-text">LoS Status</span>
+                <span class="value">{losResults.filter(r => r.canSee).length}/{losResults.length} visible</span>
+              </div>
+            {/if}
+            <button class="danger" on:click={handleRemoveSelected}>
+              Remove
+            </button>
+          </div>
+        {:else}
+          <p class="hint">Click a model to select it</p>
+        {/if}
+      </CollapsibleSection>
+
+            <!-- Army Import -->
+      <CollapsibleSection title="Import Army List" startOpen={false}>
+        <ArmyImportPanel
+          bind:this={importPanelRef}
+          {currentPlayer}
+          on:parse={handleArmyListParse}
+        />
+      </CollapsibleSection>
+
+      <!-- Actions -->
+      <CollapsibleSection title="Actions">
+        <div class="button-group vertical">
+          <div class="button-row">
+            <button
+              on:click={() => models.undo()}
+              disabled={!$history.past.length}
+              title="Undo (Ctrl+Z)"
+            >
+              Undo
+            </button>
+            <button
+              on:click={() => models.redo()}
+              disabled={!$history.future.length}
+              title="Redo (Ctrl+Y)"
+            >
+              Redo
+            </button>
+          </div>
+          <button on:click={saveDeploymentState}>Save State</button>
+          <button on:click={restoreDeploymentState}>Restore State</button>
+          <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
+          <button class="secondary" on:click={clearDeploymentState}>Clear Saved State</button>
+        </div>
+      </CollapsibleSection>
+
       <!-- Add Models Section -->
       <CollapsibleSection title="Add Models">
         <div class="player-toggle">
@@ -449,67 +956,7 @@
         </div>
       </CollapsibleSection>
 
-      <!-- Selected Model Section -->
-      <CollapsibleSection title="Selected Model">
-        {#if selectedModel}
-          <div class="edit-form">
-            <div class="field">
-              <label for="model-name">Name</label>
-              <input
-                id="model-name"
-                type="text"
-                value={selectedModel.name || ''}
-                on:change={(e) => handleRenameModel(selectedModel.id, e.target.value)}
-              />
-            </div>
-            <div class="field">
-              <span class="label-text">Base Type</span>
-              <span class="value">{getBaseSize(selectedModel.baseType, selectedModel)?.label || 'Unknown'}</span>
-            </div>
-            <div class="field">
-              <span class="label-text">Player</span>
-              <span class="value">Player {selectedModel.playerId}</span>
-            </div>
-            <div class="field">
-              <span class="label-text">Position</span>
-              <span class="value">{selectedModel.x.toFixed(1)}", {selectedModel.y.toFixed(1)}"</span>
-            </div>
-            {#if isOvalBase(selectedModel.baseType)}
-              <div class="field">
-                <span class="label-text">Rotation</span>
-                <span class="value">{Math.round(selectedModel.rotation || 0)}°</span>
-              </div>
-            {/if}
-            <div class="field">
-              <label class="checkbox-label">
-                <input type="checkbox" bind:checked={losVisualizationEnabled} />
-                Show Line of Sight
-              </label>
-            </div>
-            {#if losVisualizationEnabled}
-              <div class="field">
-                <label class="checkbox-label">
-                  <input type="checkbox" bind:checked={showDebugRays} />
-                  Show Debug Rays
-                </label>
-              </div>
-            {/if}
-            {#if losVisualizationEnabled && losResults.length > 0}
-              <div class="field">
-                <span class="label-text">LoS Status</span>
-                <span class="value">{losResults.filter(r => r.canSee).length}/{losResults.length} visible</span>
-              </div>
-            {/if}
-            <button class="danger" on:click={handleRemoveSelected}>
-              Remove
-            </button>
-          </div>
-        {:else}
-          <p class="hint">Click a model to select it</p>
-        {/if}
-      </CollapsibleSection>
-
-      <!-- Visualization Options -->
+      <!-- Visualization Options
       <CollapsibleSection title="Visualization">
         <div class="visualization-options">
           <label class="checkbox-label">
@@ -521,37 +968,14 @@
             P2 Denial Zones (9")
           </label>
         </div>
-      </CollapsibleSection>
+      </CollapsibleSection> -->
 
-      <!-- Actions -->
-      <CollapsibleSection title="Actions">
-        <div class="button-group vertical">
-          <div class="button-row">
-            <button
-              on:click={() => models.undo()}
-              disabled={!$history.past.length}
-              title="Undo (Ctrl+Z)"
-            >
-              Undo
-            </button>
-            <button
-              on:click={() => models.redo()}
-              disabled={!$history.future.length}
-              title="Redo (Ctrl+Y)"
-            >
-              Redo
-            </button>
-          </div>
-          <button on:click={saveDeploymentState}>Save State</button>
-          <button on:click={restoreDeploymentState}>Restore State</button>
-          <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
-          <button class="secondary" on:click={clearDeploymentState}>Clear Saved State</button>
-        </div>
-      </CollapsibleSection>
+
     </div>
 
-    <div class="battlefield-area">
-      <div class="battlefield-container" on:click={handleDeselectAll} role="presentation">
+    <div class="main-content">
+      <div class="battlefield-area">
+        <div class="battlefield-container" on:click={handleDeselectAll} on:mousedown={handleBattlefieldMouseDown} role="presentation">
         <Battlefield let:screenToSvg>
           {#if screenToSvg && !screenToSvgRef}
             {screenToSvgRef = screenToSvg, ''}
@@ -745,7 +1169,8 @@
               name={model.name || ''}
               customWidth={model.customWidth}
               customHeight={model.customHeight}
-              selected={model.id === $selectedModelId}
+              selected={model.id === $selectedModelId || selectedModelIds.has(model.id)}
+              marqueePreview={!selectedModelIds.has(model.id) && marqueePreviewIds.has(model.id)}
               {screenToSvg}
               onSelect={handleSelectModel}
               onDrag={handleDragModel}
@@ -823,15 +1248,53 @@
               {/if}
             {/each}
           {/if}
+
+          <!-- Marquee selection rectangle -->
+          {#if isMarqueeSelecting && marqueeStart && marqueeEnd}
+            {@const minX = Math.min(marqueeStart.x, marqueeEnd.x)}
+            {@const minY = Math.min(marqueeStart.y, marqueeEnd.y)}
+            {@const width = Math.abs(marqueeEnd.x - marqueeStart.x)}
+            {@const height = Math.abs(marqueeEnd.y - marqueeStart.y)}
+            <rect
+              x={minX}
+              y={minY}
+              width={width}
+              height={height}
+              fill="rgba(59, 130, 246, 0.1)"
+              stroke="#3b82f6"
+              stroke-width="0.1"
+              stroke-dasharray="0.3 0.2"
+              pointer-events="none"
+            />
+          {/if}
         </Battlefield>
       </div>
-      <div class="info">
-        <p>Battlefield: 60" x 44" | {$player1Models.length} P1 models | {$player2Models.length} P2 models</p>
-        <p class="hint">Press 1/2 to switch player | Press L to toggle LoS | Ctrl+Z to undo | Ctrl+Y to redo</p>
+        <div class="info">
+          <p>Battlefield: 60" x 44" | {$player1Models.length} P1 models | {$player2Models.length} P2 models</p>
+          <p class="hint">Drag to select multiple | Ctrl+Click for multi-select | Delete to remove | 1/2 to switch player | L for LoS</p>
+        </div>
       </div>
+
+      <!-- Staging Area -->
+      {#if $stagingModels.length > 0}
+        <div class="staging-wrapper">
+          <StagingArea
+            on:deploy={handleDeployFromStaging}
+            on:clear={handleClearStaging}
+          />
+        </div>
+      {/if}
     </div>
   </div>
 </main>
+
+<!-- Unmatched Units Dialog -->
+<UnmatchedUnitsDialog
+  bind:show={showUnmatchedDialog}
+  {unmatchedUnits}
+  on:import={handleUnmatchedImport}
+  on:close={() => { showUnmatchedDialog = false; }}
+/>
 
 <style>
   main {
@@ -980,8 +1443,23 @@
     margin: 0;
   }
 
+  .main-content {
+    flex: 1;
+    display: flex;
+    gap: 1rem;
+    min-width: 0;
+  }
+
   .battlefield-area {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .staging-wrapper {
+    width: 350px;
+    flex-shrink: 0;
     display: flex;
     flex-direction: column;
   }

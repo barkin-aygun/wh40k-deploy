@@ -178,6 +178,65 @@ function createModelsStore(historyStore) {
       update(models => models.filter(m => m.playerId !== playerId));
     },
 
+    // Add multiple models at once (batch operation)
+    addBatch(modelsToAdd, skipHistory = false) {
+      const addedIds = [];
+
+      update(models => {
+        const newModels = [...models];
+
+        modelsToAdd.forEach(modelData => {
+          const id = modelData.id || generateId();
+          const model = { ...modelData, id };
+          newModels.push(model);
+          addedIds.push(id);
+
+          // Track in history individually
+          if (!skipHistory && historyStore) {
+            historyStore.push({
+              type: 'add',
+              modelId: id,
+              model: { ...model }
+            });
+          }
+        });
+
+        return newModels;
+      });
+
+      return addedIds;
+    },
+
+    // Update all models in a unit
+    updateUnit(unitId, changes, skipHistory = false) {
+      update(models => models.map(m =>
+        m.unitId === unitId ? { ...m, ...changes } : m
+      ));
+    },
+
+    // Remove all models in a unit
+    removeUnit(unitId, skipHistory = false) {
+      const removedModels = [];
+
+      if (!skipHistory && historyStore) {
+        const models = get({ subscribe });
+        removedModels.push(...models.filter(m => m.unitId === unitId));
+      }
+
+      update(models => models.filter(m => m.unitId !== unitId));
+
+      // Track in history
+      if (!skipHistory && historyStore) {
+        removedModels.forEach(model => {
+          historyStore.push({
+            type: 'remove',
+            modelId: model.id,
+            model: { ...model }
+          });
+        });
+      }
+    },
+
     // Clear all models
     clear() {
       set([]);

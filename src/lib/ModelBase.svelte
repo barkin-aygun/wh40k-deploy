@@ -8,6 +8,7 @@
   export let playerId;
   export let rotation = 0;
   export let selected = false;
+  export let marqueePreview = false;
   export let name = '';
   export let customWidth = null;
   export let customHeight = null;
@@ -32,7 +33,9 @@
   $: isRect = isRectangularBase(baseType);
   $: playerColor = playerId === 1 ? '#3b82f6' : '#ef4444';
   $: playerFill = playerId === 1 ? 'rgba(59, 130, 246, 0.5)' : 'rgba(239, 68, 68, 0.5)';
-  $: strokeWidth = selected ? 0.15 : 0.1;
+  $: previewFill = playerId === 1 ? 'rgba(59, 130, 246, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+  $: strokeWidth = selected ? 0.15 : (marqueePreview ? 0.12 : 0.1);
+  $: fillColor = selected ? playerColor : (marqueePreview ? previewFill : playerFill);
 
   // For circles
   $: radius = baseSize?.radius || 0.5;
@@ -57,9 +60,20 @@
   $: dragMidX = isDragging && dragStartState ? (dragStartState.x + x) / 2 : 0;
   $: dragMidY = isDragging && dragStartState ? (dragStartState.y + y) / 2 : 0;
 
+  // Calculate font size based on base size
+  $: labelFontSize = (() => {
+    if (isRect) {
+      return Math.min(rectWidth, rectHeight) * 0.2; // 20% of smaller dimension
+    } else if (isOval) {
+      return Math.min(rx, ry) * 0.4; // 40% of smaller radius
+    } else {
+      return radius * 0.5; // 50% of radius for circles
+    }
+  })();
+
   function handleClick(event) {
     event.stopPropagation();
-    onSelect(id);
+    onSelect(id, event);
   }
 
   function handleDoubleClick(event) {
@@ -75,7 +89,7 @@
     event.preventDefault();
     event.stopPropagation();
 
-    onSelect(id);
+    onSelect(id, event);
     isDragging = true;
 
     // Capture starting position for history
@@ -164,7 +178,7 @@
         y={y - rectHeight / 2}
         width={rectWidth}
         height={rectHeight}
-        fill={selected ? playerColor : playerFill}
+        fill={fillColor}
         stroke={playerColor}
         stroke-width={strokeWidth}
         on:click={handleClick}
@@ -182,7 +196,7 @@
         cy={y}
         {rx}
         {ry}
-        fill={selected ? playerColor : playerFill}
+        fill={fillColor}
         stroke={playerColor}
         stroke-width={strokeWidth}
         on:click={handleClick}
@@ -198,7 +212,7 @@
       cx={x}
       cy={y}
       r={radius}
-      fill={selected ? playerColor : playerFill}
+      fill={fillColor}
       stroke={playerColor}
       stroke-width={strokeWidth}
       on:click={handleClick}
@@ -216,9 +230,12 @@
       y={y}
       text-anchor="middle"
       dominant-baseline="middle"
-      font-size="0.4"
+      font-size={labelFontSize}
       font-weight="bold"
       fill="white"
+      stroke="black"
+      stroke-width="0.02"
+      paint-order="stroke"
       pointer-events="none"
       class="model-name"
     >
