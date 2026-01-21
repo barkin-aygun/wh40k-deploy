@@ -15,7 +15,6 @@
   } from '../stores/layout.js';
   import {
     models,
-    selectedModelId,
     player1Models,
     player2Models,
     BASE_SIZES,
@@ -25,7 +24,8 @@
   } from '../stores/models.js';
   import { history } from '../stores/history.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
-  import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
+  import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS, DEPLOYMENT_PRESETS } from '../stores/deployment.js';
+  import { TERRAIN_LAYOUT_PRESETS } from '../stores/layout.js';
   import { checkLineOfSight } from '../lib/visibility/lineOfSight.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
   import { armyImports } from '../stores/armyImports.js';
@@ -58,7 +58,7 @@
   let isMarqueeSelecting = false;
   let marqueeStart = null;
   let marqueeEnd = null;
-  let selectedModelIds = new Set();
+  let selectedModelIds = []; // Array of selected model IDs
   let marqueePreviewIds = new Set(); // Models currently in marquee preview
   let justCompletedMarquee = false; // Flag to prevent click handler after marquee
 
@@ -101,6 +101,149 @@
   function clearDeploymentState() {
     localStorage.removeItem(DEPLOYMENT_SAVE_KEY);
     models.clear();
+  }
+
+  // Export state to JSON file
+  function exportState() {
+    const state = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      deployment: $selectedDeployment ? {
+        name: $selectedDeployment.name,
+        // Include full data in case recipient doesn't have this preset
+        zones: $selectedDeployment.zones,
+        objectives: $selectedDeployment.objectives
+      } : null,
+      terrain: {
+        layoutName: $selectedLayoutName,
+        layoutType: $selectedLayoutType,
+        // Include full terrain data so it works even without the preset
+        terrains: $loadedTerrain.terrains,
+        walls: $loadedTerrain.walls
+      },
+      models: $models
+    };
+
+    const json = JSON.stringify(state, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `deployment-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  // Import state from JSON file
+  let fileInputRef = null;
+
+  function triggerImport() {
+    fileInputRef?.click();
+  }
+
+  function handleFileImport(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const state = JSON.parse(e.target.result);
+        importState(state);
+      } catch (err) {
+        console.error('Failed to parse import file:', err);
+        alert('Failed to import: Invalid JSON file');
+      }
+    };
+    reader.readAsText(file);
+
+    // Reset file input so the same file can be imported again
+    event.target.value = '';
+  }
+
+  function importState(state) {
+    // Validate version
+    if (!state.version) {
+      alert('Invalid import file: missing version');
+      return;
+    }
+
+    // Import deployment
+    if (state.deployment) {
+      // Try to find matching preset first
+      const preset = DEPLOYMENT_PRESETS.find(p => p.name === state.deployment.name);
+      if (preset) {
+        selectedDeployment.set(preset);
+      } else if (state.deployment.zones && state.deployment.objectives) {
+        // Use the embedded deployment data
+        selectedDeployment.set({
+          name: state.deployment.name || 'Imported',
+          zones: state.deployment.zones,
+          objectives: state.deployment.objectives
+        });
+      }
+    } else {
+      selectedDeployment.set(null);
+    }
+
+    // Import terrain
+    if (state.terrain) {
+      const { layoutName, layoutType, terrains, walls } = state.terrain;
+
+      // Try to find matching preset first
+      if (layoutType === 'preset' && layoutName) {
+        const preset = TERRAIN_LAYOUT_PRESETS.find(p => p.name === layoutName);
+        if (preset) {
+          selectedLayoutName.set(layoutName);
+          selectedLayoutType.set('preset');
+        } else if (terrains || walls) {
+          // Preset not found, use embedded terrain data
+          // Store as a temporary custom layout
+          const customName = `imported-${Date.now()}`;
+          const saved = localStorage.getItem('warhammer-deployment-layouts');
+          const layouts = saved ? JSON.parse(saved) : {};
+          layouts[customName] = { terrains: terrains || [], walls: walls || [] };
+          localStorage.setItem('warhammer-deployment-layouts', JSON.stringify(layouts));
+          selectedLayoutName.set(customName);
+          selectedLayoutType.set('saved');
+        }
+      } else if (layoutType === 'saved' && layoutName) {
+        // Check if saved layout exists locally
+        const saved = localStorage.getItem('warhammer-deployment-layouts');
+        const layouts = saved ? JSON.parse(saved) : {};
+        if (layouts[layoutName]) {
+          selectedLayoutName.set(layoutName);
+          selectedLayoutType.set('saved');
+        } else if (terrains || walls) {
+          // Saved layout not found, import the embedded data
+          layouts[layoutName] = { terrains: terrains || [], walls: walls || [] };
+          localStorage.setItem('warhammer-deployment-layouts', JSON.stringify(layouts));
+          selectedLayoutName.set(layoutName);
+          selectedLayoutType.set('saved');
+        }
+      } else if (terrains || walls) {
+        // No layout name, create a new saved layout
+        const customName = `imported-${Date.now()}`;
+        const saved = localStorage.getItem('warhammer-deployment-layouts');
+        const layouts = saved ? JSON.parse(saved) : {};
+        layouts[customName] = { terrains: terrains || [], walls: walls || [] };
+        localStorage.setItem('warhammer-deployment-layouts', JSON.stringify(layouts));
+        selectedLayoutName.set(customName);
+        selectedLayoutType.set('saved');
+      }
+    }
+
+    // Import models
+    if (state.models && Array.isArray(state.models)) {
+      models.set(state.models);
+      history.clear();
+    }
+
+    // Clear selection
+    selectedModelIds = [];
   }
 
   // Army import handlers
@@ -216,7 +359,7 @@
   function handleKeyDown(event) {
     if (event.target.tagName === 'INPUT') return;
 
-    const hasSelection = $selectedModelId;
+    const hasSelection = selectedModelIds.length > 0;
 
     // Undo (Ctrl+Z)
     if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
@@ -254,29 +397,16 @@
     // Delete selected models (Delete or Backspace)
     if (event.key === 'Delete' || event.key === 'Backspace') {
       event.preventDefault();
-      if (selectedModelIds.size > 0) {
-        // Delete all selected models
+      if (selectedModelIds.length > 0) {
         selectedModelIds.forEach(id => {
           models.remove(id);
         });
-        selectedModelIds.clear();
-        selectedModelIds = selectedModelIds; // Trigger reactivity
-      } else if ($selectedModelId) {
-        // Delete single selected model
-        models.remove($selectedModelId);
-        selectedModelId.set(null);
+        selectedModelIds = [];
       }
       return;
     }
 
-    // Delete/Backspace - remove selected piece
-    if ((event.key === 'Delete' || event.key === 'Backspace') && hasSelection) {
-      event.preventDefault();
-      handleRemoveSelected();
-      return;
-    }
-
-    // Arrow keys - move selected piece
+    // Arrow keys - move selected models
     if (hasSelection && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault();
       const step = event.shiftKey ? 0.1 : 1;
@@ -289,16 +419,15 @@
         case 'ArrowRight': dx = step; break;
       }
 
-      if ($selectedModelId) {
-        const model = $models.find(m => m.id === $selectedModelId);
+      selectedModelIds.forEach(id => {
+        const model = $models.find(m => m.id === id);
         if (model) {
-          // Arrow key moves should save to history (each keypress is one action)
-          models.updateModel($selectedModelId, {
+          models.updateModel(id, {
             x: model.x + dx,
             y: model.y + dy
           }, false);
         }
-      }
+      });
       return;
     }
 
@@ -316,9 +445,12 @@
       return;
     }
 
-    selectedModelId.set(null);
-    selectedModelIds.clear();
-    selectedModelIds = selectedModelIds; // Trigger reactivity
+    // Don't deselect if click originated from a model
+    if (event?.target?.closest('.model-base')) {
+      return;
+    }
+    
+    selectedModelIds = [];
   }
 
   // Marquee selection handlers
@@ -377,23 +509,18 @@
     const width = maxX - minX;
     const height = maxY - minY;
     if (width < 0.5 && height < 0.5) {
-      // Just a click - deselect all (will be handled by click event)
-      selectedModelIds.clear();
-      selectedModelId.set(null);
+      // Just a click - deselect all
+      selectedModelIds = [];
     } else {
       // Actual marquee selection - select all models inside
-      const newSelection = new Set();
+      const newSelection = [];
       $models.forEach(model => {
         if (model.x >= minX && model.x <= maxX &&
             model.y >= minY && model.y <= maxY) {
-          newSelection.add(model.id);
+          newSelection.push(model.id);
         }
       });
       selectedModelIds = newSelection;
-      // Clear single selection if we have marquee selection
-      if (selectedModelIds.size > 0) {
-        selectedModelId.set(null);
-      }
       // Mark that we just completed a marquee to prevent click handler
       justCompletedMarquee = true;
     }
@@ -467,7 +594,7 @@
       : null;
 
     const id = models.add(phantomModel.baseType, currentPlayer, x, y, customSize);
-    selectedModelId.set(id);
+    selectedModelIds = [id];
 
     phantomModel = null;
     isDraggingFromPalette = false;
@@ -482,35 +609,29 @@
     const y = 22;
     const customSize = { width: rectWidth, height: rectHeight };
     const id = models.add('rect-custom', currentPlayer, x, y, customSize);
-    selectedModelId.set(id);
+    selectedModelIds = [id];
   }
 
   function handleSelectModel(id, event) {
     // Support Ctrl/Cmd/Shift for multi-select
     if (event && (event.ctrlKey || event.metaKey || event.shiftKey)) {
-      if (selectedModelIds.has(id)) {
-        selectedModelIds.delete(id);
+      if (selectedModelIds.includes(id)) {
+        selectedModelIds = selectedModelIds.filter(x => x !== id);
       } else {
-        selectedModelIds.add(id);
+        selectedModelIds = [...selectedModelIds, id];
       }
-      selectedModelIds = selectedModelIds; // Trigger reactivity
-      selectedModelId.set(null); // Clear single selection
-    } else if (selectedModelIds.has(id) && selectedModelIds.size > 1) {
+    } else if (selectedModelIds.includes(id) && selectedModelIds.length > 1) {
       // Clicking on a model that's already in a multi-selection - keep the selection
       // This allows group dragging to work
-      selectedModelId.set(null);
     } else {
       // Single selection
-      selectedModelIds.clear();
-      selectedModelIds.add(id);
-      selectedModelIds = selectedModelIds;
-      selectedModelId.set(null);
+      selectedModelIds = [id];
     }
   }
 
   function handleDragModel(id, x, y) {
     // Check if this is part of a multi-selection
-    if (selectedModelIds.size > 1 && selectedModelIds.has(id)) {
+    if (selectedModelIds.length > 1 && selectedModelIds.includes(id)) {
       // Group drag - move all selected models together
       if (!isDraggingGroup) {
         // First drag event - record starting positions
@@ -577,7 +698,7 @@
 
   function handleRotateModel(id, rotation) {
     // Check if this is part of a multi-selection
-    if (selectedModelIds.size > 1 && selectedModelIds.has(id)) {
+    if (selectedModelIds.length > 1 && selectedModelIds.includes(id)) {
       // Group rotation - rotate all selected models around their center
       if (!isRotatingGroup) {
         // First rotation event - calculate center and record starting states
@@ -679,22 +800,18 @@
   }
 
   function handleRemoveSelected() {
-    if (selectedModelIds.size > 0) {
+    if (selectedModelIds.length > 0) {
       selectedModelIds.forEach(id => {
         models.remove(id);
       });
-      selectedModelIds.clear();
-      selectedModelIds = selectedModelIds; // Trigger reactivity
-    } else if ($selectedModelId) {
-      models.remove($selectedModelId);
-      selectedModelId.set(null);
+      selectedModelIds = [];
     }
   }
 
   function handleClearAll() {
     if (confirm('Clear all models?')) {
       models.clear();
-      selectedModelId.set(null);
+      selectedModelIds = [];
     }
   }
 
@@ -731,9 +848,16 @@
   }
 
   // Reactive calculations for LoS
-  $: selectedModel = $models.find(m => m.id === $selectedModelId);
-  $: enemyModels = selectedModel
-    ? $models.filter(m => m.playerId !== selectedModel.playerId)
+  // selectedModels is the array of all selected model objects
+  $: selectedModels = selectedModelIds
+    .map(id => $models.find(m => m.id === id))
+    .filter(Boolean);
+  // selectedModel is only set for single selection (for info panel)
+  $: selectedModel = selectedModels.length === 1 ? selectedModels[0] : null;
+  // Get enemy models based on selected models' player IDs
+  $: selectedPlayerIds = [...new Set(selectedModels.map(m => m.playerId))];
+  $: enemyModels = selectedModels.length > 0
+    ? $models.filter(m => !selectedPlayerIds.includes(m.playerId))
     : [];
   $: allTerrainPolygons = $loadedTerrain.terrains.map(t => ({
     id: t.id,
@@ -742,22 +866,27 @@
   $: allWallPolygons = $loadedTerrain.walls.map(wall =>
     transformWallVertices(getWallVertices(wall.shape), wall.x, wall.y, wall.rotation)
   );
-  $: losResults = selectedModel && losVisualizationEnabled && enemyModels.length > 0
-    ? enemyModels.map(enemy => {
-        const result = checkLineOfSight(
-          modelToLosFormat(selectedModel),
-          modelToLosFormat(enemy),
-          allTerrainPolygons,
-          allWallPolygons
-        );
-        return {
-          targetId: enemy.id,
-          target: enemy,
-          canSee: result.canSee,
-          firstClearRay: result.firstClearRay,
-          rays: result.rays
-        };
-      })
+  // Calculate LOS from each selected model to each enemy
+  $: losResults = selectedModels.length > 0 && losVisualizationEnabled && enemyModels.length > 0
+    ? selectedModels.flatMap(source =>
+        enemyModels.map(enemy => {
+          const result = checkLineOfSight(
+            modelToLosFormat(source),
+            modelToLosFormat(enemy),
+            allTerrainPolygons,
+            allWallPolygons
+          );
+          return {
+            sourceId: source.id,
+            source: source,
+            targetId: enemy.id,
+            target: enemy,
+            canSee: result.canSee,
+            firstClearRay: result.firstClearRay,
+            rays: result.rays
+          };
+        })
+      )
     : [];
 </script>
 
@@ -776,14 +905,34 @@
     <div class="sidebar">
       <!-- Selected Model Section -->
       <CollapsibleSection title="Selected Model">
-        {#if selectedModelIds.size > 1}
+        {#if selectedModelIds.length > 1}
           <div class="edit-form">
             <div class="field">
               <span class="label-text">Selected</span>
-              <span class="value">{selectedModelIds.size} models</span>
+              <span class="value">{selectedModelIds.length} models</span>
             </div>
+            <div class="field">
+              <label class="checkbox-label">
+                <input type="checkbox" bind:checked={losVisualizationEnabled} />
+                Show Line of Sight
+              </label>
+            </div>
+            {#if losVisualizationEnabled}
+              <div class="field">
+                <label class="checkbox-label">
+                  <input type="checkbox" bind:checked={showDebugRays} />
+                  Show Debug Rays
+                </label>
+              </div>
+              {#if losResults.length > 0}
+                <div class="field">
+                  <span class="label-text">LoS Status</span>
+                  <span class="value">{losResults.filter(r => r.canSee).length}/{losResults.length} rays visible</span>
+                </div>
+              {/if}
+            {/if}
             <button class="danger" on:click={handleRemoveSelected}>
-              Remove All ({selectedModelIds.size})
+              Remove All ({selectedModelIds.length})
             </button>
           </div>
         {:else if selectedModel}
@@ -872,8 +1021,23 @@
               Redo
             </button>
           </div>
-          <button on:click={saveDeploymentState}>Save State</button>
-          <button on:click={restoreDeploymentState}>Restore State</button>
+          <div class="button-row">
+            <button on:click={exportState} title="Export deployment to share with others">
+              Export
+            </button>
+            <button on:click={triggerImport} title="Import deployment from JSON file">
+              Import
+            </button>
+          </div>
+          <input
+            type="file"
+            accept=".json"
+            bind:this={fileInputRef}
+            on:change={handleFileImport}
+            style="display: none;"
+          />
+          <button on:click={saveDeploymentState}>Save to Browser</button>
+          <button on:click={restoreDeploymentState}>Restore from Browser</button>
           <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
           <button class="secondary" on:click={clearDeploymentState}>Clear Saved State</button>
         </div>
@@ -975,7 +1139,7 @@
 
     <div class="main-content">
       <div class="battlefield-area">
-        <div class="battlefield-container" on:click={handleDeselectAll} on:mousedown={handleBattlefieldMouseDown} role="presentation">
+        <div class="battlefield-container" on:mousedown={handleBattlefieldMouseDown} role="presentation">
         <Battlefield let:screenToSvg>
           {#if screenToSvg && !screenToSvgRef}
             {screenToSvgRef = screenToSvg, ''}
@@ -1169,8 +1333,8 @@
               name={model.name || ''}
               customWidth={model.customWidth}
               customHeight={model.customHeight}
-              selected={model.id === $selectedModelId || selectedModelIds.has(model.id)}
-              marqueePreview={!selectedModelIds.has(model.id) && marqueePreviewIds.has(model.id)}
+              selected={selectedModelIds.includes(model.id)}
+              marqueePreview={!selectedModelIds.includes(model.id) && marqueePreviewIds.has(model.id)}
               {screenToSvg}
               onSelect={handleSelectModel}
               onDrag={handleDragModel}
@@ -1201,7 +1365,7 @@
           {/if}
 
           <!-- Debug rays (render behind LoS lines) -->
-          {#if showDebugRays && losVisualizationEnabled && selectedModel && losResults.length > 0}
+          {#if showDebugRays && losVisualizationEnabled && selectedModels.length > 0 && losResults.length > 0}
             {#each losResults as result}
               {#each result.rays as ray}
                 <line
@@ -1218,7 +1382,7 @@
           {/if}
 
           <!-- LoS Visualization -->
-          {#if losVisualizationEnabled && selectedModel && losResults.length > 0}
+          {#if losVisualizationEnabled && selectedModels.length > 0 && losResults.length > 0}
             {#each losResults as result}
               {#if result.firstClearRay}
                 <!-- Show the actual clear ray of sight -->
@@ -1235,8 +1399,8 @@
               {:else}
                 <!-- Show blocked line from center to center -->
                 <line
-                  x1={selectedModel.x}
-                  y1={selectedModel.y}
+                  x1={result.source.x}
+                  y1={result.source.y}
                   x2={result.target.x}
                   y2={result.target.y}
                   stroke="#ef4444"
