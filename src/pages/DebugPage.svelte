@@ -241,16 +241,6 @@
 </script>
 
 <main>
-  <div class="header">
-    <h1>Debug Mode</h1>
-    <nav class="nav-links">
-      <a href="#/setup">Battlefield Setup</a>
-      <a href="#/deployment">Deployment</a>
-      <a href="#/">Layout Builder</a>
-      <a href="#/debug" class="active">Debug Mode</a>
-    </nav>
-  </div>
-
   <div class="layout">
     <div class="sidebar">
       <!-- Debug Controls -->
@@ -484,40 +474,9 @@
     flex-direction: column;
     min-height: 100vh;
     padding: 1rem;
+    padding-top: 4rem;
+    padding-bottom: 3rem;
     box-sizing: border-box;
-  }
-
-  .header {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    margin-bottom: 1rem;
-  }
-
-  h1 {
-    margin: 0;
-    font-size: 1.5rem;
-    color: #e0e0e0;
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 1.5rem;
-  }
-
-  .nav-links a {
-    color: #888;
-    text-decoration: none;
-    font-size: 0.875rem;
-  }
-
-  .nav-links a:hover {
-    color: #aaa;
-    text-decoration: underline;
-  }
-
-  .nav-links a.active {
-    color: #fff;
   }
 
   .layout {
