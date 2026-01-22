@@ -9,6 +9,7 @@
   export let rotation = 0;
   export let selected = false;
   export let marqueePreview = false;
+  export let inGroupSelection = false; // Hide individual rotate handle when in multi-selection
   export let name = '';
   export let customWidth = null;
   export let customHeight = null;
@@ -243,8 +244,8 @@
     </text>
   {/if}
 
-  <!-- Rotation handle (for ovals and rectangles when selected) -->
-  {#if selected && (isOval || isRect)}
+  <!-- Rotation handle (for ovals and rectangles when selected, but not in group selection) -->
+  {#if selected && (isOval || isRect) && !inGroupSelection}
     <line
       x1={x}
       y1={y}
