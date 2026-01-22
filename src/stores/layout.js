@@ -57,13 +57,13 @@ export const TERRAIN_LAYOUT_PRESETS = [
       { id: "c", x: 5, y: 4, width: 6, height: 12, rotation: 0 },
       { id: "d", x: 49, y: 28, width: 6, height: 12, rotation: 0 },
       { id: "e", x: 46, y: 4, width: 6, height: 12, rotation: 0 },
-      { id: "f", x: 16.32, y: 16.13, width: 6, height: 12, rotation: 135 },
+      { id: "f", x: 16.46, y: 15.77, width: 6, height: 12, rotation: 132.1 },
       { id: "g", x: 53, y: 15, width: 4, height: 6, rotation: 90 },
       { id: "h", x: 8, y: 28, width: 6, height: 12, rotation: 0 },
       { id: "i", x: 3, y: 23, width: 4, height: 6, rotation: 90 },
       { id: "j", x: 32.62, y: 32.55, width: 5, height: 10, rotation: -90 },
       { id: "k", x: 22.48, y: 0.51, width: 5, height: 10, rotation: -90 },
-      { id: "l", x: 37, y: 16, width: 6, height: 12, rotation: 135 }
+      { id: "l", x: 37.5, y: 16.2, width: 6, height: 12, rotation: 132.1 }
     ],
     walls: [
       { id: "wa", x: 49, y: 32, shape: 'L-4x8', rotation: 0 },
@@ -111,7 +111,7 @@ export const TERRAIN_LAYOUT_PRESETS = [
       { id: "c", x: 4, y: 19, width: 4, height: 6, rotation: 0 },
       { id: "d", x: 7.50, y: 27.68, width: 6, height: 12, rotation: -48.57 },
       { id: "e", x: 46.53, y: 4.24, width: 6, height: 12, rotation: -48.57 },
-      { id: "f", x: 53, y: 19, width: 4, height: 6, rotation: 0 },
+      { id: "f", x: 52, y: 19, width: 4, height: 6, rotation: 0 },
       { id: "g", x: 48, y: 28, width: 4, height: 6, rotation: 0 },
       { id: "h", x: 39, y: 31, width: 6, height: 12, rotation: 90 },
       { id: "i", x: 33.03, y: 2.97, width: 6, height: 12, rotation: -37.25 },
