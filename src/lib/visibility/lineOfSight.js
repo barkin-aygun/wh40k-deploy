@@ -8,9 +8,11 @@ import {
   ellipsePerimeterPoints,
   rectPerimeterPoints,
   circleOverlapsPolygon,
+  circleWhollyInPolygon,
   lineIntersectsPolygon,
   findConnectedTerrainGroups,
-  getTerrainGroupMembers
+  getTerrainGroupMembers,
+  pointInPolygon
 } from './geometry.js';
 
 const NUM_SAMPLE_POINTS = 16;
@@ -37,7 +39,7 @@ function getModelPerimeterPoints(model) {
 }
 
 /**
- * Check if a model (circle or ellipse) overlaps a polygon
+ * Check if a model (circle or ellipse) overlaps a polygon (any part touching)
  * @param {Object} model - Model with either {x, y, radius} or {x, y, rx, ry, rotation}
  * @param {Array} vertices - Polygon vertices
  * @returns {boolean} True if model overlaps polygon
@@ -59,34 +61,36 @@ function modelOverlapsPolygon(model, vertices) {
   return false;
 }
 
-// Simple point in polygon test
-function pointInPolygon(point, vertices) {
-  const n = vertices.length;
-  let sign = null;
+/**
+ * Check if a model is wholly contained within a polygon (all parts inside)
+ * @param {Object} model - Model with either {x, y, radius} or {x, y, rx, ry, rotation} or {x, y, width, height, rotation, isRectangle}
+ * @param {Array} vertices - Polygon vertices
+ * @returns {boolean} True if model is wholly within polygon
+ */
+function modelWhollyInPolygon(model, vertices) {
+  // Check center first - if center is outside, model can't be wholly inside
+  if (!pointInPolygon({ x: model.x, y: model.y }, vertices)) {
+    return false;
+  }
 
-  for (let i = 0; i < n; i++) {
-    const v1 = vertices[i];
-    const v2 = vertices[(i + 1) % n];
-
-    const cross = (v2.x - v1.x) * (point.y - v1.y) - (v2.y - v1.y) * (point.x - v1.x);
-
-    if (cross !== 0) {
-      const currentSign = cross > 0;
-      if (sign === null) {
-        sign = currentSign;
-      } else if (sign !== currentSign) {
-        return false;
-      }
+  // Check all perimeter points - all must be inside
+  const points = getModelPerimeterPoints(model);
+  for (const point of points) {
+    if (!pointInPolygon(point, vertices)) {
+      return false;
     }
   }
   return true;
 }
 
+
 /**
  * Check if model A can see model B
  * Rules:
  * - Can see if ANY straight line from any part of A to any part of B is unobstructed
- * - Terrain footprints block vision UNLESS viewer (A) has ANY part on that terrain
+ * - Terrain footprints block vision UNLESS:
+ *   - Viewer (A) is WHOLLY WITHIN that terrain (can see out), OR
+ *   - Target (B) has ANY part on that terrain (can be seen into)
  * - Walls always block vision (even if model is on terrain)
  *
  * @param {Object} modelA - Viewing model (circle: {x, y, radius}, ellipse: {x, y, rx, ry, rotation}, rect: {x, y, width, height, rotation, isRectangle})
@@ -102,13 +106,15 @@ export function checkLineOfSight(modelA, modelB, terrainPolygons, walls) {
   // Find connected terrain groups (terrains sharing edges are treated as one footprint)
   const terrainToGroup = findConnectedTerrainGroups(terrainPolygons);
 
-  // For each terrain, check if EITHER model touches it
-  // If so, ignore that terrain AND all terrains connected to it (sharing edges)
+  // Determine which terrains to ignore for LOS:
+  // - Viewer (A) must be WHOLLY WITHIN a terrain to ignore it for outgoing LOS
+  // - Target (B) only needs ANY part on terrain to ignore it for incoming LOS
+  // If either condition is met, ignore that terrain AND all terrains connected to it
   const terrainsToIgnore = new Set();
   for (const terrain of terrainPolygons) {
-    const viewerOnTerrain = modelOverlapsPolygon(modelA, terrain.vertices);
+    const viewerWhollyInTerrain = modelWhollyInPolygon(modelA, terrain.vertices);
     const targetOnTerrain = modelOverlapsPolygon(modelB, terrain.vertices);
-    if (viewerOnTerrain || targetOnTerrain) {
+    if (viewerWhollyInTerrain || targetOnTerrain) {
       // Add this terrain and all connected terrains to ignore set
       const groupMembers = getTerrainGroupMembers(terrain.id, terrainToGroup, terrainPolygons);
       for (const memberId of groupMembers) {
@@ -180,13 +186,15 @@ export function canSee(modelA, modelB, terrainPolygons, walls) {
   // Find connected terrain groups (terrains sharing edges are treated as one footprint)
   const terrainToGroup = findConnectedTerrainGroups(terrainPolygons);
 
-  // For each terrain, check if EITHER model touches it
-  // If so, ignore that terrain AND all terrains connected to it (sharing edges)
+  // Determine which terrains to ignore for LOS:
+  // - Viewer (A) must be WHOLLY WITHIN a terrain to ignore it for outgoing LOS
+  // - Target (B) only needs ANY part on terrain to ignore it for incoming LOS
+  // If either condition is met, ignore that terrain AND all terrains connected to it
   const terrainsToIgnore = new Set();
   for (const terrain of terrainPolygons) {
-    const viewerOnTerrain = modelOverlapsPolygon(modelA, terrain.vertices);
+    const viewerWhollyInTerrain = modelWhollyInPolygon(modelA, terrain.vertices);
     const targetOnTerrain = modelOverlapsPolygon(modelB, terrain.vertices);
-    if (viewerOnTerrain || targetOnTerrain) {
+    if (viewerWhollyInTerrain || targetOnTerrain) {
       // Add this terrain and all connected terrains to ignore set
       const groupMembers = getTerrainGroupMembers(terrain.id, terrainToGroup, terrainPolygons);
       for (const memberId of groupMembers) {

@@ -220,17 +220,18 @@
   $: debugWallPolygons = $debugWalls.map(wall =>
     transformWallVertices(getWallVertices(wall.shape, wall.segments), wall.x, wall.y, wall.rotation)
   );
+  // Calculate LOS from each enemy to the selected model (who can see the selected model)
   $: modelLosResults = selectedModel && enemyModels.length > 0
     ? enemyModels.map(enemy => {
         const result = checkLineOfSight(
-          modelToLosFormat(selectedModel),
-          modelToLosFormat(enemy),
+          modelToLosFormat(enemy),          // enemy is the viewer
+          modelToLosFormat(selectedModel),  // selected model is the target
           debugTerrainPolygons,
           debugWallPolygons
         );
         return {
-          targetId: enemy.id,
-          target: enemy,
+          viewerId: enemy.id,
+          viewer: enemy,
           canSee: result.canSee,
           firstClearRay: result.firstClearRay,
           rays: result.rays  // Include all rays for debug visualization

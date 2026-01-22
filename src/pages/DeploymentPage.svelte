@@ -1176,21 +1176,21 @@
   $: allWallPolygons = $loadedTerrain.walls.map(wall =>
     transformWallVertices(getWallVertices(wall.shape, wall.segments), wall.x, wall.y, wall.rotation)
   );
-  // Calculate LOS from each selected model to each enemy
+  // Calculate LOS from each enemy to each selected model (who can see the selected models)
   $: losResults = selectedModels.length > 0 && losVisualizationEnabled && enemyModels.length > 0
-    ? selectedModels.flatMap(source =>
+    ? selectedModels.flatMap(selected =>
         enemyModels.map(enemy => {
           const result = checkLineOfSight(
-            modelToLosFormat(source),
-            modelToLosFormat(enemy),
+            modelToLosFormat(enemy),      // enemy is the viewer
+            modelToLosFormat(selected),   // selected model is the target
             allTerrainPolygons,
             allWallPolygons
           );
           return {
-            sourceId: source.id,
-            source: source,
-            targetId: enemy.id,
-            target: enemy,
+            sourceId: enemy.id,
+            source: enemy,
+            targetId: selected.id,
+            target: selected,
             canSee: result.canSee,
             firstClearRay: result.firstClearRay,
             rays: result.rays
