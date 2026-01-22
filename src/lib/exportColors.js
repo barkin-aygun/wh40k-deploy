@@ -6,20 +6,20 @@
 export const EXPORT_COLORS = {
   // Battlefield background
   battlefield: {
-    fill: '#4a5a4a'  // Green-tinted gray (same as app)
+    fill: '#adbeadff'  // Green-tinted gray (same as app)
   },
 
   // Terrain rectangles
   terrain: {
-    fill: 'rgba(139, 90, 43, 0.6)',  // Tan/brown, slightly more opaque for export
+    fill: 'rgba(116, 102, 63, 0.71)',  // Tan/brown, slightly more opaque for export
     stroke: '#8b5a2b',               // Saddle brown
     strokeWidth: 0.15
   },
 
   // Wall pieces (L-shaped and C-shaped)
   wall: {
-    fill: 'rgba(139, 69, 19, 0.9)',  // Dark brown, more opaque for export
-    stroke: '#5c3317',               // Very dark brown
+    fill: 'rgba(52, 45, 39, 1)',  // Dark brown, more opaque for export
+    stroke: '#000000ba',               // Very dark brown
     strokeWidth: 0.15
   },
 
@@ -47,7 +47,7 @@ export const EXPORT_COLORS = {
 
   // Deployment zones (uses zone's own borderColor, these are fallbacks/settings)
   deploymentZone: {
-    fillOpacity: 0.1,       // Light fill for zone area
+    fillOpacity: 0.2,       // Light fill for zone area
     strokeWidth: 0.2,       // Zone border thickness
     strokeDasharray: '0.5,0.25'  // Dashed border
   },
@@ -55,7 +55,7 @@ export const EXPORT_COLORS = {
   // Objectives
   objective: {
     primary: {
-      fill: '#fbbf24',      // Amber/gold for primary objective
+      fill: '#9ca3af',      // Gray for primary objectives
       stroke: '#000000',
       strokeWidth: 0.08
     },
