@@ -18,6 +18,7 @@
     deleteLayout,
     parseWallShape
   } from '../stores/layout.js';
+  import { exportBattlefieldPng } from '../lib/exportPng.js';
 
   // Modal state
   let showSaveModal = false;

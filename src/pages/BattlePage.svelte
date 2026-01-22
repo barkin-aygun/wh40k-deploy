@@ -21,6 +21,7 @@
   import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
   import { checkLineOfSight } from '../lib/visibility/lineOfSight.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
+  import { exportBattlefieldPng } from '../lib/exportPng.js';
 
   // State
   let screenToSvgRef = null;
@@ -62,6 +63,24 @@
   onDestroy(() => {
     window.removeEventListener('keydown', handleKeyDown);
   });
+
+  // Export to PNG
+  async function handleExportPng() {
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `battle-${timestamp}`;
+    try {
+      await exportBattlefieldPng(
+        $loadedTerrain.terrains,
+        $loadedTerrain.walls,
+        $models,
+        filename,
+        $selectedDeployment  // Include deployment zones and objectives
+      );
+    } catch (err) {
+      alert('Failed to export PNG');
+      console.error('Export error:', err);
+    }
+  }
 
   function handleKeyDown(event) {
     if (event.target.tagName === 'INPUT') return;
@@ -904,7 +923,9 @@
               Redo
             </button>
           </div>
+          <button on:click={handleExportPng} title="Export battlefield as PNG image">Export PNG</button>
         </div>
+
       </CollapsibleSection>
     </div>
 

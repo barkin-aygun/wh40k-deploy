@@ -30,6 +30,7 @@
   import { armyImports } from '../stores/armyImports.js';
   import { parseArmyList } from '../lib/services/armyParser.js';
   import { mapParsedUnitsToModels } from '../lib/services/unitMapper.js';
+  import { exportBattlefieldPng } from '../lib/exportPng.js';
 
   // Model palette state
   let currentPlayer = 1;
@@ -147,6 +148,24 @@
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  }
+
+  // Export to PNG
+  async function handleExportPng() {
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `deployment-${timestamp}`;
+    try {
+      await exportBattlefieldPng(
+        $loadedTerrain.terrains,
+        $loadedTerrain.walls,
+        $models,
+        filename,
+        $selectedDeployment  // Include deployment zones and objectives
+      );
+    } catch (err) {
+      alert('Failed to export PNG');
+      console.error('Export error:', err);
+    }
   }
 
   // Import state from JSON file
@@ -1403,6 +1422,7 @@
             on:change={handleFileImport}
             style="display: none;"
           />
+          <button on:click={handleExportPng} title="Export battlefield as PNG image">Export PNG</button>
           <button on:click={saveDeploymentState}>Save to Browser</button>
           <button on:click={restoreDeploymentState}>Restore from Browser</button>
           <button class="secondary" on:click={handleClearAll}>Clear All Models</button>

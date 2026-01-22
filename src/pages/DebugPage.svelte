@@ -18,6 +18,7 @@
     getWallVertices,
     transformWallVertices
   } from '../stores/layout.js';
+  import { exportBattlefieldPng } from '../lib/exportPng.js';
   import {
     debugModels,
     debugSelectedModelId,
@@ -238,6 +239,18 @@
         };
       })
     : [];
+
+  // Export to PNG
+  async function handleExportPng() {
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const filename = `battlefield-debug-${timestamp}`;
+    try {
+      await exportBattlefieldPng($debugTerrains, $debugWalls, $debugModels, filename);
+    } catch (err) {
+      alert('Failed to export PNG');
+      console.error('Export error:', err);
+    }
+  }
 </script>
 
 <main>
@@ -257,6 +270,7 @@
           {:else}
             <span class="los-status">No enemies</span>
           {/if}
+          <button class="export-btn" on:click={handleExportPng}>Export PNG</button>
         </div>
       </CollapsibleSection>
 
@@ -554,6 +568,11 @@
   .los-status.blocked {
     background: #ef444433;
     color: #ef4444;
+  }
+
+  .export-btn {
+    margin-top: 0.5rem;
+    width: 100%;
   }
 
   .player-toggle {
