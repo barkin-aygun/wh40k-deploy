@@ -33,7 +33,7 @@
 </script>
 
 <div class="app-header">
-  <h1 class="app-title">Fu'llasso</h1>
+  <h1 class="app-title">Procinctum</h1>
   <nav class="nav-links">
     <a href="#/setup" class:active={currentPage === 'setup'}>Battlefield Setup</a>
     <a href="#/deployment" class:active={currentPage === 'deployment'}>Deployment</a>
