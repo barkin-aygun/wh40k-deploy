@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import Battlefield from '../lib/Battlefield.svelte';
   import CollapsibleSection from '../lib/CollapsibleSection.svelte';
-  import { DEPLOYMENT_PRESETS, pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
+  import { DEPLOYMENT_PRESETS } from '../stores/deployment.js';
   import { savedLayoutsList, refreshSavedLayouts, TERRAIN_LAYOUT_PRESETS } from '../stores/layout.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
 
@@ -31,75 +31,6 @@
 
   function handleClearDeployment() {
     selectedDeployment.set(null);
-  }
-
-  // Get wall vertices for rendering
-  function getWallPath(wall) {
-    const t = 0.5; // wall thickness
-    let vertices = [];
-
-    switch (wall.shape) {
-      case 'L-4x8':
-        vertices = [
-          { x: 0, y: 0 }, { x: t, y: 0 }, { x: t, y: 8 - t },
-          { x: 4, y: 8 - t }, { x: 4, y: 8 }, { x: 0, y: 8 }
-        ];
-        break;
-      case 'L-4x8-mirror':
-        vertices = [
-          { x: 0, y: 0 }, { x: t, y: 0 }, { x: t, y: 8 },
-          { x: -4 + t, y: 8 }, { x: -4 + t, y: 8 - t }, { x: 0, y: 8 - t }
-        ];
-        break;
-      case 'C-4-8-4':
-        vertices = [
-          { x: 0, y: 0 }, { x: 4, y: 0 }, { x: 4, y: t }, { x: t, y: t },
-          { x: t, y: 8 - t }, { x: 4, y: 8 - t }, { x: 4, y: 8 }, { x: 0, y: 8 }
-        ];
-        break;
-      case 'L-5x6':
-        vertices = [
-          { x: 0, y: 0 }, { x: t, y: 0 }, { x: t, y: 6 - t },
-          { x: 5, y: 6 - t }, { x: 5, y: 6 }, { x: 0, y: 6 }
-        ];
-        break;
-      case 'L-5x6-mirror':
-        vertices = [
-          { x: 0, y: 0 }, { x: t, y: 0 }, { x: t, y: 6 },
-          { x: -5 + t, y: 6 }, { x: -5 + t, y: 6 - t }, { x: 0, y: 6 - t }
-        ];
-        break;
-      case 'L-4x6':
-        vertices = [
-          { x: 0, y: 0 }, { x: t, y: 0 }, { x: t, y: 6 - t },
-          { x: 4, y: 6 - t }, { x: 4, y: 6 }, { x: 0, y: 6 }
-        ];
-        break;
-      case 'L-4x6-mirror':
-        vertices = [
-          { x: 0, y: 0 }, { x: t, y: 0 }, { x: t, y: 6 },
-          { x: -4 + t, y: 6 }, { x: -4 + t, y: 6 - t }, { x: 0, y: 6 - t }
-        ];
-        break;
-      default:
-        return '';
-    }
-
-    return `M ${vertices.map(v => `${wall.x + v.x},${wall.y + v.y}`).join(' L ')} Z`;
-  }
-
-  function getWallCenter(wall) {
-    const t = 0.5;
-    switch (wall.shape) {
-      case 'L-4x8': return { x: wall.x + 2, y: wall.y + 4 };
-      case 'L-4x8-mirror': return { x: wall.x - 2 + t, y: wall.y + 4 };
-      case 'C-4-8-4': return { x: wall.x + 2, y: wall.y + 4 };
-      case 'L-5x6': return { x: wall.x + 2.5, y: wall.y + 3 };
-      case 'L-5x6-mirror': return { x: wall.x - 2.5 + t, y: wall.y + 3 };
-      case 'L-4x6': return { x: wall.x + 2, y: wall.y + 3 };
-      case 'L-4x6-mirror': return { x: wall.x - 2 + t, y: wall.y + 3 };
-      default: return { x: wall.x, y: wall.y };
-    }
   }
 </script>
 
@@ -188,79 +119,12 @@
 
     <div class="battlefield-area">
       <div class="battlefield-container">
-        <Battlefield>
-          <!-- Deployment zones -->
-          {#if $selectedDeployment}
-            {#each $selectedDeployment.zones as zone}
-              <path
-                d={pathToSvgD(zone.path)}
-                fill={zone.color}
-                stroke={zone.borderColor}
-                stroke-width="0.10"
-                stroke-dasharray="0.5,0.25"
-              />
-            {/each}
-
-            <!-- Objectives -->
-            {#each $selectedDeployment.objectives as obj}
-              {@const markerColor = obj.isPrimary ? '#fbbf24' : '#9ca3af'}
-              {@const controlColor = obj.isPrimary ? 'rgba(251, 191, 36, 0.15)' : 'rgba(156, 163, 175, 0.15)'}
-              <circle
-                cx={obj.x}
-                cy={obj.y}
-                r={OBJECTIVE_CONTROL_RADIUS}
-                fill={controlColor}
-                stroke={markerColor}
-                stroke-width="0.05"
-                stroke-dasharray="0.3,0.15"
-              />
-              <circle
-                cx={obj.x}
-                cy={obj.y}
-                r={OBJECTIVE_RADIUS}
-                fill={markerColor}
-                stroke="#000"
-                stroke-width="0.06"
-              />
-              <circle
-                cx={obj.x}
-                cy={obj.y}
-                r="0.15"
-                fill="#000"
-              />
-            {/each}
-          {/if}
-
-          <!-- Terrain pieces -->
-          {#each $loadedTerrain.terrains as terrain}
-            {@const centerX = terrain.x + terrain.width / 2}
-            {@const centerY = terrain.y + terrain.height / 2}
-            <g transform="rotate({terrain.rotation}, {centerX}, {centerY})">
-              <rect
-                x={terrain.x}
-                y={terrain.y}
-                width={terrain.width}
-                height={terrain.height}
-                fill="rgba(139, 90, 43, 0.6)"
-                stroke="#8b5a2b"
-                stroke-width="0.1"
-              />
-            </g>
-          {/each}
-
-          <!-- Wall pieces -->
-          {#each $loadedTerrain.walls as wall}
-            {@const center = getWallCenter(wall)}
-            <g transform="rotate({wall.rotation}, {center.x}, {center.y})">
-              <path
-                d={getWallPath(wall)}
-                fill="rgba(139, 69, 19, 0.8)"
-                stroke="#5c3317"
-                stroke-width="0.1"
-              />
-            </g>
-          {/each}
-        </Battlefield>
+        <Battlefield
+          deploymentZones={$selectedDeployment?.zones}
+          objectives={$selectedDeployment?.objectives}
+          terrains={$loadedTerrain.terrains}
+          walls={$loadedTerrain.walls}
+        />
       </div>
       <div class="info">
         <p>Battlefield: 60" x 44"</p>

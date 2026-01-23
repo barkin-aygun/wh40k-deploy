@@ -1431,7 +1431,6 @@
           <button on:click={saveDeploymentState}>Save to Browser</button>
           <button on:click={restoreDeploymentState}>Restore from Browser</button>
           <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
-          <button class="secondary" on:click={clearDeploymentState}>Clear Saved State</button>
         </div>
       </CollapsibleSection>
 
@@ -2196,7 +2195,7 @@
   }
 
   .sidebar {
-    width: 200px;
+    width: 220px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -2224,11 +2223,12 @@
   }
 
   button {
-    padding: 0.5rem 0.75rem;
+    padding: 0.375rem 0.5rem;
     border: 1px solid #444;
     border-radius: 4px;
     background: #333;
     color: #fff;
+    font-size: 0.8rem;
     cursor: pointer;
     font-size: 0.875rem;
     transition: all 0.15s;

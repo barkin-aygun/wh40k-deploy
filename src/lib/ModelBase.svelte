@@ -1,5 +1,6 @@
 <script>
   import { getBaseSize, isOvalBase, isRectangularBase } from '../stores/models.js';
+  import { COLORS, getPlayerColors } from './colors.js';
 
   export let id;
   export let x;
@@ -32,9 +33,10 @@
   $: baseSize = getBaseSize(baseType, modelObj);
   $: isOval = isOvalBase(baseType);
   $: isRect = isRectangularBase(baseType);
-  $: playerColor = playerId === 1 ? '#3b82f6' : '#ef4444';
-  $: playerFill = playerId === 1 ? 'rgba(59, 130, 246, 0.5)' : 'rgba(239, 68, 68, 0.5)';
-  $: previewFill = playerId === 1 ? 'rgba(59, 130, 246, 0.3)' : 'rgba(239, 68, 68, 0.3)';
+  $: playerColors = getPlayerColors(playerId);
+  $: playerColor = playerColors.primary;
+  $: playerFill = playerColors.fill;
+  $: previewFill = playerColors.fillLight;
   $: strokeWidth = selected ? 0.15 : (marqueePreview ? 0.12 : 0.1);
   $: fillColor = selected ? playerColor : (marqueePreview ? previewFill : playerFill);
 
@@ -251,7 +253,7 @@
       y1={y}
       x2={handleX}
       y2={handleY}
-      stroke="#9333ea"
+      stroke={COLORS.selection.handle}
       stroke-width="0.1"
       stroke-dasharray="0.3,0.15"
     />
@@ -259,8 +261,8 @@
       cx={handleX}
       cy={handleY}
       r="0.8"
-      fill="#9333ea"
-      stroke="#7e22ce"
+      fill={COLORS.selection.handle}
+      stroke={COLORS.selection.handleDark}
       stroke-width="0.1"
       on:mousedown={handleRotateMouseDown}
       role="button"
@@ -291,7 +293,7 @@
       y1={dragStartState.y}
       x2={x}
       y2={y}
-      stroke="#fbbf24"
+      stroke={COLORS.selection.dragRuler}
       stroke-width="0.12"
       stroke-dasharray="0.3,0.15"
       pointer-events="none"
@@ -300,7 +302,7 @@
       cx={dragStartState.x}
       cy={dragStartState.y}
       r="0.25"
-      fill="#fbbf24"
+      fill={COLORS.selection.dragRuler}
       pointer-events="none"
     />
     <text
@@ -310,7 +312,7 @@
       dominant-baseline="middle"
       font-size="0.5"
       font-weight="bold"
-      fill="#fbbf24"
+      fill={COLORS.selection.dragRuler}
       stroke="#000"
       stroke-width="0.05"
       paint-order="stroke"

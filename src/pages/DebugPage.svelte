@@ -1,9 +1,6 @@
 <script>
   import { onMount } from 'svelte';
   import Battlefield from '../lib/Battlefield.svelte';
-  import TerrainRect from '../lib/TerrainRect.svelte';
-  import WallPiece from '../lib/WallPiece.svelte';
-  import ModelBase from '../lib/ModelBase.svelte';
   import ModelPaletteItem from '../lib/ModelPaletteItem.svelte';
   import CollapsibleSection from '../lib/CollapsibleSection.svelte';
   import { debugMode } from '../stores/elements.js';
@@ -28,6 +25,10 @@
   } from '../stores/models.js';
   import { debugHistory } from '../stores/history.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
+  import { COLORS, getPlayerColors } from '../lib/colors.js';
+
+  // Battlefield component reference for screenToSvg
+  let battlefieldComponent;
 
   // Terrain/wall/model handlers
   function handleAddTerrain(width, height) {
@@ -71,7 +72,6 @@
   let phantomModel = null;
   let isDraggingFromPalette = false;
   let dragStartPos = null;
-  let screenToSvgRef = null;
 
   const DRAG_THRESHOLD = 5; // pixels - movement below this is considered a click
 
@@ -87,12 +87,12 @@
   });
 
   function handlePaletteDragStart(baseSize, event) {
-    if (!screenToSvgRef) return;
+    if (!battlefieldComponent) return;
 
     isDraggingFromPalette = true;
     dragStartPos = { x: event.clientX, y: event.clientY };
 
-    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+    const svgCoords = battlefieldComponent.screenToSvg(event.clientX, event.clientY);
     phantomModel = {
       baseType: baseSize.type,
       x: svgCoords.x,
@@ -104,8 +104,8 @@
   }
 
   function handlePaletteDragMove(event) {
-    if (!isDraggingFromPalette || !phantomModel || !screenToSvgRef) return;
-    const svgCoords = screenToSvgRef(event.clientX, event.clientY);
+    if (!isDraggingFromPalette || !phantomModel || !battlefieldComponent) return;
+    const svgCoords = battlefieldComponent.screenToSvg(event.clientX, event.clientY);
     phantomModel = {
       ...phantomModel,
       x: svgCoords.x,
@@ -187,6 +187,12 @@
 
   function handleRenameModel(id, name) {
     debugModels.updateModel(id, { name });
+  }
+
+  function handleBackgroundClick() {
+    debugSelectedTerrainId.set(null);
+    debugSelectedWallId.set(null);
+    debugSelectedModelId.set(null);
   }
 
   // Convert model to LoS format
@@ -345,129 +351,58 @@
 
     <div class="battlefield-area">
       <div class="battlefield-container">
-        <Battlefield let:screenToSvg>
-          {#if screenToSvg && !screenToSvgRef}
-            {screenToSvgRef = screenToSvg, ''}
-          {/if}
-
-          <!-- Debug rays (render first, behind everything) -->
-          {#if $debugMode && selectedModel && modelLosResults.length > 0}
-            {#each modelLosResults as result}
-              {#each result.rays as ray}
-                <line
-                  x1={ray.from.x}
-                  y1={ray.from.y}
-                  x2={ray.to.x}
-                  y2={ray.to.y}
-                  stroke={ray.blocked ? '#ff000033' : '#00ff0033'}
-                  stroke-width="0.05"
-                />
-              {/each}
-            {/each}
-          {/if}
-
-          <!-- Debug terrain pieces -->
-          {#each $debugTerrains as terrain (terrain.id)}
-            <TerrainRect
-              id={terrain.id}
-              x={terrain.x}
-              y={terrain.y}
-              width={terrain.width}
-              height={terrain.height}
-              rotation={terrain.rotation}
-              selected={terrain.id === $debugSelectedTerrainId}
-              {screenToSvg}
-              onSelect={handleSelectTerrain}
-              onDrag={handleDragTerrain}
-              onRotate={handleRotateLayoutTerrain}
-            />
-          {/each}
-
-          <!-- Debug walls -->
-          {#each $debugWalls as wall (wall.id)}
-            <WallPiece
-              id={wall.id}
-              x={wall.x}
-              y={wall.y}
-              shape={wall.shape}
-              segments={wall.segments}
-              rotation={wall.rotation}
-              selected={wall.id === $debugSelectedWallId}
-              {screenToSvg}
-              onSelect={handleSelectWall}
-              onDrag={handleDragWall}
-              onRotate={handleRotateWall}
-            />
-          {/each}
-
-          <!-- Debug models -->
-          {#each $debugModels as model (model.id)}
-            <ModelBase
-              id={model.id}
-              x={model.x}
-              y={model.y}
-              baseType={model.baseType}
-              playerId={model.playerId}
-              rotation={model.rotation}
-              name={model.name || ''}
-              selected={model.id === $debugSelectedModelId}
-              {screenToSvg}
-              onSelect={handleSelectModel}
-              onDrag={handleDragModel}
-              onDragEnd={handleDragModelEnd}
-              onRotate={handleRotateModel}
-              onRotateEnd={handleRotateModelEnd}
-              onRename={handleRenameModel}
-            />
-          {/each}
-
-          <!-- Model LOS Visualization -->
-          {#if $debugMode && selectedModel && modelLosResults.length > 0}
-            {#each modelLosResults as result}
-              {#if result.firstClearRay}
-                <!-- Show the actual clear ray of sight -->
-                <line
-                  x1={result.firstClearRay.from.x}
-                  y1={result.firstClearRay.from.y}
-                  x2={result.firstClearRay.to.x}
-                  y2={result.firstClearRay.to.y}
-                  stroke="#22c55e"
-                  stroke-width="0.15"
-                  opacity="0.7"
-                  pointer-events="none"
-                />
-              {:else}
-                <!-- Show blocked line from center to center -->
-                <line
-                  x1={selectedModel.x}
-                  y1={selectedModel.y}
-                  x2={result.target.x}
-                  y2={result.target.y}
-                  stroke="#ef4444"
-                  stroke-width="0.1"
-                  stroke-dasharray="0.5 0.25"
-                  opacity="0.7"
-                  pointer-events="none"
-                />
-              {/if}
-            {/each}
-          {/if}
-
+        <Battlefield
+          bind:this={battlefieldComponent}
+          terrains={$debugTerrains}
+          walls={$debugWalls}
+          models={$debugModels}
+          losResults={modelLosResults}
+          interactiveTerrain={true}
+          interactiveWalls={true}
+          interactiveModels={true}
+          showDebugRays={$debugMode}
+          selectedTerrainId={$debugSelectedTerrainId}
+          selectedWallId={$debugSelectedWallId}
+          selectedModelId={$debugSelectedModelId}
+          onTerrainSelect={handleSelectTerrain}
+          onTerrainDrag={handleDragTerrain}
+          onTerrainRotate={handleRotateLayoutTerrain}
+          onWallSelect={handleSelectWall}
+          onWallDrag={handleDragWall}
+          onWallRotate={handleRotateWall}
+          onModelSelect={handleSelectModel}
+          onModelDrag={handleDragModel}
+          onModelDragEnd={handleDragModelEnd}
+          onModelRotate={handleRotateModel}
+          onModelRotateEnd={handleRotateModelEnd}
+          onModelRename={handleRenameModel}
+          onBackgroundClick={handleBackgroundClick}
+        >
           <!-- Phantom model during drag from palette -->
           {#if phantomModel}
-            <ModelBase
-              id="phantom"
-              x={phantomModel.x}
-              y={phantomModel.y}
-              baseType={phantomModel.baseType}
-              playerId={currentPlayer}
-              rotation={0}
-              selected={false}
-              {screenToSvg}
-              onSelect={() => {}}
-              onDrag={() => {}}
-              onRotate={() => {}}
-            />
+            {@const baseSize = getBaseSize(phantomModel.baseType)}
+            {@const isOval = isOvalBase(phantomModel.baseType)}
+            {@const phantomColors = getPlayerColors(currentPlayer)}
+            {#if isOval}
+              <ellipse
+                cx={phantomModel.x}
+                cy={phantomModel.y}
+                rx={baseSize.width / 2}
+                ry={baseSize.height / 2}
+                fill={phantomColors.fillLight}
+                stroke={phantomColors.primary}
+                stroke-width="0.1"
+              />
+            {:else}
+              <circle
+                cx={phantomModel.x}
+                cy={phantomModel.y}
+                r={baseSize.radius}
+                fill={phantomColors.fillLight}
+                stroke={phantomColors.primary}
+                stroke-width="0.1"
+              />
+            {/if}
           {/if}
         </Battlefield>
       </div>

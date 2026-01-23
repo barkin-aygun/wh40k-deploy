@@ -1,6 +1,7 @@
 <script>
   import { BATTLEFIELD } from '../stores/elements.js';
   import { getWallVertices } from '../stores/layout.js';
+  import { COLORS } from './colors.js';
 
   export let id;
   export let x;
@@ -131,8 +132,8 @@
   <g transform="rotate({rotation}, {centerX}, {centerY})">
     <path
       d={pathD}
-      fill={selected ? 'rgba(139, 69, 19, 0.6)' : 'rgba(139, 69, 19, 0.8)'}
-      stroke={selected ? '#3b82f6' : '#5c3317'}
+      fill={selected ? COLORS.wall.fillSelected : COLORS.wall.fill}
+      stroke={selected ? COLORS.selection.highlight : COLORS.wall.stroke}
       stroke-width={selected ? 0.15 : 0.1}
       on:click={handleClick}
       on:mousedown={handleMouseDown}
@@ -148,7 +149,7 @@
       y1={centerY}
       x2={handleX}
       y2={handleY}
-      stroke="#3b82f6"
+      stroke={COLORS.selection.highlight}
       stroke-width="0.08"
       stroke-dasharray="0.2,0.1"
     />
@@ -156,8 +157,8 @@
       cx={handleX}
       cy={handleY}
       r="0.6"
-      fill="#3b82f6"
-      stroke="#1d4ed8"
+      fill={COLORS.selection.highlight}
+      stroke={COLORS.selection.highlightDark}
       stroke-width="0.08"
       on:mousedown={handleRotateMouseDown}
       role="button"

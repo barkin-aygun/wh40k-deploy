@@ -1,8 +1,6 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
   import Battlefield from '../lib/Battlefield.svelte';
-  import TerrainRect from '../lib/TerrainRect.svelte';
-  import WallPiece from '../lib/WallPiece.svelte';
   import CollapsibleSection from '../lib/CollapsibleSection.svelte';
   import {
     layoutTerrains,
@@ -606,39 +604,22 @@
     </div>
 
     <div class="battlefield-area">
-      <div class="battlefield-container" on:click={handleDeselectAll} role="presentation">
-        <Battlefield let:screenToSvg>
-          {#each $layoutTerrains as terrain (terrain.id)}
-            <TerrainRect
-              id={terrain.id}
-              x={terrain.x}
-              y={terrain.y}
-              width={terrain.width}
-              height={terrain.height}
-              rotation={terrain.rotation}
-              selected={terrain.id === $selectedTerrainId}
-              {screenToSvg}
-              onSelect={handleSelectTerrain}
-              onDrag={handleDragTerrain}
-              onRotate={handleRotateTerrain}
-            />
-          {/each}
-          {#each $layoutWalls as wall (wall.id)}
-            <WallPiece
-              id={wall.id}
-              x={wall.x}
-              y={wall.y}
-              shape={wall.shape}
-              segments={wall.segments}
-              rotation={wall.rotation}
-              selected={wall.id === $selectedWallId}
-              {screenToSvg}
-              onSelect={handleSelectWall}
-              onDrag={handleDragWall}
-              onRotate={handleRotateWall}
-            />
-          {/each}
-        </Battlefield>
+      <div class="battlefield-container">
+        <Battlefield
+          terrains={$layoutTerrains}
+          walls={$layoutWalls}
+          interactiveTerrain={true}
+          interactiveWalls={true}
+          selectedTerrainId={$selectedTerrainId}
+          selectedWallId={$selectedWallId}
+          onTerrainSelect={handleSelectTerrain}
+          onTerrainDrag={handleDragTerrain}
+          onTerrainRotate={handleRotateTerrain}
+          onWallSelect={handleSelectWall}
+          onWallDrag={handleDragWall}
+          onWallRotate={handleRotateWall}
+          onBackgroundClick={handleDeselectAll}
+        />
       </div>
       <div class="info">
         <p>Battlefield: 60" x 44" | {$layoutTerrains.length} terrain{$layoutTerrains.length !== 1 ? 's' : ''} | {$layoutWalls.length} wall{$layoutWalls.length !== 1 ? 's' : ''}</p>
@@ -716,7 +697,7 @@
   }
 
   .sidebar {
-    width: 200px;
+    width: 220px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;

@@ -83,6 +83,108 @@
     }
   }
 
+  // State save/restore
+  const BATTLE_SAVE_KEY = 'warhammer-battle-state';
+  let fileInputRef;
+
+  function saveBattleState() {
+    const state = {
+      deployment: $selectedDeployment?.name || null,
+      layout: $selectedLayoutName || null,
+      layoutType: $selectedLayoutType || null,
+      models: $models
+    };
+    localStorage.setItem(BATTLE_SAVE_KEY, JSON.stringify(state));
+  }
+
+  function restoreBattleState() {
+    const saved = localStorage.getItem(BATTLE_SAVE_KEY);
+    if (saved) {
+      try {
+        const state = JSON.parse(saved);
+        if (state.models && Array.isArray(state.models)) {
+          models.set(state.models);
+          history.clear();
+        }
+      } catch (err) {
+        console.error('Failed to restore battle state:', err);
+      }
+    }
+  }
+
+  function exportState() {
+    const state = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      deployment: $selectedDeployment ? {
+        name: $selectedDeployment.name,
+        zones: $selectedDeployment.zones,
+        objectives: $selectedDeployment.objectives
+      } : null,
+      terrain: {
+        layoutName: $selectedLayoutName,
+        layoutType: $selectedLayoutType,
+        terrains: $loadedTerrain.terrains,
+        walls: $loadedTerrain.walls
+      },
+      models: $models.map(m => ({
+        id: m.id,
+        baseType: m.baseType,
+        playerId: m.playerId,
+        x: m.x,
+        y: m.y,
+        rotation: m.rotation || 0,
+        name: m.name || '',
+        customWidth: m.customWidth,
+        customHeight: m.customHeight
+      }))
+    };
+
+    const json = JSON.stringify(state, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    const timestamp = new Date().toISOString().slice(0, 10);
+    a.download = `battle-${timestamp}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function triggerImport() {
+    fileInputRef?.click();
+  }
+
+  function handleFileImport(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const state = JSON.parse(e.target.result);
+        if (state.models && Array.isArray(state.models)) {
+          models.set(state.models);
+          history.clear();
+        }
+      } catch (err) {
+        console.error('Failed to parse import file:', err);
+        alert('Failed to import: Invalid JSON file');
+      }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+  }
+
+  function handleClearAll() {
+    if (confirm('Clear all models?')) {
+      models.clear();
+      selectedModelIds = [];
+    }
+  }
+
   function handleKeyDown(event) {
     if (event.target.tagName === 'INPUT') return;
 
@@ -928,9 +1030,26 @@
               Redo
             </button>
           </div>
+          <div class="button-row">
+            <button on:click={exportState} title="Export battle state to share">
+              Export
+            </button>
+            <button on:click={triggerImport} title="Import battle state from JSON">
+              Import
+            </button>
+          </div>
+          <input
+            type="file"
+            accept=".json"
+            bind:this={fileInputRef}
+            on:change={handleFileImport}
+            style="display: none;"
+          />
           <button on:click={handleExportPng} title="Export battlefield as PNG image">Export PNG</button>
+          <button on:click={saveBattleState}>Save to Browser</button>
+          <button on:click={restoreBattleState}>Restore from Browser</button>
+          <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
         </div>
-
       </CollapsibleSection>
     </div>
 
@@ -1460,7 +1579,7 @@
   }
 
   .sidebar {
-    width: 200px;
+    width: 220px;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -1487,13 +1606,13 @@
   }
 
   button {
-    padding: 0.5rem 0.75rem;
+    padding: 0.375rem 0.5rem;
     border: 1px solid #444;
     border-radius: 4px;
     background: #333;
     color: #fff;
     cursor: pointer;
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     transition: all 0.15s;
   }
 

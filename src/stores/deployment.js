@@ -1,4 +1,5 @@
 import { writable, get } from 'svelte/store';
+import { COLORS } from '../lib/colors.js';
 
 const STORAGE_KEY = 'warhammer-deployment-zones';
 
@@ -101,8 +102,8 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.1)',
-        borderColor: '#3b82f6',
+        color: COLORS.player1.zone,
+        borderColor: COLORS.player1.primary,
         // Rectangle: bottom 12" strip
         path: [
           { type: 'M', x: 0, y: 32 },
@@ -114,8 +115,8 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.1)',
-        borderColor: '#ef4444',
+        color: COLORS.player2.zone,
+        borderColor: COLORS.player2.primary,
         // Rectangle: top 12" strip
         path: [
           { type: 'M', x: 0, y: 0 },
@@ -139,8 +140,8 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.1)',
-        borderColor: '#3b82f6',
+        color: COLORS.player1.zone,
+        borderColor: COLORS.player1.primary,
         // Rectangle: left 18" strip
         path: [
           { type: 'M', x: 0, y: 0 },
@@ -152,8 +153,8 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.1)',
-        borderColor: '#ef4444',
+        color: COLORS.player2.zone,
+        borderColor: COLORS.player2.primary,
         // Rectangle: right 18" strip
         path: [
           { type: 'M', x: 42, y: 0 },
@@ -177,8 +178,8 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.1)',
-        borderColor: '#3b82f6',
+        color: COLORS.player1.zone,
+        borderColor: COLORS.player1.primary,
         // Rectangle: left 12/20 steps
         path: [
           { type: 'M', x: 0, y: 0 },
@@ -192,8 +193,8 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.1)',
-        borderColor: '#ef4444',
+        color: COLORS.player2.zone,
+        borderColor: COLORS.player2.primary,
         path: [
           { type: 'M', x: 40, y: 0 },
           { type: 'L', x: 60, y: 0 },
@@ -218,8 +219,8 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.1)',
-        borderColor: '#3b82f6',
+        color: COLORS.player1.zone,
+        borderColor: COLORS.player1.primary,
         // Bottom-left corner with quarter circle arc (9" radius from corner)
         path: [
           { type: 'M', x: 0, y: 22 },
@@ -232,8 +233,8 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.1)',
-        borderColor: '#ef4444',
+        color: COLORS.player2.zone,
+        borderColor: COLORS.player2.primary,
         // Top-right corner with quarter circle arc (9" radius from corner)
         path: [
           { type: 'M', x: 30, y: 0 },
@@ -258,8 +259,8 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.1)',
-        borderColor: '#3b82f6',
+        color: COLORS.player1.zone,
+        borderColor: COLORS.player1.primary,
         // Diagonal bottom-left
         path: [
           { type: 'M', x: 0, y: 0 },
@@ -273,8 +274,8 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.1)',
-        borderColor: '#ef4444',
+        color: COLORS.player2.zone,
+        borderColor: COLORS.player2.primary,
         // Diagonal top-right
         path: [
           { type: 'M', x: 0, y: 44 },
@@ -300,8 +301,8 @@ export const DEPLOYMENT_PRESETS = [
     zones: [
       {
         name: 'Player 1',
-        color: 'rgba(59, 130, 246, 0.1)',
-        borderColor: '#3b82f6',
+        color: COLORS.player1.zone,
+        borderColor: COLORS.player1.primary,
         // Left Diagonal
         path: [
           { type: 'M', x: 0, y: 0 },
@@ -312,8 +313,8 @@ export const DEPLOYMENT_PRESETS = [
       },
       {
         name: 'Player 2',
-        color: 'rgba(239, 68, 68, 0.1)',
-        borderColor: '#ef4444',
+        color: COLORS.player2.zone,
+        borderColor: COLORS.player2.primary,
         path: [
           { type: 'M', x: 60, y: 44 },
           { type: 'L', x: 30, y: 0 },
