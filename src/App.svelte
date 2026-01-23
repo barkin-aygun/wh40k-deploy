@@ -57,7 +57,7 @@
 <footer class="app-footer">
   <span>Built with love by <a href="https://github.com/barkin-aygun/wh40k-deploy" target="_blank" rel="noopener noreferrer">@Volfied</a></span>
   <span class="separator">|</span>
-  <span class="disclaimer">Warhammer 40,000 and all associated marks, logos, and images are trademarks and/or copyrights of Games Workshop Ltd. This is an unofficial fan project and is not affiliated with or endorsed by Games Workshop.</span>
+  <span class="disclaimer">Warhammer 40,000 and all associated marks, logos, and images are trademarks and/or copyrights of Games Workshop Ltd. This is an unofficial fan project and is not affiliated with or endorsed by Games Workshop.<br><a href="https://github.com/desjani/40kCompactor" target="_blank" rel="noopener noreferrer">40KCompactor</a> by Desjani</span>
 </footer>
 
 <style>
