@@ -1,6 +1,6 @@
 <script>
   import { BATTLEFIELD } from '../stores/elements.js';
-  import { COLORS, getPlayerColors } from './colors.js';
+  import { COLORS, getPlayerColors } from '../lib/colors.js';
   import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
   import { getWallVertices } from '../stores/layout.js';
   import { getBaseSize, isOvalBase, isRectangularBase } from '../stores/models.js';

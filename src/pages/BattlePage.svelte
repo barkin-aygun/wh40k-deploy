@@ -1,9 +1,9 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import Battlefield from '../lib/Battlefield.svelte';
-  import WallPiece from '../lib/WallPiece.svelte';
-  import ModelBase from '../lib/ModelBase.svelte';
-  import CollapsibleSection from '../lib/CollapsibleSection.svelte';
+  import Battlefield from '../components/Battlefield.svelte';
+  import WallPiece from '../components/WallPiece.svelte';
+  import ModelBase from '../components/ModelBase.svelte';
+  import CollapsibleSection from '../components/CollapsibleSection.svelte';
   import {
     getWallVertices,
     transformWallVertices

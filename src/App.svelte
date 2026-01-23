@@ -1,6 +1,5 @@
 <script>
   import { onMount } from 'svelte';
-  import MainPage from './pages/MainPage.svelte';
   import BattlefieldSetupPage from './pages/BattlefieldSetupPage.svelte';
   import DeploymentPage from './pages/DeploymentPage.svelte';
   import BattlePage from './pages/BattlePage.svelte';
@@ -18,8 +17,8 @@
       currentPage = 'deployment';
     } else if (hash === '#/battle') {
       currentPage = 'battle';
-    } else if (hash === '#/' || hash === '#/layout') {
-      currentPage = 'main';
+    } else if (hash === '#/') {
+      currentPage = 'deployment';
     } else {
       currentPage = 'setup';
     }
@@ -51,7 +50,7 @@
 {:else if currentPage === 'battle'}
   <BattlePage />
 {:else}
-  <MainPage />
+  <DeploymentPage />
 {/if}
 
 <footer class="app-footer">

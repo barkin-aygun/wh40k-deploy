@@ -1,6 +1,6 @@
 <script>
   import { getBaseSize, isOvalBase, isRectangularBase } from '../stores/models.js';
-  import { COLORS, getPlayerColors } from './colors.js';
+  import { COLORS, getPlayerColors } from '../lib/colors.js';
 
   export let id;
   export let x;

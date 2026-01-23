@@ -1,41 +1,37 @@
-import { writable, derived } from 'svelte/store';
+/**
+ * Unit base size data store
+ * Provides access to unit base information from unitBases.json
+ */
+
 import unitBasesData from '../data/unitBases.json';
 
-// Store containing all unit base data
-export const unitBases = writable(unitBasesData);
-
-// Get all available factions
+/**
+ * Get all faction names
+ * @returns {string[]} Array of faction names
+ */
 export function getFactions() {
   return Object.keys(unitBasesData);
 }
 
-// Get all units for a specific faction
+/**
+ * Get all unit names for a faction
+ * @param {string} faction - Faction name
+ * @returns {string[]} Array of unit names
+ */
 export function getUnitsForFaction(faction) {
-  if (!unitBasesData[faction]) {
-    return [];
-  }
-  return Object.keys(unitBasesData[faction]);
+  const factionData = unitBasesData[faction];
+  if (!factionData) return [];
+  return Object.keys(factionData);
 }
 
-// Get base size information for a specific faction and unit
+/**
+ * Get base size info for a specific unit
+ * @param {string} faction - Faction name
+ * @param {string} unitName - Unit name
+ * @returns {object|null} Base info object or null if not found
+ */
 export function getUnitBaseSize(faction, unitName) {
-  if (!unitBasesData[faction] || !unitBasesData[faction][unitName]) {
-    return null;
-  }
-  return unitBasesData[faction][unitName];
-}
-
-// Derived store: list of all factions
-export const factions = derived(unitBases, $unitBases => {
-  return Object.keys($unitBases);
-});
-
-// Create a derived store for units of a selected faction
-export function createUnitsForFaction(factionStore) {
-  return derived([unitBases, factionStore], ([$unitBases, $faction]) => {
-    if (!$faction || !$unitBases[$faction]) {
-      return [];
-    }
-    return Object.keys($unitBases[$faction]);
-  });
+  const factionData = unitBasesData[faction];
+  if (!factionData) return null;
+  return factionData[unitName] || null;
 }

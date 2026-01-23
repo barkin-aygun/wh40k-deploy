@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  import Battlefield from '../lib/Battlefield.svelte';
-  import CollapsibleSection from '../lib/CollapsibleSection.svelte';
+  import Battlefield from '../components/Battlefield.svelte';
+  import CollapsibleSection from '../components/CollapsibleSection.svelte';
   import { DEPLOYMENT_PRESETS } from '../stores/deployment.js';
   import { savedLayoutsList, refreshSavedLayouts, TERRAIN_LAYOUT_PRESETS } from '../stores/layout.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';

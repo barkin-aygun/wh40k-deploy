@@ -1,7 +1,7 @@
 <script>
   import { BATTLEFIELD } from '../stores/elements.js';
   import { getWallVertices } from '../stores/layout.js';
-  import { COLORS } from './colors.js';
+  import { COLORS } from '../lib/colors.js';
 
   export let id;
   export let x;

@@ -1,13 +1,13 @@
 <script>
   import { onMount, onDestroy } from 'svelte';
-  import Battlefield from '../lib/Battlefield.svelte';
-  import TerrainRect from '../lib/TerrainRect.svelte';
-  import WallPiece from '../lib/WallPiece.svelte';
-  import ModelBase from '../lib/ModelBase.svelte';
-  import ModelPaletteItem from '../lib/ModelPaletteItem.svelte';
-  import CollapsibleSection from '../lib/CollapsibleSection.svelte';
-  import ArmyImportPanel from '../lib/ArmyImportPanel.svelte';
-  import UnmatchedUnitsDialog from '../lib/UnmatchedUnitsDialog.svelte';
+  import Battlefield from '../components/Battlefield.svelte';
+  import TerrainRect from '../components/TerrainRect.svelte';
+  import WallPiece from '../components/WallPiece.svelte';
+  import ModelBase from '../components/ModelBase.svelte';
+  import ModelPaletteItem from '../components/ModelPaletteItem.svelte';
+  import CollapsibleSection from '../components/CollapsibleSection.svelte';
+  import ArmyImportPanel from '../components/ArmyImportPanel.svelte';
+  import UnmatchedUnitsDialog from '../components/UnmatchedUnitsDialog.svelte';
   import {
     getWallVertices,
     transformWallVertices

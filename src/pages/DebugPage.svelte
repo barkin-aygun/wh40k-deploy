@@ -1,8 +1,8 @@
 <script>
   import { onMount } from 'svelte';
-  import Battlefield from '../lib/Battlefield.svelte';
-  import ModelPaletteItem from '../lib/ModelPaletteItem.svelte';
-  import CollapsibleSection from '../lib/CollapsibleSection.svelte';
+  import Battlefield from '../components/Battlefield.svelte';
+  import ModelPaletteItem from '../components/ModelPaletteItem.svelte';
+  import CollapsibleSection from '../components/CollapsibleSection.svelte';
   import { debugMode } from '../stores/elements.js';
   import { checkLineOfSight } from '../lib/visibility/index.js';
   import {
