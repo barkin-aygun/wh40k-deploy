@@ -80,6 +80,7 @@
   // Zone visualization state
   let show6InchZone = false;
   let show9InchZone = false;
+  let show12InchZone = false;
 
   const DRAG_THRESHOLD = 5; // pixels - movement below this is considered a click
   const DEEP_STRIKE_DENIAL_RADIUS = 9; // 9" radius around each model
@@ -1383,6 +1384,10 @@
               <input type="checkbox" bind:checked={show9InchZone} />
               Show 9" zones
             </label>
+            <label class="checkbox-label">
+              <input type="checkbox" bind:checked={show12InchZone} />
+              Show 12" zones
+            </label>
           </div>
         </div>
       </CollapsibleSection>
@@ -1718,14 +1723,61 @@
             </g>
           {/each}
 
-          <!-- Range zone visualization (6" and 9" zones) -->
-          {#if show6InchZone || show9InchZone}
+          <!-- Range zone visualization (6", 9", and 12" zones) -->
+          {#if show6InchZone || show9InchZone || show12InchZone}
             {#each $models as model (model.id)}
               {@const baseSize = getBaseSize(model.baseType, model)}
               {@const isOval = isOvalBase(model.baseType)}
               {@const isRect = isRectangularBase(model.baseType)}
               {@const playerColor = model.playerId === 1 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(239, 68, 68, 0.15)'}
               {@const playerStroke = model.playerId === 1 ? '#3b82f6' : '#ef4444'}
+              {#if show12InchZone}
+                {#if isRect}
+                  <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
+                    <rect
+                      x={model.x - model.customWidth / 2 - 12}
+                      y={model.y - model.customHeight / 2 - 12}
+                      width={model.customWidth + 24}
+                      height={model.customHeight + 24}
+                      rx="12"
+                      ry="12"
+                      fill={playerColor}
+                      stroke={playerStroke}
+                      stroke-width="0.05"
+                      stroke-dasharray="0.5,0.25"
+                      pointer-events="none"
+                      opacity="0.4"
+                    />
+                  </g>
+                {:else if isOval}
+                  <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
+                    <ellipse
+                      cx={model.x}
+                      cy={model.y}
+                      rx={baseSize.width / 2 + 12}
+                      ry={baseSize.height / 2 + 12}
+                      fill={playerColor}
+                      stroke={playerStroke}
+                      stroke-width="0.05"
+                      stroke-dasharray="0.5,0.25"
+                      pointer-events="none"
+                      opacity="0.4"
+                    />
+                  </g>
+                {:else}
+                  <circle
+                    cx={model.x}
+                    cy={model.y}
+                    r={baseSize.radius + 12}
+                    fill={playerColor}
+                    stroke={playerStroke}
+                    stroke-width="0.05"
+                    stroke-dasharray="0.5,0.25"
+                    pointer-events="none"
+                    opacity="0.4"
+                  />
+                {/if}
+              {/if}
               {#if show9InchZone}
                 {#if isRect}
                   <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
