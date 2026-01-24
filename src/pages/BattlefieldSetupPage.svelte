@@ -3,7 +3,7 @@
   import Battlefield from '../components/Battlefield.svelte';
   import CollapsibleSection from '../components/CollapsibleSection.svelte';
   import { DEPLOYMENT_PRESETS } from '../stores/deployment.js';
-  import { savedLayoutsList, refreshSavedLayouts, TERRAIN_LAYOUT_PRESETS } from '../stores/layout.js';
+  import { savedLayoutsList, refreshSavedLayouts, TERRAIN_LAYOUT_CATEGORIES } from '../stores/layout.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
 
   onMount(() => {
@@ -64,16 +64,18 @@
           </div>
         {:else}
           <div class="layout-sections">
-            <div class="layout-group">
-              <h4>Presets</h4>
-              <div class="button-group">
-                {#each TERRAIN_LAYOUT_PRESETS as preset}
-                  <button on:click={() => handleSelectPreset(preset)}>
-                    {preset.name}
-                  </button>
-                {/each}
+            {#each TERRAIN_LAYOUT_CATEGORIES as category}
+              <div class="layout-group">
+                <h4>{category.name}</h4>
+                <div class="button-group">
+                  {#each category.presets as preset}
+                    <button on:click={() => handleSelectPreset(preset)}>
+                      {preset.name}
+                    </button>
+                  {/each}
+                </div>
               </div>
-            </div>
+            {/each}
             {#if $savedLayoutsList.length > 0}
               <div class="layout-group">
                 <h4>Saved</h4>

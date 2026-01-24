@@ -4,6 +4,7 @@
   import DeploymentPage from './pages/DeploymentPage.svelte';
   import BattlePage from './pages/BattlePage.svelte';
   import DebugPage from './pages/DebugPage.svelte';
+    import LayoutPage from './pages/LayoutPage.svelte';
 
   let currentPage = 'main';
 
@@ -17,10 +18,10 @@
       currentPage = 'deployment';
     } else if (hash === '#/battle') {
       currentPage = 'battle';
-    } else if (hash === '#/') {
-      currentPage = 'deployment';
+    } else if (hash === '#/layout') {
+      currentPage = 'layout';
     } else {
-      currentPage = 'setup';
+      currentPage = 'deployment';
     }
   }
 
@@ -37,7 +38,7 @@
     <a href="#/setup" class:active={currentPage === 'setup'}>Battlefield Setup</a>
     <a href="#/deployment" class:active={currentPage === 'deployment'}>Deployment</a>
     <a href="#/battle" class:active={currentPage === 'battle'}>Battle</a>
-    <a href="#/" class:active={currentPage === 'main'}>Layout Builder</a>
+    <a href="#/layout" class:active={currentPage === 'layout'}>Layout Builder</a>
   </nav>
 </div>
 
@@ -49,6 +50,8 @@
   <DeploymentPage />
 {:else if currentPage === 'battle'}
   <BattlePage />
+{:else if currentPage === 'layout'}
+  <LayoutPage />
 {:else}
   <DeploymentPage />
 {/if}

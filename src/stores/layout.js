@@ -20,10 +20,15 @@ export const WALL_SHAPES = [
   { label: 'L 4x6 ⌐', shape: 'L-4x6-mirror' }
 ];
 
-// Preset terrain layouts
-export const TERRAIN_LAYOUT_PRESETS = [
+// Preset terrain layouts organized by tournament type
+export const TERRAIN_LAYOUT_CATEGORIES = [
   {
-    name: 'Layout 1',
+    id: 'gw',
+    name: 'GW',
+    description: 'Games Workshop official layouts',
+    presets: [
+      {
+        name: 'Layout 1',
     terrains: [
       { id: "a", x: 28, y: 0, width: 4, height: 6, rotation: 0 },
       { id: "b", x: 28, y: 38, width: 4, height: 6, rotation: 0 },
@@ -240,7 +245,58 @@ export const TERRAIN_LAYOUT_PRESETS = [
       { id: "a8", x: 46.91, y: 5.85, shape: 'L-4x8-mirror', rotation: 132.19 }
     ]
   }
+    ]
+  },
+  {
+    id: 'uktc',
+    name: 'UKTC',
+    description: 'UK Team Championship layouts',
+    presets: [
+      {
+        name: 'UKTC 1',
+        terrains: [
+          { id: "a", x: 15, y: 16, width: 6, height: 12, rotation: 0 },
+          { id: "b", x: 39, y: 16, width: 6, height: 12, rotation: 0 }
+        ],
+        walls: []
+      },
+      {
+        name: 'UKTC 2',
+        terrains: [
+          { id: "a", x: 15, y: 16, width: 6, height: 12, rotation: 0 },
+          { id: "b", x: 39, y: 16, width: 6, height: 12, rotation: 0 }
+        ],
+        walls: []
+      }
+    ]
+  },
+  {
+    id: 'wtc',
+    name: 'WTC',
+    description: 'World Team Championship layouts',
+    presets: [
+      {
+        name: 'WTC 1',
+        terrains: [
+          { id: "a", x: 15, y: 16, width: 6, height: 12, rotation: 0 },
+          { id: "b", x: 39, y: 16, width: 6, height: 12, rotation: 0 }
+        ],
+        walls: []
+      },
+      {
+        name: 'WTC 2',
+        terrains: [
+          { id: "a", x: 15, y: 16, width: 6, height: 12, rotation: 0 },
+          { id: "b", x: 39, y: 16, width: 6, height: 12, rotation: 0 }
+        ],
+        walls: []
+      }
+    ]
+  }
 ];
+
+// Flat array of all presets (for backward compatibility)
+export const TERRAIN_LAYOUT_PRESETS = TERRAIN_LAYOUT_CATEGORIES.flatMap(cat => cat.presets);
 
 // Generate unique ID
 function generateId() {
