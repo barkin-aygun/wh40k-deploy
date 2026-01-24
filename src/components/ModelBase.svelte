@@ -14,6 +14,7 @@
   export let name = '';
   export let customWidth = null;
   export let customHeight = null;
+  export let unitStrokeColor = null; // Optional unit color for grouped models
   export let screenToSvg;
   export let onSelect = () => {};
   export let onDrag = () => {};
@@ -39,6 +40,7 @@
   $: previewFill = playerColors.fillLight;
   $: strokeWidth = selected ? 0.15 : (marqueePreview ? 0.12 : 0.1);
   $: fillColor = selected ? playerColor : (marqueePreview ? previewFill : playerFill);
+  $: strokeColor = unitStrokeColor || playerColor; // Use unit color if available
 
   // For circles
   $: radius = baseSize?.radius || 0.5;
@@ -182,7 +184,7 @@
         width={rectWidth}
         height={rectHeight}
         fill={fillColor}
-        stroke={playerColor}
+        stroke={strokeColor}
         stroke-width={strokeWidth}
         on:click={handleClick}
         on:dblclick={handleDoubleClick}
@@ -200,7 +202,7 @@
         {rx}
         {ry}
         fill={fillColor}
-        stroke={playerColor}
+        stroke={strokeColor}
         stroke-width={strokeWidth}
         on:click={handleClick}
         on:dblclick={handleDoubleClick}
@@ -216,7 +218,7 @@
       cy={y}
       r={radius}
       fill={fillColor}
-      stroke={playerColor}
+      stroke={strokeColor}
       stroke-width={strokeWidth}
       on:click={handleClick}
       on:dblclick={handleDoubleClick}

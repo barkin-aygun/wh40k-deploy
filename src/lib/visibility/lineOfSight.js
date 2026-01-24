@@ -234,3 +234,62 @@ export function canSee(modelA, modelB, terrainPolygons, walls) {
 
   return false;
 }
+
+/**
+ * Check if any model in unit A can see any model in unit B
+ * Returns true on first successful LOS (early exit for performance)
+ *
+ * @param {Array} unitAModels - Array of models in unit A
+ * @param {Array} unitBModels - Array of models in unit B
+ * @param {Array} terrainPolygons - Array of {id, vertices} for each terrain footprint
+ * @param {Array} walls - Array of wall polygons
+ * @returns {boolean} True if any model in A can see any model in B
+ */
+export function unitCanSeeUnit(unitAModels, unitBModels, terrainPolygons, walls) {
+  for (const modelA of unitAModels) {
+    for (const modelB of unitBModels) {
+      if (canSee(modelA, modelB, terrainPolygons, walls)) {
+        return true; // Early exit on first clear LOS
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if any model in unit A can see any model in unit B (with debug data)
+ * Returns full ray data for visualization
+ *
+ * @param {Array} unitAModels - Array of models in unit A
+ * @param {Array} unitBModels - Array of models in unit B
+ * @param {Array} terrainPolygons - Array of {id, vertices} for each terrain footprint
+ * @param {Array} walls - Array of wall polygons
+ * @returns {Object} { canSee: boolean, firstClearResult: Object, allResults: Array }
+ */
+export function checkUnitToUnitLineOfSight(unitAModels, unitBModels, terrainPolygons, walls) {
+  const allResults = [];
+  let firstClearResult = null;
+  let unitCanSeeFlag = false;
+
+  for (const modelA of unitAModels) {
+    for (const modelB of unitBModels) {
+      const result = checkLineOfSight(modelA, modelB, terrainPolygons, walls);
+      allResults.push({
+        modelA,
+        modelB,
+        ...result
+      });
+
+      if (result.canSee && !unitCanSeeFlag) {
+        unitCanSeeFlag = true;
+        firstClearResult = result;
+      }
+    }
+  }
+
+  return {
+    canSee: unitCanSeeFlag,
+    firstClearResult,
+    allResults
+  };
+}

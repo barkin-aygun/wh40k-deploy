@@ -237,6 +237,69 @@ function createModelsStore(historyStore) {
       }
     },
 
+    // Group selected models into a unit
+    groupModels(modelIds, skipHistory = false) {
+      if (modelIds.length < 2) return null;
+
+      // Verify all models exist and belong to same player
+      const currentModels = get({ subscribe });
+      const modelsToGroup = modelIds.map(id => currentModels.find(m => m.id === id)).filter(Boolean);
+      if (modelsToGroup.length < 2) return null;
+
+      const playerIds = [...new Set(modelsToGroup.map(m => m.playerId))];
+      if (playerIds.length > 1) return null; // Can't group models from different players
+
+      const unitId = 'unit-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+      // Store previous unitIds for undo
+      const previousUnitIds = {};
+      modelsToGroup.forEach(m => {
+        previousUnitIds[m.id] = m.unitId || null;
+      });
+
+      update(models => models.map(m =>
+        modelIds.includes(m.id) ? { ...m, unitId } : m
+      ));
+
+      // Track in history
+      if (!skipHistory && historyStore) {
+        historyStore.push({
+          type: 'group',
+          modelIds: [...modelIds],
+          unitId,
+          previousUnitIds
+        });
+      }
+
+      return unitId;
+    },
+
+    // Ungroup models (set unitId to null)
+    ungroupModels(modelIds, skipHistory = false) {
+      // Store previous unitIds for undo
+      const currentModels = get({ subscribe });
+      const previousUnitIds = {};
+      modelIds.forEach(id => {
+        const model = currentModels.find(m => m.id === id);
+        if (model) {
+          previousUnitIds[id] = model.unitId || null;
+        }
+      });
+
+      update(models => models.map(m =>
+        modelIds.includes(m.id) ? { ...m, unitId: null } : m
+      ));
+
+      // Track in history
+      if (!skipHistory && historyStore) {
+        historyStore.push({
+          type: 'ungroup',
+          modelIds: [...modelIds],
+          previousUnitIds
+        });
+      }
+    },
+
     // Clear all models
     clear() {
       set([]);
@@ -271,6 +334,26 @@ function createModelsStore(historyStore) {
           // Undo rotate by restoring previous rotation
           this.updateModel(action.modelId, action.before, true);
           break;
+
+        case 'group':
+          // Undo group by restoring previous unitIds
+          update(models => models.map(m => {
+            if (action.modelIds.includes(m.id)) {
+              return { ...m, unitId: action.previousUnitIds[m.id] };
+            }
+            return m;
+          }));
+          break;
+
+        case 'ungroup':
+          // Undo ungroup by restoring previous unitIds
+          update(models => models.map(m => {
+            if (action.modelIds.includes(m.id)) {
+              return { ...m, unitId: action.previousUnitIds[m.id] };
+            }
+            return m;
+          }));
+          break;
       }
     },
 
@@ -299,6 +382,26 @@ function createModelsStore(historyStore) {
         case 'rotate':
           // Redo rotate by applying new rotation
           this.updateModel(action.modelId, action.after, true);
+          break;
+
+        case 'group':
+          // Redo group by applying the unitId
+          update(models => models.map(m => {
+            if (action.modelIds.includes(m.id)) {
+              return { ...m, unitId: action.unitId };
+            }
+            return m;
+          }));
+          break;
+
+        case 'ungroup':
+          // Redo ungroup by setting unitId to null
+          update(models => models.map(m => {
+            if (action.modelIds.includes(m.id)) {
+              return { ...m, unitId: null };
+            }
+            return m;
+          }));
           break;
       }
     }
@@ -338,3 +441,23 @@ export const debugSelectedModel = derived(
     return $debugModels.find(m => m.id === $debugSelectedModelId);
   }
 );
+
+// Derived store that groups models by unitId
+export const units = derived(models, $models => {
+  const unitMap = new Map();
+
+  $models.forEach(model => {
+    if (model.unitId) {
+      if (!unitMap.has(model.unitId)) {
+        unitMap.set(model.unitId, {
+          unitId: model.unitId,
+          playerId: model.playerId,
+          models: []
+        });
+      }
+      unitMap.get(model.unitId).models.push(model);
+    }
+  });
+
+  return Array.from(unitMap.values());
+});

@@ -25,7 +25,7 @@
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
   import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS, DEPLOYMENT_PRESETS } from '../stores/deployment.js';
   import { TERRAIN_LAYOUT_PRESETS } from '../stores/layout.js';
-  import { checkLineOfSight } from '../lib/visibility/lineOfSight.js';
+  import { checkLineOfSight, checkUnitToUnitLineOfSight } from '../lib/visibility/lineOfSight.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
   import { armyImports } from '../stores/armyImports.js';
   import { parseArmyList } from '../lib/services/armyParser.js';
@@ -433,6 +433,20 @@
     if ((event.ctrlKey || event.metaKey) && (event.key === 'y' || (event.shiftKey && event.key === 'z'))) {
       event.preventDefault();
       models.redo();
+      return;
+    }
+
+    // Group (Ctrl+G)
+    if ((event.ctrlKey || event.metaKey) && event.key === 'g' && !event.shiftKey) {
+      event.preventDefault();
+      handleGroupSelected();
+      return;
+    }
+
+    // Ungroup (Ctrl+Shift+G)
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'G') {
+      event.preventDefault();
+      handleUngroupSelected();
       return;
     }
 
@@ -848,19 +862,27 @@
   }
 
   function handleSelectModel(id, event) {
-    // Support Ctrl/Cmd/Shift for multi-select
+    // Support Ctrl/Cmd/Shift for multi-select (toggle individual)
     if (event && (event.ctrlKey || event.metaKey || event.shiftKey)) {
       if (selectedModelIds.includes(id)) {
         selectedModelIds = selectedModelIds.filter(x => x !== id);
       } else {
         selectedModelIds = [...selectedModelIds, id];
       }
-    } else if (selectedModelIds.includes(id) && selectedModelIds.length > 1) {
-      // Clicking on a model that's already in a multi-selection - keep the selection
-      // This allows group dragging to work
+    } else if (selectedModelIds.includes(id)) {
+      // If already selected, keep current selection (allows individual control)
+      return;
     } else {
-      // Single selection
-      selectedModelIds = [id];
+      // Check if this model belongs to a unit
+      const model = $models.find(m => m.id === id);
+      if (model && model.unitId) {
+        // Select all models with the same unitId
+        const unitMembers = $models.filter(m => m.unitId === model.unitId).map(m => m.id);
+        selectedModelIds = unitMembers;
+      } else {
+        // Single selection
+        selectedModelIds = [id];
+      }
     }
   }
 
@@ -1034,6 +1056,36 @@
     models.updateModel(id, { name: newName });
   }
 
+  // Group selected models
+  function handleGroupSelected() {
+    if (selectedModelIds.length < 2) return;
+
+    // Verify all models belong to same player
+    const selectedModelsData = selectedModelIds.map(id => $models.find(m => m.id === id)).filter(Boolean);
+    const playerIds = [...new Set(selectedModelsData.map(m => m.playerId))];
+    if (playerIds.length > 1) {
+      alert('Cannot group models from different players');
+      return;
+    }
+
+    models.groupModels(selectedModelIds);
+  }
+
+  // Ungroup selected models
+  function handleUngroupSelected() {
+    if (selectedModelIds.length === 0) return;
+
+    // Filter to only models that have a unitId
+    const modelsWithUnits = selectedModelIds.filter(id => {
+      const model = $models.find(m => m.id === id);
+      return model && model.unitId;
+    });
+
+    if (modelsWithUnits.length > 0) {
+      models.ungroupModels(modelsWithUnits);
+    }
+  }
+
   // Group rotation handle functions
   function handleGroupRotateMouseDown(event) {
     if (!screenToSvgRef || selectedModels.length < 2) return;
@@ -1186,6 +1238,37 @@
   // selectedModel is only set for single selection (for info panel)
   $: selectedModel = selectedModels.length === 1 ? selectedModels[0] : null;
 
+  // Check if selected models can be grouped
+  $: canGroupSelected = (() => {
+    if (selectedModels.length < 2) return false;
+    const playerIds = [...new Set(selectedModels.map(m => m.playerId))];
+    return playerIds.length === 1; // All must be from same player
+  })();
+
+  // Check if any selected models can be ungrouped
+  $: canUngroupSelected = selectedModels.some(m => m.unitId);
+
+  // Unit color palette (20 distinct hues)
+  const UNIT_COLORS = [
+    '#f97316', '#f59e0b', '#eab308', '#84cc16',
+    '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9',
+    '#6366f1', '#8b5cf6', '#a855f7', '#d946ef',
+    '#ec4899', '#f43f5e', '#fb7185', '#fdba74', '#fcd34d'
+  ];
+
+  // Hash unitId to a color index
+  function getUnitColor(unitId) {
+    if (!unitId) return null;
+    let hash = 0;
+    for (let i = 0; i < unitId.length; i++) {
+      hash = ((hash << 5) - hash) + unitId.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    const index = Math.abs(hash) % UNIT_COLORS.length;
+    console.log(UNIT_COLORS[index]);
+    return UNIT_COLORS[index];
+  }
+
   // Group rotation handle calculations (only when multiple models selected)
   $: groupCenter = selectedModels.length > 1 ? (() => {
     let sumX = 0, sumY = 0;
@@ -1227,27 +1310,82 @@
   $: allWallPolygons = $loadedTerrain.walls.map(wall =>
     transformWallVertices(getWallVertices(wall.shape, wall.segments), wall.x, wall.y, wall.rotation)
   );
-  // Calculate LOS from each enemy to each selected model (who can see the selected models)
+  // Calculate LOS using unit-based logic
+  // Group selected models and enemy models into units
   $: losResults = selectedModels.length > 0 && losVisualizationEnabled && enemyModels.length > 0
-    ? selectedModels.flatMap(selected =>
-        enemyModels.map(enemy => {
-          const result = checkLineOfSight(
-            modelToLosFormat(enemy),      // enemy is the viewer
-            modelToLosFormat(selected),   // selected model is the target
-            allTerrainPolygons,
-            allWallPolygons
-          );
-          return {
-            sourceId: enemy.id,
-            source: enemy,
-            targetId: selected.id,
-            target: selected,
-            canSee: result.canSee,
-            firstClearRay: result.firstClearRay,
-            rays: result.rays
-          };
-        })
-      )
+    ? (() => {
+        // Group selected models by unitId (ungrouped = own unit)
+        const selectedUnits = new Map();
+        selectedModels.forEach(model => {
+          const key = model.unitId || `single-${model.id}`;
+          if (!selectedUnits.has(key)) {
+            selectedUnits.set(key, []);
+          }
+          selectedUnits.get(key).push(model);
+        });
+
+        // Group enemy models by unitId (ungrouped = own unit)
+        const enemyUnits = new Map();
+        enemyModels.forEach(model => {
+          const key = model.unitId || `single-${model.id}`;
+          if (!enemyUnits.has(key)) {
+            enemyUnits.set(key, []);
+          }
+          enemyUnits.get(key).push(model);
+        });
+
+        // Check each selected unit against each enemy unit
+        const results = [];
+        for (const selectedUnit of selectedUnits.values()) {
+          for (const enemyUnit of enemyUnits.values()) {
+            // Convert to LOS format
+            const enemyModelsLos = enemyUnit.map(m => modelToLosFormat(m));
+            const selectedModelsLos = selectedUnit.map(m => modelToLosFormat(m));
+
+            // Check if any enemy in unit can see any selected in unit
+            const unitResult = checkUnitToUnitLineOfSight(
+              enemyModelsLos,
+              selectedModelsLos,
+              allTerrainPolygons,
+              allWallPolygons
+            );
+
+            // If ANY model in enemy unit can see ANY model in selected unit,
+            // mark ALL models in enemy unit as visible
+            if (unitResult.canSee) {
+              enemyUnit.forEach(enemyModel => {
+                selectedUnit.forEach(selectedModel => {
+                  results.push({
+                    sourceId: enemyModel.id,
+                    source: enemyModel,
+                    targetId: selectedModel.id,
+                    target: selectedModel,
+                    canSee: true,
+                    firstClearRay: unitResult.firstClearResult?.firstClearRay,
+                    rays: unitResult.firstClearResult?.rays || []
+                  });
+                });
+              });
+            } else {
+              // No LOS - add blocked results
+              enemyUnit.forEach(enemyModel => {
+                selectedUnit.forEach(selectedModel => {
+                  results.push({
+                    sourceId: enemyModel.id,
+                    source: enemyModel,
+                    targetId: selectedModel.id,
+                    target: selectedModel,
+                    canSee: false,
+                    firstClearRay: null,
+                    rays: []
+                  });
+                });
+              });
+            }
+          }
+        }
+        return results;
+      })()
     : [];
 </script>
 
@@ -1281,6 +1419,16 @@
                   <span class="value">{losResults.filter(r => r.canSee).length}/{losResults.length} rays visible</span>
                 </div>
               {/if}
+            {/if}
+            {#if canGroupSelected}
+              <button on:click={handleGroupSelected}>
+                Group (Ctrl+G)
+              </button>
+            {/if}
+            {#if canUngroupSelected}
+              <button on:click={handleUngroupSelected}>
+                Ungroup (Ctrl+Shift+G)
+              </button>
             {/if}
             <button class="danger" on:click={handleRemoveSelected}>
               Remove All ({selectedModelIds.length})
@@ -1886,6 +2034,7 @@
               name={model.name || ''}
               customWidth={model.customWidth}
               customHeight={model.customHeight}
+              unitStrokeColor={getUnitColor(model.unitId)}
               selected={selectedModelIds.includes(model.id)}
               inGroupSelection={selectedModelIds.length > 1 && selectedModelIds.includes(model.id)}
               marqueePreview={!selectedModelIds.includes(model.id) && marqueePreviewIds.has(model.id)}
