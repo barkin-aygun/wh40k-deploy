@@ -15,6 +15,7 @@
   export let customWidth = null;
   export let customHeight = null;
   export let unitStrokeColor = null; // Optional unit color for grouped models
+  export let coherencyViolation = false; // True if model is out of unit coherency
   export let screenToSvg;
   export let onSelect = () => {};
   export let onDrag = () => {};
@@ -38,9 +39,9 @@
   $: playerColor = playerColors.primary;
   $: playerFill = playerColors.fill;
   $: previewFill = playerColors.fillLight;
-  $: strokeWidth = selected ? 0.15 : (marqueePreview ? 0.12 : 0.1);
-  $: fillColor = selected ? playerColor : (marqueePreview ? previewFill : playerFill);
-  $: strokeColor = unitStrokeColor || playerColor; // Use unit color if available
+  $: strokeWidth = selected ? 0.15 : (marqueePreview ? 0.12 : (coherencyViolation ? 0.15 : 0.1));
+  $: fillColor = selected ? playerColor : (marqueePreview ? previewFill : (coherencyViolation ? 'rgba(239, 68, 68, 0.3)' : playerFill));
+  $: strokeColor = coherencyViolation ? '#ef4444' : (unitStrokeColor || playerColor); // Red for coherency violation
 
   // For circles
   $: radius = baseSize?.radius || 0.5;
@@ -174,7 +175,7 @@
   }
 </script>
 
-<g class="model-base" class:selected class:dragging={isDragging}>
+<g class="model-base" class:selected class:dragging={isDragging} class:coherency-violation={coherencyViolation}>
   {#if isRect}
     <!-- Rectangle base (vehicle hull) -->
     <g transform="rotate({rotation}, {x}, {y})">
@@ -352,5 +353,18 @@
   }
   .drag-ruler-label {
     filter: drop-shadow(0.05px 0.05px 0.1px rgba(0,0,0,0.8));
+  }
+  .model-base.coherency-violation circle,
+  .model-base.coherency-violation ellipse,
+  .model-base.coherency-violation rect {
+    animation: coherency-pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes coherency-pulse {
+    0%, 100% {
+      filter: drop-shadow(0 0 0.2px #ef4444);
+    }
+    50% {
+      filter: drop-shadow(0 0 0.6px #ef4444);
+    }
   }
 </style>

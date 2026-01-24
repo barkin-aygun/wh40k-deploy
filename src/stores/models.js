@@ -461,3 +461,11 @@ export const units = derived(models, $models => {
 
   return Array.from(unitMap.values());
 });
+
+// Coherency status for all models (derived from models store)
+// Import checkAllUnitsCoherency dynamically to avoid circular dependencies
+import { checkAllUnitsCoherency } from '../lib/coherency.js';
+
+export const coherencyStatus = derived(models, $models => {
+  return checkAllUnitsCoherency($models);
+});

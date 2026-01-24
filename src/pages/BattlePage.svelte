@@ -14,7 +14,8 @@
     player2Models,
     getBaseSize,
     isOvalBase,
-    isRectangularBase
+    isRectangularBase,
+    coherencyStatus
   } from '../stores/models.js';
   import { history } from '../stores/history.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
@@ -877,6 +878,13 @@
   // Check if any selected models can be ungrouped
   $: canUngroupSelected = selectedModels.some(m => m.unitId);
 
+  // Coherency status for selected models
+  $: selectedCoherencyViolations = selectedModels.filter(m => {
+    const status = $coherencyStatus.get(m.id);
+    return status && !status.inCoherency;
+  });
+  $: hasCoherencyViolations = selectedCoherencyViolations.length > 0;
+
   // Unit color palette (20 distinct hues)
   const UNIT_COLORS = [
     '#f97316', '#f59e0b', '#eab308', '#84cc16',
@@ -1042,6 +1050,25 @@
                 </div>
               {/if}
             {/if}
+            {#if hasCoherencyViolations}
+              {@const disconnectedCount = selectedCoherencyViolations.filter(m => {
+                const status = $coherencyStatus.get(m.id);
+                return status?.isDisconnected;
+              }).length}
+              <div class="field coherency-warning">
+                <span class="label-text">Coherency</span>
+                {#if disconnectedCount > 0}
+                  <span class="value warning">Unit split into groups</span>
+                {:else}
+                  <span class="value warning">{selectedCoherencyViolations.length} model{selectedCoherencyViolations.length !== 1 ? 's' : ''} out of coherency</span>
+                {/if}
+              </div>
+            {:else if selectedModels.some(m => m.unitId)}
+              <div class="field">
+                <span class="label-text">Coherency</span>
+                <span class="value ok">All models in coherency</span>
+              </div>
+            {/if}
             {#if canGroupSelected}
               <button on:click={handleGroupSelected}>
                 Group (Ctrl+G)
@@ -1083,6 +1110,21 @@
               <div class="field">
                 <span class="label-text">Rotation</span>
                 <span class="value">{Math.round(selectedModel.rotation || 0)}°</span>
+              </div>
+            {/if}
+            {#if selectedModel.unitId}
+              {@const modelCoherency = $coherencyStatus.get(selectedModel.id)}
+              <div class="field" class:coherency-warning={modelCoherency && !modelCoherency.inCoherency}>
+                <span class="label-text">Coherency</span>
+                {#if modelCoherency && !modelCoherency.inCoherency}
+                  {#if modelCoherency.isDisconnected}
+                    <span class="value warning">Disconnected from unit</span>
+                  {:else}
+                    <span class="value warning">Need {modelCoherency.requiredCount} nearby, have {modelCoherency.actualCount}</span>
+                  {/if}
+                {:else}
+                  <span class="value ok">In coherency</span>
+                {/if}
               </div>
             {/if}
             <div class="field">
@@ -1447,6 +1489,7 @@
 
           <!-- Render models -->
           {#each $models as model (model.id)}
+            {@const modelCoherency = $coherencyStatus.get(model.id)}
             <ModelBase
               id={model.id}
               x={model.x}
@@ -1458,6 +1501,7 @@
               customWidth={model.customWidth}
               customHeight={model.customHeight}
               unitStrokeColor={getUnitColor(model.unitId)}
+              coherencyViolation={modelCoherency ? !modelCoherency.inCoherency : false}
               selected={selectedModelIds.includes(model.id)}
               inGroupSelection={selectedModelIds.length > 1 && selectedModelIds.includes(model.id)}
               marqueePreview={!selectedModelIds.includes(model.id) && marqueePreviewIds.has(model.id)}
@@ -1818,6 +1862,22 @@
   .field .value {
     color: #ccc;
     font-size: 0.875rem;
+  }
+
+  .field .value.warning {
+    color: #ef4444;
+    font-weight: 500;
+  }
+
+  .field .value.ok {
+    color: #22c55e;
+  }
+
+  .field.coherency-warning {
+    background: rgba(239, 68, 68, 0.1);
+    padding: 0.5rem;
+    border-radius: 4px;
+    border-left: 2px solid #ef4444;
   }
 
   .hint {
