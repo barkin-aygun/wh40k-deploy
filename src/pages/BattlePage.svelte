@@ -45,6 +45,10 @@
   let groupRotationStartAngle = 0;
   let groupStartStates = null;
 
+  // Single model drag state (for engagement range tracking)
+  let isDraggingSingle = false;
+  let draggingSingleId = null;
+
   // Line tool state
   let measurementLines = [];
   let selectedLineId = null;
@@ -580,6 +584,11 @@
         });
       }
     } else {
+      // Track single model drag for engagement range display
+      if (!isDraggingSingle) {
+        isDraggingSingle = true;
+        draggingSingleId = id;
+      }
       models.updateModel(id, { x, y }, true);
     }
   }
@@ -607,6 +616,9 @@
         before: { x: startX, y: startY },
         after: { x: endX, y: endY }
       });
+      // Clear single drag state
+      isDraggingSingle = false;
+      draggingSingleId = null;
     }
   }
 
@@ -933,6 +945,62 @@
   $: enemyModels = selectedModels.length > 0
     ? $models.filter(m => !selectedPlayerIds.includes(m.playerId))
     : [];
+
+  // Engagement Range (1") tracking
+  // Determine if any model is being dragged
+  $: isAnyModelDragging = isDraggingGroup || isDraggingSingle;
+
+  // Get the models currently being dragged
+  $: draggingModels = isAnyModelDragging
+    ? (isDraggingGroup
+        ? selectedModels
+        : (draggingSingleId ? $models.filter(m => m.id === draggingSingleId) : []))
+    : [];
+
+  // Get player IDs of dragging models
+  $: draggingPlayerIds = [...new Set(draggingModels.map(m => m.playerId))];
+
+  // Enemy models relative to the dragging models
+  $: enemyModelsForEngagement = isAnyModelDragging && draggingPlayerIds.length > 0
+    ? $models.filter(m => !draggingPlayerIds.includes(m.playerId))
+    : [];
+
+  // Helper function to get the effective radius of a model's base
+  function getModelRadius(model) {
+    const baseSize = getBaseSize(model.baseType, model);
+    if (isRectangularBase(model.baseType)) {
+      // For rectangles, use half the diagonal as a conservative estimate
+      return Math.sqrt(model.customWidth * model.customWidth + model.customHeight * model.customHeight) / 2;
+    } else if (isOvalBase(model.baseType)) {
+      // For ovals, use the larger radius
+      return Math.max(baseSize.width, baseSize.height) / 2;
+    } else {
+      return baseSize.radius;
+    }
+  }
+
+  // Check if a model is within engagement range (1") of any enemy
+  function isInEngagementRange(model, enemies) {
+    const modelRadius = getModelRadius(model);
+    for (const enemy of enemies) {
+      const enemyRadius = getModelRadius(enemy);
+      const dx = model.x - enemy.x;
+      const dy = model.y - enemy.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      // Distance between bases (edge to edge) = center distance - both radii
+      const baseToBaseDistance = distance - modelRadius - enemyRadius;
+      if (baseToBaseDistance < 1) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Calculate which dragging models are in engagement range
+  $: engagementRangeViolations = isAnyModelDragging
+    ? new Set(draggingModels.filter(m => isInEngagementRange(m, enemyModelsForEngagement)).map(m => m.id))
+    : new Set();
+
   $: allTerrainPolygons = $loadedTerrain.terrains.map(t => ({
     id: t.id,
     vertices: getRotatedRectVertices(t)
@@ -1487,6 +1555,60 @@
             {/each}
           {/if}
 
+          <!-- Engagement Range zones (1" around enemy models when dragging) -->
+          {#if isAnyModelDragging && enemyModelsForEngagement.length > 0}
+            {#each enemyModelsForEngagement as enemy (enemy.id)}
+              {@const baseSize = getBaseSize(enemy.baseType, enemy)}
+              {@const isOval = isOvalBase(enemy.baseType)}
+              {@const isRect = isRectangularBase(enemy.baseType)}
+              {#if isRect}
+                <g transform="rotate({enemy.rotation || 0}, {enemy.x}, {enemy.y})">
+                  <rect
+                    x={enemy.x - enemy.customWidth / 2 - 1}
+                    y={enemy.y - enemy.customHeight / 2 - 1}
+                    width={enemy.customWidth + 2}
+                    height={enemy.customHeight + 2}
+                    rx="1"
+                    ry="1"
+                    fill="rgba(239, 68, 68, 0.2)"
+                    stroke="#ef4444"
+                    stroke-width="0.08"
+                    stroke-dasharray="0.2,0.1"
+                    pointer-events="none"
+                    class="engagement-zone"
+                  />
+                </g>
+              {:else if isOval}
+                <g transform="rotate({enemy.rotation || 0}, {enemy.x}, {enemy.y})">
+                  <ellipse
+                    cx={enemy.x}
+                    cy={enemy.y}
+                    rx={baseSize.width / 2 + 1}
+                    ry={baseSize.height / 2 + 1}
+                    fill="rgba(239, 68, 68, 0.2)"
+                    stroke="#ef4444"
+                    stroke-width="0.08"
+                    stroke-dasharray="0.2,0.1"
+                    pointer-events="none"
+                    class="engagement-zone"
+                  />
+                </g>
+              {:else}
+                <circle
+                  cx={enemy.x}
+                  cy={enemy.y}
+                  r={baseSize.radius + 1}
+                  fill="rgba(239, 68, 68, 0.2)"
+                  stroke="#ef4444"
+                  stroke-width="0.08"
+                  stroke-dasharray="0.2,0.1"
+                  pointer-events="none"
+                  class="engagement-zone"
+                />
+              {/if}
+            {/each}
+          {/if}
+
           <!-- Render models -->
           {#each $models as model (model.id)}
             {@const modelCoherency = $coherencyStatus.get(model.id)}
@@ -1502,6 +1624,7 @@
               customHeight={model.customHeight}
               unitStrokeColor={getUnitColor(model.unitId)}
               coherencyViolation={modelCoherency ? !modelCoherency.inCoherency : false}
+              inEngagementRange={engagementRangeViolations.has(model.id)}
               selected={selectedModelIds.includes(model.id)}
               inGroupSelection={selectedModelIds.length > 1 && selectedModelIds.includes(model.id)}
               marqueePreview={!selectedModelIds.includes(model.id) && marqueePreviewIds.has(model.id)}
@@ -1965,5 +2088,18 @@
 
   :global(.group-rotate-handle:hover) {
     filter: drop-shadow(0 0 0.5px #9333ea);
+  }
+
+  :global(.engagement-zone) {
+    animation: engagement-zone-pulse 0.6s ease-in-out infinite;
+  }
+
+  @keyframes engagement-zone-pulse {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 0.9;
+    }
   }
 </style>

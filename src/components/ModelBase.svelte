@@ -16,6 +16,7 @@
   export let customHeight = null;
   export let unitStrokeColor = null; // Optional unit color for grouped models
   export let coherencyViolation = false; // True if model is out of unit coherency
+  export let inEngagementRange = false; // True if model is within 1" of an enemy
   export let screenToSvg;
   export let onSelect = () => {};
   export let onDrag = () => {};
@@ -175,7 +176,47 @@
   }
 </script>
 
-<g class="model-base" class:selected class:dragging={isDragging} class:coherency-violation={coherencyViolation}>
+<g class="model-base" class:selected class:dragging={isDragging} class:coherency-violation={coherencyViolation} class:engagement-range={inEngagementRange}>
+  <!-- Engagement range red glow (rendered under base) -->
+  {#if inEngagementRange}
+    {#if isRect}
+      <g transform="rotate({rotation}, {x}, {y})">
+        <rect
+          x={x - rectWidth / 2 - 0.15}
+          y={y - rectHeight / 2 - 0.15}
+          width={rectWidth + 0.3}
+          height={rectHeight + 0.3}
+          rx="0.1"
+          ry="0.1"
+          fill="rgba(239, 68, 68, 0.6)"
+          pointer-events="none"
+          class="engagement-glow"
+        />
+      </g>
+    {:else if isOval}
+      <g transform="rotate({rotation}, {x}, {y})">
+        <ellipse
+          cx={x}
+          cy={y}
+          rx={rx + 0.15}
+          ry={ry + 0.15}
+          fill="rgba(239, 68, 68, 0.6)"
+          pointer-events="none"
+          class="engagement-glow"
+        />
+      </g>
+    {:else}
+      <circle
+        cx={x}
+        cy={y}
+        r={radius + 0.15}
+        fill="rgba(239, 68, 68, 0.6)"
+        pointer-events="none"
+        class="engagement-glow"
+      />
+    {/if}
+  {/if}
+
   {#if isRect}
     <!-- Rectangle base (vehicle hull) -->
     <g transform="rotate({rotation}, {x}, {y})">
@@ -365,6 +406,17 @@
     }
     50% {
       filter: drop-shadow(0 0 0.6px #ef4444);
+    }
+  }
+  .engagement-glow {
+    animation: engagement-pulse 0.8s ease-in-out infinite;
+  }
+  @keyframes engagement-pulse {
+    0%, 100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
     }
   }
 </style>
