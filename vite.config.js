@@ -4,5 +4,6 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [svelte()],
-  base: "https://barkin-aygun.github.io/wh40k-deploy/"
+  base: "https://barkin-aygun.github.io/wh40k-deploy/",
+  server: { allowedHosts: ["unlying-laci-unwanted.ngrok-free.dev"]}
 })

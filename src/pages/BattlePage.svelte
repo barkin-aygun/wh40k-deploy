@@ -4,6 +4,9 @@
   import WallPiece from '../components/WallPiece.svelte';
   import ModelBase from '../components/ModelBase.svelte';
   import CollapsibleSection from '../components/CollapsibleSection.svelte';
+  import SidebarDrawer from '../components/SidebarDrawer.svelte';
+  import TouchControls from '../components/TouchControls.svelte';
+  import { resetView } from '../stores/battlefieldView.js';
   import {
     getWallVertices,
     transformWallVertices
@@ -26,6 +29,8 @@
 
   // State
   let screenToSvgRef = null;
+  let battlefieldComponent = null;
+  let drawerOpen = false;
   let losVisualizationEnabled = false;
   let showDebugRays = false;
 
@@ -188,6 +193,27 @@
       models.clear();
       selectedModelIds = [];
     }
+  }
+
+  // Touch controls handlers
+  function handleZoomIn() {
+    battlefieldComponent?.zoomIn();
+  }
+
+  function handleZoomOut() {
+    battlefieldComponent?.zoomOut();
+  }
+
+  function handleResetView() {
+    resetView();
+  }
+
+  function openDrawer() {
+    drawerOpen = true;
+  }
+
+  function closeDrawer() {
+    drawerOpen = false;
   }
 
   function handleKeyDown(event) {
@@ -1316,8 +1342,8 @@
 
     <div class="main-content">
       <div class="battlefield-area">
-        <div class="battlefield-container" on:mousedown={handleBattlefieldMouseDown} role="presentation">
-        <Battlefield let:screenToSvg>
+        <div class="battlefield-container" on:mousedown={handleBattlefieldMouseDown} on:touchstart={handleBattlefieldMouseDown} role="presentation">
+        <Battlefield bind:this={battlefieldComponent} let:screenToSvg>
           {#if screenToSvg && !screenToSvgRef}
             {screenToSvgRef = screenToSvg, ''}
           {/if}
@@ -1873,11 +1899,95 @@
       </div>
         <div class="info">
           <p>Battlefield: 60" x 44" | {$player1Models.length} P1 models | {$player2Models.length} P2 models</p>
-          <p class="hint">Drag to select | Ctrl+Click multi-select | Del remove | L LoS | M measure</p>
+          <p class="hint desktop-hint">Drag to select | Ctrl+Click multi-select | Del remove | L LoS | M measure</p>
+          <p class="hint mobile-hint">Pinch zoom | Two-finger pan | Tap to select</p>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Touch controls for mobile -->
+  <TouchControls
+    onZoomIn={handleZoomIn}
+    onZoomOut={handleZoomOut}
+    onResetView={handleResetView}
+    on:openOptions={openDrawer}
+  />
+
+  <!-- Mobile sidebar drawer -->
+  <SidebarDrawer bind:open={drawerOpen} title="Battle Options" on:close={closeDrawer}>
+    <!-- Selected Model Section -->
+    <CollapsibleSection title="Selection">
+      {#if selectedModelIds.length > 0}
+        <div class="edit-form">
+          <div class="field">
+            <span class="label-text">Selected</span>
+            <span class="value">{selectedModelIds.length} model(s)</span>
+          </div>
+          <div class="field">
+            <label class="checkbox-label">
+              <input type="checkbox" bind:checked={losVisualizationEnabled} />
+              Show Line of Sight
+            </label>
+          </div>
+          <button class="danger" on:click={() => { selectedModelIds.forEach(id => models.remove(id)); selectedModelIds = []; }}>Delete Selected</button>
+        </div>
+      {:else}
+        <p class="hint">Tap a model to select</p>
+      {/if}
+    </CollapsibleSection>
+
+    <!-- Visualizations -->
+    <CollapsibleSection title="Visualizations">
+      <div class="edit-form">
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" bind:checked={show6InchZone} />
+            6" Zone
+          </label>
+        </div>
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" bind:checked={show9InchZone} />
+            9" Zone (Deep Strike)
+          </label>
+        </div>
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" bind:checked={show12InchZone} />
+            12" Zone
+          </label>
+        </div>
+      </div>
+    </CollapsibleSection>
+
+    <!-- Tools -->
+    <CollapsibleSection title="Tools">
+      <div class="button-group">
+        <button on:click={() => lineToolActive = !lineToolActive} class:active={lineToolActive}>
+          {lineToolActive ? 'Disable Measure' : 'Enable Measure'}
+        </button>
+        {#if lineToolActive && measurementLines.length > 0}
+          <button class="secondary" on:click={() => { measurementLines = []; selectedLineId = null; }}>
+            Clear Lines
+          </button>
+        {/if}
+      </div>
+    </CollapsibleSection>
+
+    <!-- Export -->
+    <CollapsibleSection title="Export">
+      <div class="button-group">
+        <button on:click={handleExportPng}>Export PNG</button>
+        <button on:click={exportState}>Export JSON</button>
+      </div>
+    </CollapsibleSection>
+
+    <!-- Actions -->
+    <CollapsibleSection title="Actions">
+      <button class="danger" on:click={handleClearAll}>Clear All Models</button>
+    </CollapsibleSection>
+  </SidebarDrawer>
 </main>
 
 <style>
@@ -2100,6 +2210,54 @@
     }
     50% {
       opacity: 0.9;
+    }
+  }
+
+  .mobile-hint {
+    display: none;
+  }
+
+  button.active {
+    background: #3b82f6;
+    border-color: #2563eb;
+  }
+
+  /* Mobile styles */
+  @media (max-width: 768px) {
+    main {
+      padding: 0.5rem;
+      padding-top: 3.5rem;
+      padding-bottom: 2.5rem;
+    }
+
+    .layout {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      display: none;
+    }
+
+    .battlefield-area {
+      width: 100%;
+    }
+
+    .battlefield-container {
+      max-height: calc(100vh - 140px);
+      border-radius: 8px;
+    }
+
+    .info {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .desktop-hint {
+      display: none;
+    }
+
+    .mobile-hint {
+      display: block;
     }
   }
 </style>

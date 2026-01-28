@@ -5,6 +5,7 @@
   import { getWallVertices } from '../stores/layout.js';
   import { getBaseSize, isOvalBase, isRectangularBase } from '../stores/models.js';
   import { battlefieldView, resetView } from '../stores/battlefieldView.js';
+  import { isTouchDevice } from '../lib/touch.js';
   import TerrainRect from './TerrainRect.svelte';
   import WallPiece from './WallPiece.svelte';
   import ModelBase from './ModelBase.svelte';
@@ -55,6 +56,13 @@
   let isPanning = false;
   let lastPanPoint = { x: 0, y: 0 };
   let spacePressed = false;
+
+  // Touch state
+  let touches = new Map();
+  let initialPinchDistance = null;
+  let initialPinchZoom = null;
+  let initialPinchCenter = null;
+  let isTwoFingerPanning = false;
 
   const MIN_ZOOM = 0.5;
   const MAX_ZOOM = 4;
@@ -153,6 +161,130 @@
     resetView();
   }
 
+  // Touch event handlers for pinch-to-zoom and two-finger pan
+  function handleTouchStart(event) {
+    // Store all touches
+    for (const touch of event.changedTouches) {
+      touches.set(touch.identifier, {
+        x: touch.clientX,
+        y: touch.clientY
+      });
+    }
+
+    // Two-finger gesture start
+    if (touches.size === 2) {
+      event.preventDefault();
+      const touchList = [...touches.values()];
+      const [t1, t2] = touchList;
+
+      // Calculate initial pinch distance
+      initialPinchDistance = Math.hypot(t2.x - t1.x, t2.y - t1.y);
+      initialPinchZoom = $battlefieldView.zoom;
+
+      // Calculate initial pinch center in screen coordinates
+      initialPinchCenter = {
+        x: (t1.x + t2.x) / 2,
+        y: (t1.y + t2.y) / 2
+      };
+
+      isTwoFingerPanning = true;
+      lastPanPoint = { ...initialPinchCenter };
+    }
+  }
+
+  function handleTouchMove(event) {
+    // Update stored touches
+    for (const touch of event.changedTouches) {
+      if (touches.has(touch.identifier)) {
+        touches.set(touch.identifier, {
+          x: touch.clientX,
+          y: touch.clientY
+        });
+      }
+    }
+
+    // Two-finger gesture (pinch zoom + pan)
+    if (touches.size === 2 && initialPinchDistance !== null) {
+      event.preventDefault();
+      const touchList = [...touches.values()];
+      const [t1, t2] = touchList;
+
+      // Calculate current pinch distance for zoom
+      const currentDistance = Math.hypot(t2.x - t1.x, t2.y - t1.y);
+      const scale = currentDistance / initialPinchDistance;
+      const newZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, initialPinchZoom * scale));
+
+      // Calculate current center for pan
+      const currentCenter = {
+        x: (t1.x + t2.x) / 2,
+        y: (t1.y + t2.y) / 2
+      };
+
+      // Calculate pan delta
+      const rect = svgElement.getBoundingClientRect();
+      const dx = (currentCenter.x - lastPanPoint.x) / rect.width * viewWidth;
+      const dy = (currentCenter.y - lastPanPoint.y) / rect.height * viewHeight;
+
+      // Calculate new viewBox dimensions for zoom
+      const newViewWidth = TOTAL_WIDTH / newZoom;
+      const newViewHeight = TOTAL_HEIGHT / newZoom;
+
+      // Apply zoom around the pinch center
+      const svgCenterX = viewX + (initialPinchCenter.x - rect.left) / rect.width * viewWidth;
+      const svgCenterY = viewY + (initialPinchCenter.y - rect.top) / rect.height * viewHeight;
+
+      const newPanX = svgCenterX - (initialPinchCenter.x - rect.left) / rect.width * newViewWidth - dx;
+      const newPanY = svgCenterY - (initialPinchCenter.y - rect.top) / rect.height * newViewHeight - dy;
+
+      battlefieldView.set({ zoom: newZoom, panX: newPanX, panY: newPanY });
+      lastPanPoint = currentCenter;
+    }
+  }
+
+  function handleTouchEnd(event) {
+    // Remove ended touches
+    for (const touch of event.changedTouches) {
+      touches.delete(touch.identifier);
+    }
+
+    // Reset pinch state when less than 2 fingers
+    if (touches.size < 2) {
+      initialPinchDistance = null;
+      initialPinchZoom = null;
+      initialPinchCenter = null;
+      isTwoFingerPanning = false;
+    }
+  }
+
+  // Zoom programmatically (for touch controls)
+  export function zoomIn() {
+    const newZoom = Math.min(MAX_ZOOM, $battlefieldView.zoom * 1.25);
+    const newViewWidth = TOTAL_WIDTH / newZoom;
+    const newViewHeight = TOTAL_HEIGHT / newZoom;
+
+    // Zoom towards center
+    const centerX = viewX + viewWidth / 2;
+    const centerY = viewY + viewHeight / 2;
+    const newPanX = centerX - newViewWidth / 2;
+    const newPanY = centerY - newViewHeight / 2;
+
+    battlefieldView.set({ zoom: newZoom, panX: newPanX, panY: newPanY });
+  }
+
+  export function zoomOut() {
+    const newZoom = Math.max(MIN_ZOOM, $battlefieldView.zoom * 0.8);
+    const newViewWidth = TOTAL_WIDTH / newZoom;
+    const newViewHeight = TOTAL_HEIGHT / newZoom;
+
+    // Zoom towards center
+    const centerX = viewX + viewWidth / 2;
+    const centerY = viewY + viewHeight / 2;
+    const newPanX = centerX - newViewWidth / 2;
+    const newPanY = centerY - newViewHeight / 2;
+
+    battlefieldView.set({ zoom: newZoom, panX: newPanX, panY: newPanY });
+  }
+
   // Handle background click for deselection
   function handleBackgroundClick(event) {
     // Only trigger if clicking directly on background, not on child elements
@@ -199,11 +331,15 @@
   viewBox={viewBoxStr}
   preserveAspectRatio="xMidYMid meet"
   class="battlefield"
-  class:panning={isPanning || spacePressed}
+  class:panning={isPanning || spacePressed || isTwoFingerPanning}
   on:wheel={handleWheel}
   on:mousedown={handleMouseDown}
   on:dblclick={handleDblClick}
   on:click={handleBackgroundClick}
+  on:touchstart={handleTouchStart}
+  on:touchmove={handleTouchMove}
+  on:touchend={handleTouchEnd}
+  on:touchcancel={handleTouchEnd}
 >
   <!-- Ruler background -->
   {#if showRuler}
@@ -597,6 +733,9 @@
     max-height: 100vh;
     display: block;
     cursor: default;
+    touch-action: none; /* Prevent browser gestures */
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   .battlefield.panning {

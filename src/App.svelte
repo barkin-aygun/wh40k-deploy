@@ -1,12 +1,15 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import BattlefieldSetupPage from './pages/BattlefieldSetupPage.svelte';
   import DeploymentPage from './pages/DeploymentPage.svelte';
   import BattlePage from './pages/BattlePage.svelte';
   import DebugPage from './pages/DebugPage.svelte';
-    import LayoutPage from './pages/LayoutPage.svelte';
+  import LayoutPage from './pages/LayoutPage.svelte';
+  import { isMobile, MOBILE_BREAKPOINT } from './lib/touch.js';
 
   let currentPage = 'main';
+  let mobileNavOpen = false;
+  let isMobileView = false;
 
   function handleHashChange() {
     const hash = window.location.hash;
@@ -23,24 +26,77 @@
     } else {
       currentPage = 'deployment';
     }
+    // Close mobile nav on page change
+    mobileNavOpen = false;
+  }
+
+  function handleResize() {
+    isMobileView = isMobile();
+    // Close mobile nav if we resize to desktop
+    if (!isMobileView) {
+      mobileNavOpen = false;
+    }
+  }
+
+  function toggleMobileNav() {
+    mobileNavOpen = !mobileNavOpen;
+  }
+
+  function closeMobileNav() {
+    mobileNavOpen = false;
+  }
+
+  function handleKeyDown(event) {
+    if (event.key === 'Escape' && mobileNavOpen) {
+      mobileNavOpen = false;
+    }
   }
 
   onMount(() => {
     handleHashChange();
+    handleResize();
     window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   });
 </script>
 
 <div class="app-header">
   <h1 class="app-title">Procinctum</h1>
-  <nav class="nav-links">
+  <nav class="nav-links desktop-nav">
     <a href="#/setup" class:active={currentPage === 'setup'}>Battlefield Setup</a>
     <a href="#/deployment" class:active={currentPage === 'deployment'}>Deployment</a>
     <a href="#/battle" class:active={currentPage === 'battle'}>Battle</a>
     <a href="#/layout" class:active={currentPage === 'layout'}>Layout Builder</a>
   </nav>
+  <button class="hamburger-btn" on:click={toggleMobileNav} aria-label="Toggle navigation">
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+    <span class="hamburger-line"></span>
+  </button>
 </div>
+
+<!-- Mobile Navigation Drawer -->
+{#if mobileNavOpen}
+  <div class="mobile-nav-overlay" on:click={closeMobileNav}></div>
+{/if}
+<nav class="mobile-nav" class:open={mobileNavOpen}>
+  <div class="mobile-nav-header">
+    <h2>Navigation</h2>
+    <button class="close-btn" on:click={closeMobileNav} aria-label="Close navigation">&times;</button>
+  </div>
+  <div class="mobile-nav-links">
+    <a href="#/setup" class:active={currentPage === 'setup'} on:click={closeMobileNav}>Battlefield Setup</a>
+    <a href="#/deployment" class:active={currentPage === 'deployment'} on:click={closeMobileNav}>Deployment</a>
+    <a href="#/battle" class:active={currentPage === 'battle'} on:click={closeMobileNav}>Battle</a>
+    <a href="#/layout" class:active={currentPage === 'layout'} on:click={closeMobileNav}>Layout Builder</a>
+  </div>
+</nav>
 
 {#if currentPage === 'debug'}
   <DebugPage />
@@ -112,6 +168,125 @@
     color: #fff;
   }
 
+  /* Hamburger button - hidden on desktop */
+  .hamburger-btn {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 28px;
+    height: 24px;
+    padding: 0;
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+  }
+
+  .hamburger-line {
+    width: 100%;
+    height: 3px;
+    background: #888;
+    border-radius: 2px;
+    transition: all 0.2s ease;
+  }
+
+  .hamburger-btn:hover .hamburger-line {
+    background: #fff;
+  }
+
+  /* Mobile nav overlay */
+  .mobile-nav-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 150;
+  }
+
+  /* Mobile navigation drawer */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 80vw;
+    background: #222;
+    z-index: 200;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    flex-direction: column;
+  }
+
+  .mobile-nav.open {
+    transform: translateX(0);
+  }
+
+  .mobile-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid #333;
+  }
+
+  .mobile-nav-header h2 {
+    margin: 0;
+    font-size: 1.125rem;
+    color: #e0e0e0;
+  }
+
+  .close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: #888;
+    font-size: 1.5rem;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+
+  .close-btn:hover {
+    background: #333;
+    color: #fff;
+  }
+
+  .mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+
+  .mobile-nav-links a {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: #888;
+    text-decoration: none;
+    font-size: 1rem;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .mobile-nav-links a:hover {
+    background: #333;
+    color: #fff;
+  }
+
+  .mobile-nav-links a.active {
+    background: #3b82f6;
+    color: #fff;
+  }
+
   .app-footer {
     position: fixed;
     bottom: 0;
@@ -146,5 +321,52 @@
   .app-footer a:hover {
     color: #aaa;
     text-decoration: underline;
+  }
+
+  /* Mobile styles */
+  @media (max-width: 768px) {
+    .app-header {
+      padding: 0.75rem 1rem;
+    }
+
+    .app-title {
+      font-size: 1.25rem;
+    }
+
+    .desktop-nav {
+      display: none;
+    }
+
+    .hamburger-btn {
+      display: flex;
+    }
+
+    .mobile-nav-overlay {
+      display: block;
+    }
+
+    .mobile-nav {
+      display: flex;
+    }
+
+    .app-footer {
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.5rem;
+      font-size: 0.65rem;
+    }
+
+    .app-footer .separator {
+      display: none;
+    }
+
+    .app-footer .disclaimer {
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    .app-footer .disclaimer br {
+      display: none;
+    }
   }
 </style>

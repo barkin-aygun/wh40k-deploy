@@ -1,6 +1,7 @@
 <script>
   import { getBaseSize, isOvalBase, isRectangularBase } from '../stores/models.js';
   import { COLORS, getPlayerColors } from '../lib/colors.js';
+  import { isTouchDevice } from '../lib/touch.js';
 
   export let id;
   export let x;
@@ -30,6 +31,11 @@
   let dragOffset = { x: 0, y: 0 };
   let dragStartState = null;
   let rotateStartState = null;
+  let pointerStartPos = null; // For tap vs drag detection
+  const DRAG_THRESHOLD = 5; // pixels
+
+  // Larger handles for touch
+  $: handleRadius = isTouchDevice() ? 1.2 : 0.8;
 
   // Create a model object for getBaseSize
   $: modelObj = { customWidth, customHeight };
@@ -79,7 +85,7 @@
   })();
 
   function handleClick(event) {
-    // Just stop propagation - selection is handled in mousedown
+    // Just stop propagation - selection is handled in pointerdown
     event.stopPropagation();
   }
 
@@ -91,11 +97,16 @@
     }
   }
 
-  function handleMouseDown(event) {
+  function handlePointerDown(event) {
+    // Only handle primary button (left click or touch)
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
 
+    // Capture pointer for reliable tracking
+    event.target.setPointerCapture(event.pointerId);
+
+    pointerStartPos = { x: event.clientX, y: event.clientY };
     onSelect(id, event);
     isDragging = true;
 
@@ -104,13 +115,21 @@
 
     const svgCoords = screenToSvg(event.clientX, event.clientY);
     dragOffset = { x: svgCoords.x - x, y: svgCoords.y - y };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
   }
 
-  function handleMouseMove(event) {
+  function handlePointerMove(event) {
     if (!isDragging) return;
+
+    // Check if this is actually a drag (moved beyond threshold)
+    if (pointerStartPos) {
+      const dist = Math.hypot(
+        event.clientX - pointerStartPos.x,
+        event.clientY - pointerStartPos.y
+      );
+      if (dist < DRAG_THRESHOLD) return;
+      pointerStartPos = null; // Start dragging
+    }
+
     const svgCoords = screenToSvg(event.clientX, event.clientY);
 
     let newX = svgCoords.x - dragOffset.x;
@@ -120,7 +139,9 @@
     onDrag(id, newX, newY);
   }
 
-  function handleMouseUp() {
+  function handlePointerUp(event) {
+    event.target.releasePointerCapture(event.pointerId);
+
     if (isDragging && dragStartState) {
       // Only save to history if position actually changed
       if (dragStartState.x !== x || dragStartState.y !== y) {
@@ -130,23 +151,23 @@
     }
 
     isDragging = false;
-    window.removeEventListener('mousemove', handleMouseMove);
-    window.removeEventListener('mouseup', handleMouseUp);
+    pointerStartPos = null;
   }
 
-  function handleRotateMouseDown(event) {
+  function handleRotatePointerDown(event) {
     event.preventDefault();
     event.stopPropagation();
+
+    // Capture pointer for reliable tracking
+    event.target.setPointerCapture(event.pointerId);
+
     isRotating = true;
 
     // Capture starting rotation for history
     rotateStartState = rotation;
-
-    window.addEventListener('mousemove', handleRotateMouseMove);
-    window.addEventListener('mouseup', handleRotateMouseUp);
   }
 
-  function handleRotateMouseMove(event) {
+  function handleRotatePointerMove(event) {
     if (!isRotating) return;
     const svgCoords = screenToSvg(event.clientX, event.clientY);
 
@@ -154,14 +175,17 @@
     const dy = svgCoords.y - y;
     let angle = Math.atan2(dy, dx) * 180 / Math.PI + 45;
 
-    if (!event.shiftKey) {
+    // Only snap to grid on non-touch or when not using shift
+    if (!event.shiftKey && !isTouchDevice()) {
       angle = Math.round(angle / 15) * 15;
     }
 
     onRotate(id, angle);
   }
 
-  function handleRotateMouseUp() {
+  function handleRotatePointerUp(event) {
+    event.target.releasePointerCapture(event.pointerId);
+
     if (isRotating && rotateStartState !== null) {
       // Only save to history if rotation actually changed
       if (rotateStartState !== rotation) {
@@ -171,8 +195,6 @@
     }
 
     isRotating = false;
-    window.removeEventListener('mousemove', handleRotateMouseMove);
-    window.removeEventListener('mouseup', handleRotateMouseUp);
   }
 </script>
 
@@ -230,9 +252,13 @@
         stroke-width={strokeWidth}
         on:click={handleClick}
         on:dblclick={handleDoubleClick}
-        on:mousedown={handleMouseDown}
+        on:pointerdown={handlePointerDown}
+        on:pointermove={handlePointerMove}
+        on:pointerup={handlePointerUp}
+        on:pointercancel={handlePointerUp}
         role="button"
         tabindex="0"
+        class="model-shape"
       />
     </g>
   {:else if isOval}
@@ -248,9 +274,13 @@
         stroke-width={strokeWidth}
         on:click={handleClick}
         on:dblclick={handleDoubleClick}
-        on:mousedown={handleMouseDown}
+        on:pointerdown={handlePointerDown}
+        on:pointermove={handlePointerMove}
+        on:pointerup={handlePointerUp}
+        on:pointercancel={handlePointerUp}
         role="button"
         tabindex="0"
+        class="model-shape"
       />
     </g>
   {:else}
@@ -264,9 +294,13 @@
       stroke-width={strokeWidth}
       on:click={handleClick}
       on:dblclick={handleDoubleClick}
-      on:mousedown={handleMouseDown}
+      on:pointerdown={handlePointerDown}
+      on:pointermove={handlePointerMove}
+      on:pointerup={handlePointerUp}
+      on:pointercancel={handlePointerUp}
       role="button"
       tabindex="0"
+      class="model-shape"
     />
   {/if}
 
@@ -304,11 +338,14 @@
     <circle
       cx={handleX}
       cy={handleY}
-      r="0.8"
+      r={handleRadius}
       fill={COLORS.selection.handle}
       stroke={COLORS.selection.handleDark}
       stroke-width="0.1"
-      on:mousedown={handleRotateMouseDown}
+      on:pointerdown={handleRotatePointerDown}
+      on:pointermove={handleRotatePointerMove}
+      on:pointerup={handleRotatePointerUp}
+      on:pointercancel={handleRotatePointerUp}
       role="button"
       tabindex="0"
       class="rotate-handle"
@@ -384,10 +421,14 @@
   .model-base.selected rect {
     filter: drop-shadow(0 0 0.3px currentColor);
   }
+  .model-shape {
+    touch-action: none;
+  }
   .rotate-handle {
     cursor: grab;
     filter: drop-shadow(0.1px 0.1px 0.2px rgba(0,0,0,0.5));
     transition: filter 0.15s;
+    touch-action: none;
   }
   .rotate-handle:hover {
     filter: drop-shadow(0 0 0.5px #9333ea);

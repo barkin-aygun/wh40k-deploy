@@ -2,9 +2,15 @@
   import { onMount } from 'svelte';
   import Battlefield from '../components/Battlefield.svelte';
   import CollapsibleSection from '../components/CollapsibleSection.svelte';
+  import SidebarDrawer from '../components/SidebarDrawer.svelte';
+  import TouchControls from '../components/TouchControls.svelte';
+  import { resetView } from '../stores/battlefieldView.js';
   import { DEPLOYMENT_PRESETS } from '../stores/deployment.js';
   import { savedLayoutsList, refreshSavedLayouts, TERRAIN_LAYOUT_CATEGORIES } from '../stores/layout.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
+
+  let battlefieldComponent;
+  let drawerOpen = false;
 
   onMount(() => {
     refreshSavedLayouts();
@@ -31,6 +37,27 @@
 
   function handleClearDeployment() {
     selectedDeployment.set(null);
+  }
+
+  // Touch controls handlers
+  function handleZoomIn() {
+    battlefieldComponent?.zoomIn();
+  }
+
+  function handleZoomOut() {
+    battlefieldComponent?.zoomOut();
+  }
+
+  function handleResetView() {
+    resetView();
+  }
+
+  function openDrawer() {
+    drawerOpen = true;
+  }
+
+  function closeDrawer() {
+    drawerOpen = false;
   }
 </script>
 
@@ -122,6 +149,7 @@
     <div class="battlefield-area">
       <div class="battlefield-container">
         <Battlefield
+          bind:this={battlefieldComponent}
           deploymentZones={$selectedDeployment?.zones}
           objectives={$selectedDeployment?.objectives}
           terrains={$loadedTerrain.terrains}
@@ -130,10 +158,91 @@
       </div>
       <div class="info">
         <p>Battlefield: 60" x 44"</p>
-        <p class="hint">Scroll to zoom | Space+drag to pan | Double-click to reset view</p>
+        <p class="hint desktop-hint">Scroll to zoom | Space+drag to pan | Double-click to reset view</p>
+        <p class="hint mobile-hint">Pinch to zoom | Two-finger drag to pan</p>
       </div>
     </div>
   </div>
+
+  <!-- Touch controls for mobile -->
+  <TouchControls
+    onZoomIn={handleZoomIn}
+    onZoomOut={handleZoomOut}
+    onResetView={handleResetView}
+    on:openOptions={openDrawer}
+  />
+
+  <!-- Mobile sidebar drawer -->
+  <SidebarDrawer bind:open={drawerOpen} title="Setup Options" on:close={closeDrawer}>
+    <!-- Deployment Selection -->
+    <CollapsibleSection title="Deployment">
+      {#if $selectedDeployment}
+        <div class="selected-item">
+          <span class="selected-name">{$selectedDeployment.name}</span>
+          <button class="small secondary" on:click={handleClearDeployment}>Change</button>
+        </div>
+      {:else}
+        <div class="button-group">
+          {#each DEPLOYMENT_PRESETS as preset}
+            <button on:click={() => handleSelectDeployment(preset)}>
+              {preset.name}
+            </button>
+          {/each}
+        </div>
+      {/if}
+    </CollapsibleSection>
+
+    <!-- Terrain Layout Selection -->
+    <CollapsibleSection title="Terrain Layout">
+      {#if $selectedLayoutName}
+        <div class="selected-item">
+          <span class="selected-name">{$selectedLayoutName}</span>
+          <button class="small secondary" on:click={handleClearLayout}>Change</button>
+        </div>
+      {:else}
+        <div class="layout-sections">
+          {#each TERRAIN_LAYOUT_CATEGORIES as category}
+            <div class="layout-group">
+              <h4>{category.name}</h4>
+              <div class="button-group">
+                {#each category.presets as preset}
+                  <button on:click={() => handleSelectPreset(preset)}>
+                    {preset.name}
+                  </button>
+                {/each}
+              </div>
+            </div>
+          {/each}
+          {#if $savedLayoutsList.length > 0}
+            <div class="layout-group">
+              <h4>Saved</h4>
+              <div class="button-group">
+                {#each $savedLayoutsList as layout}
+                  <button on:click={() => handleSelectSavedLayout(layout.name)}>
+                    {layout.name}
+                  </button>
+                {/each}
+              </div>
+            </div>
+          {/if}
+        </div>
+      {/if}
+    </CollapsibleSection>
+
+    <!-- Summary -->
+    <CollapsibleSection title="Summary">
+      <div class="summary">
+        <div class="summary-row">
+          <span class="label">Deployment:</span>
+          <span class="value">{$selectedDeployment?.name || 'None'}</span>
+        </div>
+        <div class="summary-row">
+          <span class="label">Terrain:</span>
+          <span class="value">{$selectedLayoutName || 'None'}</span>
+        </div>
+      </div>
+    </CollapsibleSection>
+  </SidebarDrawer>
 </main>
 
 <style>
@@ -284,5 +393,48 @@
   .info .hint {
     margin-top: 0.25rem;
     font-size: 0.75rem;
+  }
+
+  .mobile-hint {
+    display: none;
+  }
+
+  /* Mobile styles */
+  @media (max-width: 768px) {
+    main {
+      padding: 0.5rem;
+      padding-top: 3.5rem;
+      padding-bottom: 2.5rem;
+    }
+
+    .layout {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      display: none;
+    }
+
+    .battlefield-area {
+      width: 100%;
+    }
+
+    .battlefield-container {
+      max-height: calc(100vh - 140px);
+      border-radius: 8px;
+    }
+
+    .info {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .desktop-hint {
+      display: none;
+    }
+
+    .mobile-hint {
+      display: block;
+    }
   }
 </style>

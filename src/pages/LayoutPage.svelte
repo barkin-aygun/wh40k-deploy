@@ -2,6 +2,9 @@
   import { onMount } from 'svelte';
   import Battlefield from '../components/Battlefield.svelte';
   import CollapsibleSection from '../components/CollapsibleSection.svelte';
+  import SidebarDrawer from '../components/SidebarDrawer.svelte';
+  import TouchControls from '../components/TouchControls.svelte';
+  import { resetView } from '../stores/battlefieldView.js';
   import {
     layoutTerrains,
     layoutWalls,
@@ -21,6 +24,7 @@
   let battlefieldComponent;
   let saveLayoutName = '';
   let fileInputRef;
+  let drawerOpen = false;
 
   // Custom terrain size inputs
   let customTerrainWidth = 6;
@@ -29,6 +33,27 @@
   onMount(() => {
     refreshSavedLayouts();
   });
+
+  // Touch controls handlers
+  function handleZoomIn() {
+    battlefieldComponent?.zoomIn();
+  }
+
+  function handleZoomOut() {
+    battlefieldComponent?.zoomOut();
+  }
+
+  function handleResetView() {
+    resetView();
+  }
+
+  function openDrawer() {
+    drawerOpen = true;
+  }
+
+  function closeDrawer() {
+    drawerOpen = false;
+  }
 
   // Terrain handlers
   function handleAddTerrain(width, height) {
@@ -466,10 +491,124 @@
       </div>
       <div class="info">
         <p>Battlefield: 60" × 44" | {$layoutTerrains.length} terrain | {$layoutWalls.length} walls</p>
-        <p class="hint">Del to remove | Scroll to zoom | Space+drag to pan | Shift+drag for fine rotation</p>
+        <p class="hint desktop-hint">Del to remove | Scroll to zoom | Space+drag to pan | Shift+drag for fine rotation</p>
+        <p class="hint mobile-hint">Pinch to zoom | Two-finger drag to pan</p>
       </div>
     </div>
   </div>
+
+  <!-- Touch controls for mobile -->
+  <TouchControls
+    onZoomIn={handleZoomIn}
+    onZoomOut={handleZoomOut}
+    onResetView={handleResetView}
+    on:openOptions={openDrawer}
+  />
+
+  <!-- Mobile sidebar drawer -->
+  <SidebarDrawer bind:open={drawerOpen} title="Layout Options" on:close={closeDrawer}>
+    <!-- Add Terrain Section -->
+    <CollapsibleSection title="Add Terrain">
+      <div class="button-group">
+        {#each TERRAIN_SIZES as size}
+          <button on:click={() => handleAddTerrain(size.width, size.height)}>
+            {size.label}
+          </button>
+        {/each}
+      </div>
+      <div class="custom-size-section">
+        <span class="section-label">Custom Size</span>
+        <div class="dimension-inputs">
+          <div class="dimension-input">
+            <label>W</label>
+            <input type="number" bind:value={customTerrainWidth} min="1" max="20" step="0.5" />
+          </div>
+          <span class="dimension-separator">×</span>
+          <div class="dimension-input">
+            <label>H</label>
+            <input type="number" bind:value={customTerrainHeight} min="1" max="20" step="0.5" />
+          </div>
+          <button on:click={handleAddCustomTerrain}>Add</button>
+        </div>
+      </div>
+    </CollapsibleSection>
+
+    <!-- Add Wall Section -->
+    <CollapsibleSection title="Add Wall">
+      <div class="button-group">
+        {#each WALL_SHAPES as wallShape}
+          <button on:click={() => handleAddWall(wallShape.shape)}>
+            {wallShape.label}
+          </button>
+        {/each}
+      </div>
+    </CollapsibleSection>
+
+    <!-- Selected Item Section -->
+    <CollapsibleSection title="Selected">
+      {#if selectedTerrain}
+        <div class="selected-info">
+          <div class="field">
+            <span class="label">Type</span>
+            <span class="value">Terrain</span>
+          </div>
+          <div class="field">
+            <span class="label">Position</span>
+            <span class="value">{selectedTerrain.x.toFixed(1)}", {selectedTerrain.y.toFixed(1)}"</span>
+          </div>
+          <div class="field">
+            <span class="label">Rotation</span>
+            <span class="value">{Math.round(selectedTerrain.rotation || 0)}°</span>
+          </div>
+          <button class="danger" on:click={handleDeleteTerrain}>Delete Terrain</button>
+        </div>
+      {:else if selectedWall}
+        <div class="selected-info">
+          <div class="field">
+            <span class="label">Type</span>
+            <span class="value">{selectedWallParsed?.type}-Wall</span>
+          </div>
+          <div class="field">
+            <span class="label">Position</span>
+            <span class="value">{selectedWall.x.toFixed(1)}", {selectedWall.y.toFixed(1)}"</span>
+          </div>
+          <button class="danger" on:click={handleDeleteWall}>Delete Wall</button>
+        </div>
+      {:else}
+        <p class="hint">Tap terrain or wall to select</p>
+      {/if}
+    </CollapsibleSection>
+
+    <!-- Save & Load Section -->
+    <CollapsibleSection title="Save & Load">
+      <div class="save-section">
+        <div class="save-row">
+          <input
+            type="text"
+            bind:value={saveLayoutName}
+            placeholder="Layout name..."
+          />
+          <button on:click={handleSaveLayout}>Save</button>
+        </div>
+
+        {#if $savedLayoutsList.length > 0}
+          <div class="saved-layouts">
+            <span class="section-label">Saved Layouts</span>
+            {#each $savedLayoutsList as layout}
+              <div class="saved-layout-item">
+                <button class="layout-btn" on:click={() => handleLoadLayout(layout.name)}>
+                  {layout.name}
+                </button>
+                <button class="delete-btn" on:click={(e) => handleDeleteSavedLayout(layout.name, e)}>×</button>
+              </div>
+            {/each}
+          </div>
+        {/if}
+
+        <button class="secondary" on:click={handleClearAll}>Clear All</button>
+      </div>
+    </CollapsibleSection>
+  </SidebarDrawer>
 </main>
 
 <style>
@@ -780,5 +919,48 @@
     font-size: 0.75rem;
     color: #666;
     font-style: italic;
+  }
+
+  .mobile-hint {
+    display: none;
+  }
+
+  /* Mobile styles */
+  @media (max-width: 768px) {
+    main {
+      padding: 0.5rem;
+      padding-top: 3.5rem;
+      padding-bottom: 2.5rem;
+    }
+
+    .layout {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      display: none;
+    }
+
+    .battlefield-area {
+      width: 100%;
+    }
+
+    .battlefield-container {
+      max-height: calc(100vh - 140px);
+      border-radius: 8px;
+    }
+
+    .info {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .desktop-hint {
+      display: none;
+    }
+
+    .mobile-hint {
+      display: block;
+    }
   }
 </style>

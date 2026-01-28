@@ -8,6 +8,9 @@
   import CollapsibleSection from '../components/CollapsibleSection.svelte';
   import ArmyImportPanel from '../components/ArmyImportPanel.svelte';
   import UnmatchedUnitsDialog from '../components/UnmatchedUnitsDialog.svelte';
+  import SidebarDrawer from '../components/SidebarDrawer.svelte';
+  import TouchControls from '../components/TouchControls.svelte';
+  import { resetView } from '../stores/battlefieldView.js';
   import {
     getWallVertices,
     transformWallVertices
@@ -38,6 +41,8 @@
   let isDraggingFromPalette = false;
   let dragStartPos = null;
   let screenToSvgRef = null;
+  let battlefieldComponent = null;
+  let drawerOpen = false;
   let losVisualizationEnabled = false;
   let showDebugRays = false;
   let showP1Denial = false;
@@ -115,6 +120,27 @@
   function clearDeploymentState() {
     localStorage.removeItem(DEPLOYMENT_SAVE_KEY);
     models.clear();
+  }
+
+  // Touch controls handlers
+  function handleZoomIn() {
+    battlefieldComponent?.zoomIn();
+  }
+
+  function handleZoomOut() {
+    battlefieldComponent?.zoomOut();
+  }
+
+  function handleResetView() {
+    resetView();
+  }
+
+  function openDrawer() {
+    drawerOpen = true;
+  }
+
+  function closeDrawer() {
+    drawerOpen = false;
   }
 
   // Export state to JSON file
@@ -1688,7 +1714,7 @@
     <div class="main-content">
       <div class="battlefield-area">
         <div class="battlefield-container" on:mousedown={handleBattlefieldMouseDown} role="presentation">
-        <Battlefield let:screenToSvg>
+        <Battlefield bind:this={battlefieldComponent} let:screenToSvg>
           {#if screenToSvg && !screenToSvgRef}
             {screenToSvgRef = screenToSvg, ''}
           {/if}
@@ -2310,12 +2336,108 @@
       </div>
         <div class="info">
           <p>Battlefield: 60" x 44" | {$player1Models.length} P1 models | {$player2Models.length} P2 models</p>
-          <p class="hint">Drag to select | Ctrl+Click multi-select | Del remove | 1/2 player | L LoS | M measure</p>
+          <p class="hint desktop-hint">Drag to select | Ctrl+Click multi-select | Del remove | 1/2 player | L LoS | M measure</p>
+          <p class="hint mobile-hint">Pinch zoom | Two-finger pan | Tap to select</p>
         </div>
       </div>
 
     </div>
   </div>
+
+  <!-- Touch controls for mobile -->
+  <TouchControls
+    onZoomIn={handleZoomIn}
+    onZoomOut={handleZoomOut}
+    onResetView={handleResetView}
+    on:openOptions={openDrawer}
+  />
+
+  <!-- Mobile sidebar drawer -->
+  <SidebarDrawer bind:open={drawerOpen} title="Deployment Options" on:close={closeDrawer}>
+    <!-- Player Selection -->
+    <CollapsibleSection title="Current Player">
+      <div class="button-row">
+        <button class:active={currentPlayer === 1} on:click={() => currentPlayer = 1}>Player 1</button>
+        <button class:active={currentPlayer === 2} on:click={() => currentPlayer = 2}>Player 2</button>
+      </div>
+    </CollapsibleSection>
+
+    <!-- Add Models -->
+    <CollapsibleSection title="Add Models">
+      <div class="button-group">
+        {#each BASE_SIZES.circles.slice(0, 6) as size}
+          <button on:click={() => models.add(size.type, currentPlayer, 30, 22)}>
+            {size.label}
+          </button>
+        {/each}
+      </div>
+    </CollapsibleSection>
+
+    <!-- Selection -->
+    <CollapsibleSection title="Selection">
+      {#if selectedModelIds.length > 0}
+        <div class="edit-form">
+          <div class="field">
+            <span class="label-text">Selected</span>
+            <span class="value">{selectedModelIds.length} model(s)</span>
+          </div>
+          <div class="field">
+            <label class="checkbox-label">
+              <input type="checkbox" bind:checked={losVisualizationEnabled} />
+              Show Line of Sight
+            </label>
+          </div>
+          <button class="danger" on:click={() => { selectedModelIds.forEach(id => models.remove(id)); selectedModelIds = []; }}>Delete Selected</button>
+        </div>
+      {:else}
+        <p class="hint">Tap a model to select</p>
+      {/if}
+    </CollapsibleSection>
+
+    <!-- Visualizations -->
+    <CollapsibleSection title="Visualizations">
+      <div class="edit-form">
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" bind:checked={showP1Denial} />
+            P1 Deep Strike Denial
+          </label>
+        </div>
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" bind:checked={showP2Denial} />
+            P2 Deep Strike Denial
+          </label>
+        </div>
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" bind:checked={show6InchZone} />
+            6" Zone
+          </label>
+        </div>
+        <div class="field">
+          <label class="checkbox-label">
+            <input type="checkbox" bind:checked={show9InchZone} />
+            9" Zone
+          </label>
+        </div>
+      </div>
+    </CollapsibleSection>
+
+    <!-- Export -->
+    <CollapsibleSection title="Export/Import">
+      <div class="button-group">
+        <button on:click={handleExportPng}>Export PNG</button>
+        <button on:click={exportState}>Export JSON</button>
+        <button on:click={triggerImport}>Import JSON</button>
+      </div>
+    </CollapsibleSection>
+
+    <!-- Clear -->
+    <CollapsibleSection title="Actions">
+      <button class="danger" on:click={() => { if (confirm('Clear all models?')) { models.clear(); selectedModelIds = []; } }}>Clear All Models</button>
+    </CollapsibleSection>
+  </SidebarDrawer>
 </main>
 
 <!-- Unmatched Units Dialog -->
@@ -2602,5 +2724,53 @@
 
   :global(.group-rotate-handle:hover) {
     filter: drop-shadow(0 0 0.5px #9333ea);
+  }
+
+  .mobile-hint {
+    display: none;
+  }
+
+  button.active {
+    background: #3b82f6;
+    border-color: #2563eb;
+  }
+
+  /* Mobile styles */
+  @media (max-width: 768px) {
+    main {
+      padding: 0.5rem;
+      padding-top: 3.5rem;
+      padding-bottom: 2.5rem;
+    }
+
+    .layout {
+      flex-direction: column;
+    }
+
+    .sidebar {
+      display: none;
+    }
+
+    .battlefield-area {
+      width: 100%;
+    }
+
+    .battlefield-container {
+      max-height: calc(100vh - 140px);
+      border-radius: 8px;
+    }
+
+    .info {
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+    }
+
+    .desktop-hint {
+      display: none;
+    }
+
+    .mobile-hint {
+      display: block;
+    }
   }
 </style>

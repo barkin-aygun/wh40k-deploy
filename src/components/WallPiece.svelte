@@ -2,6 +2,7 @@
   import { BATTLEFIELD } from '../stores/elements.js';
   import { getWallVertices } from '../stores/layout.js';
   import { COLORS } from '../lib/colors.js';
+  import { isTouchDevice } from '../lib/touch.js';
 
   export let id;
   export let x;
@@ -36,6 +37,9 @@
   $: centerX = x + bounds.minX + wallWidth / 2;
   $: centerY = y + bounds.minY + wallHeight / 2;
 
+  // Larger handles for touch
+  $: handleRadius = isTouchDevice() ? 1.0 : 0.6;
+
   // Convert vertices to SVG path
   $: pathD = vertices.length > 0
     ? `M ${vertices.map(v => `${x + v.x},${y + v.y}`).join(' L ')} Z`
@@ -55,30 +59,30 @@
     onSelect(id);
   }
 
-  function handleMouseDown(event) {
+  function handlePointerDown(event) {
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
+
+    // Capture pointer for reliable tracking
+    event.target.setPointerCapture(event.pointerId);
 
     onSelect(id);
     isDragging = true;
 
     const svgCoords = screenToSvg(event.clientX, event.clientY);
     dragOffset = { x: svgCoords.x - x, y: svgCoords.y - y };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
   }
 
-  function handleMouseMove(event) {
+  function handlePointerMove(event) {
     if (!isDragging) return;
     const svgCoords = screenToSvg(event.clientX, event.clientY);
 
     let newX = svgCoords.x - dragOffset.x;
     let newY = svgCoords.y - dragOffset.y;
 
-    // Snap to grid (1 inch) unless Shift is held
-    if (!event.shiftKey) {
+    // Snap to grid (1 inch) unless Shift is held or on touch device
+    if (!event.shiftKey && !isTouchDevice()) {
       newX = Math.round(newX);
       newY = Math.round(newY);
     }
@@ -91,22 +95,22 @@
     onDrag(id, newX, newY);
   }
 
-  function handleMouseUp() {
+  function handlePointerUp(event) {
+    event.target.releasePointerCapture(event.pointerId);
     isDragging = false;
-    window.removeEventListener('mousemove', handleMouseMove);
-    window.removeEventListener('mouseup', handleMouseUp);
   }
 
-  function handleRotateMouseDown(event) {
+  function handleRotatePointerDown(event) {
     event.preventDefault();
     event.stopPropagation();
-    isRotating = true;
 
-    window.addEventListener('mousemove', handleRotateMouseMove);
-    window.addEventListener('mouseup', handleRotateMouseUp);
+    // Capture pointer for reliable tracking
+    event.target.setPointerCapture(event.pointerId);
+
+    isRotating = true;
   }
 
-  function handleRotateMouseMove(event) {
+  function handleRotatePointerMove(event) {
     if (!isRotating) return;
     const svgCoords = screenToSvg(event.clientX, event.clientY);
 
@@ -114,17 +118,17 @@
     const dy = svgCoords.y - centerY;
     let angle = Math.atan2(dy, dx) * 180 / Math.PI + 45;
 
-    if (!event.shiftKey) {
+    // Snap to 15 degrees unless on touch device
+    if (!event.shiftKey && !isTouchDevice()) {
       angle = Math.round(angle / 15) * 15;
     }
 
     onRotate(id, angle);
   }
 
-  function handleRotateMouseUp() {
+  function handleRotatePointerUp(event) {
+    event.target.releasePointerCapture(event.pointerId);
     isRotating = false;
-    window.removeEventListener('mousemove', handleRotateMouseMove);
-    window.removeEventListener('mouseup', handleRotateMouseUp);
   }
 </script>
 
@@ -136,9 +140,13 @@
       stroke={selected ? COLORS.selection.highlight : COLORS.wall.stroke}
       stroke-width={selected ? 0.15 : 0.1}
       on:click={handleClick}
-      on:mousedown={handleMouseDown}
+      on:pointerdown={handlePointerDown}
+      on:pointermove={handlePointerMove}
+      on:pointerup={handlePointerUp}
+      on:pointercancel={handlePointerUp}
       role="button"
       tabindex="0"
+      class="wall-shape"
     />
   </g>
 
@@ -156,11 +164,14 @@
     <circle
       cx={handleX}
       cy={handleY}
-      r="0.6"
+      r={handleRadius}
       fill={COLORS.selection.highlight}
       stroke={COLORS.selection.highlightDark}
       stroke-width="0.08"
-      on:mousedown={handleRotateMouseDown}
+      on:pointerdown={handleRotatePointerDown}
+      on:pointermove={handleRotatePointerMove}
+      on:pointerup={handleRotatePointerUp}
+      on:pointercancel={handleRotatePointerUp}
       role="button"
       tabindex="0"
       class="rotate-handle"
@@ -178,8 +189,12 @@
   .wall-piece.selected path {
     filter: drop-shadow(0 0 0.3px #3b82f6);
   }
+  .wall-shape {
+    touch-action: none;
+  }
   .rotate-handle {
     cursor: grab;
     filter: drop-shadow(0.05px 0.05px 0.1px rgba(0,0,0,0.5));
+    touch-action: none;
   }
 </style>
