@@ -22,8 +22,8 @@ export const COLORS = {
 
   // Battlefield
   battlefield: {
-    background: '#738973ff',
-    gridFine: '#3a4a3a8c',
+    background: 'rgb(76, 86, 76)',
+    gridFine: '#2328235f',
     gridCoarse: '#5a6a5a',
     ruler: '#666',
     rulerText: '#888',
@@ -32,9 +32,10 @@ export const COLORS = {
 
   // Terrain
   terrain: {
-    fill: 'rgba(139, 90, 43, 0.3)',
-    fillSelected: 'rgba(59, 130, 246, 0.3)',
-    fillStatic: 'rgba(139, 90, 43, 0.6)',
+    fill: 'rgba(139, 90, 43, 0.6)',
+    fillSelected: 'rgba(59, 130, 246, 0.6)',
+    fillStatic: 'rgba(139, 90, 43, 0.8)',
+    fillReadonly: 'rgba(139, 90, 43, 0.2)', // subtle tint in read-only battle/deployment view
     stroke: '#8b5a2b',
   },
 
@@ -47,8 +48,8 @@ export const COLORS = {
 
   // Objectives
   objective: {
-    primary: '#fbbf24',
-    primaryControl: 'rgba(251, 191, 36, 0.15)',
+    primary: '#9ca3af',
+    primaryControl: 'rgba(156, 163, 175, 0.15)',
     secondary: '#9ca3af',
     secondaryControl: 'rgba(156, 163, 175, 0.15)',
     center: '#000',
@@ -68,11 +69,36 @@ export const COLORS = {
     highlightDark: '#1d4ed8',
     handle: '#9333ea',
     handleDark: '#7e22ce',
+    groupCenter: 'rgba(147, 51, 234, 0.5)', // semi-transparent pivot dot for group rotation
     dragRuler: '#fbbf24',
+  },
+
+  // Measurement tool lines
+  measurement: {
+    line: '#f59e0b',
+    labelBg: 'rgba(0,0,0,0.75)',
+  },
+
+  // Engagement range indicator (shown while dragging models)
+  engagement: {
+    zoneFill: 'rgba(239, 68, 68, 0.2)',  // 1" zone ring around enemy models
+    glowFill: 'rgba(239, 68, 68, 0.6)', // red glow on the engaged model itself
+  },
+
+  // Generic SVG literals
+  ui: {
+    white: 'white',
+    black: '#000',
   },
 };
 
 // Helper to get player colors by ID
 export function getPlayerColors(playerId) {
   return playerId === 1 ? COLORS.player1 : COLORS.player2;
+}
+
+// Helper for range/denial zone colors (fill = fillLighter, stroke = primary)
+export function getPlayerZoneColors(playerId) {
+  const p = getPlayerColors(playerId);
+  return { fill: p.fillLighter, stroke: p.primary };
 }

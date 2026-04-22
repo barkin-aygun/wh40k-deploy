@@ -4,6 +4,8 @@
   import WallPiece from '../components/WallPiece.svelte';
   import ModelBase from '../components/ModelBase.svelte';
   import CollapsibleSection from '../components/CollapsibleSection.svelte';
+  import MeasureToolPanel from '../components/MeasureToolPanel.svelte';
+  import RangeZones from '../components/RangeZones.svelte';
   import {
     getWallVertices,
     transformWallVertices
@@ -23,6 +25,8 @@
   import { checkLineOfSight, checkUnitToUnitLineOfSight } from '../lib/visibility/lineOfSight.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
   import { exportBattlefieldPng } from '../lib/exportPng.js';
+  import { saveState, restoreState, exportToFile, applyState } from '../lib/statePersistence.js';
+  import { COLORS } from '../lib/colors.js';
 
   // State
   let screenToSvgRef = null;
@@ -40,6 +44,11 @@
   // Group drag/rotate state
   let isDraggingGroup = false;
   let groupDragStart = null;
+
+  // Unit drag state (drag any model → whole unit follows)
+  let isDraggingUnit = false;
+  let unitDragStart = null;
+  let unitDragIds = [];
   let isRotatingGroup = false;
   let groupRotationCenter = null;
   let groupRotationStartAngle = 0;
@@ -89,74 +98,7 @@
   }
 
   // State save/restore
-  const BATTLE_SAVE_KEY = 'warhammer-battle-state';
   let fileInputRef;
-
-  function saveBattleState() {
-    const state = {
-      deployment: $selectedDeployment?.name || null,
-      layout: $selectedLayoutName || null,
-      layoutType: $selectedLayoutType || null,
-      models: $models
-    };
-    localStorage.setItem(BATTLE_SAVE_KEY, JSON.stringify(state));
-  }
-
-  function restoreBattleState() {
-    const saved = localStorage.getItem(BATTLE_SAVE_KEY);
-    if (saved) {
-      try {
-        const state = JSON.parse(saved);
-        if (state.models && Array.isArray(state.models)) {
-          models.set(state.models);
-          history.clear();
-        }
-      } catch (err) {
-        console.error('Failed to restore battle state:', err);
-      }
-    }
-  }
-
-  function exportState() {
-    const state = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      deployment: $selectedDeployment ? {
-        name: $selectedDeployment.name,
-        zones: $selectedDeployment.zones,
-        objectives: $selectedDeployment.objectives
-      } : null,
-      terrain: {
-        layoutName: $selectedLayoutName,
-        layoutType: $selectedLayoutType,
-        terrains: $loadedTerrain.terrains,
-        walls: $loadedTerrain.walls
-      },
-      models: $models.map(m => ({
-        id: m.id,
-        baseType: m.baseType,
-        playerId: m.playerId,
-        x: m.x,
-        y: m.y,
-        rotation: m.rotation || 0,
-        name: m.name || '',
-        customWidth: m.customWidth,
-        customHeight: m.customHeight
-      }))
-    };
-
-    const json = JSON.stringify(state, null, 2);
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const timestamp = new Date().toISOString().slice(0, 10);
-    a.download = `battle-${timestamp}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
 
   function triggerImport() {
     fileInputRef?.click();
@@ -165,15 +107,11 @@
   function handleFileImport(event) {
     const file = event.target.files?.[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const state = JSON.parse(e.target.result);
-        if (state.models && Array.isArray(state.models)) {
-          models.set(state.models);
-          history.clear();
-        }
+        applyState(JSON.parse(e.target.result));
+        selectedModelIds = [];
       } catch (err) {
         console.error('Failed to parse import file:', err);
         alert('Failed to import: Invalid JSON file');
@@ -584,12 +522,37 @@
         });
       }
     } else {
-      // Track single model drag for engagement range display
-      if (!isDraggingSingle) {
-        isDraggingSingle = true;
-        draggingSingleId = id;
+      const model = $models.find(m => m.id === id);
+      if (model && model.unitId) {
+        // Unit drag — move all models in the same unit together
+        if (!isDraggingUnit) {
+          isDraggingUnit = true;
+          unitDragIds = $models.filter(m => m.unitId === model.unitId).map(m => m.id);
+          unitDragStart = {};
+          unitDragIds.forEach(modelId => {
+            const m = $models.find(m => m.id === modelId);
+            if (m) unitDragStart[modelId] = { x: m.x, y: m.y };
+          });
+        }
+        const originalPos = unitDragStart[id];
+        if (originalPos) {
+          const dx = x - originalPos.x;
+          const dy = y - originalPos.y;
+          unitDragIds.forEach(modelId => {
+            const startPos = unitDragStart[modelId];
+            if (startPos) {
+              models.updateModel(modelId, { x: startPos.x + dx, y: startPos.y + dy }, true);
+            }
+          });
+        }
+      } else {
+        // Track single model drag for engagement range display
+        if (!isDraggingSingle) {
+          isDraggingSingle = true;
+          draggingSingleId = id;
+        }
+        models.updateModel(id, { x, y }, true);
       }
-      models.updateModel(id, { x, y }, true);
     }
   }
 
@@ -609,6 +572,22 @@
       });
       isDraggingGroup = false;
       groupDragStart = null;
+    } else if (isDraggingUnit) {
+      unitDragIds.forEach(modelId => {
+        const startPos = unitDragStart[modelId];
+        const model = $models.find(m => m.id === modelId);
+        if (startPos && model) {
+          history.push({
+            type: 'move',
+            modelId,
+            before: { x: startPos.x, y: startPos.y },
+            after: { x: model.x, y: model.y }
+          });
+        }
+      });
+      isDraggingUnit = false;
+      unitDragStart = null;
+      unitDragIds = [];
     } else {
       history.push({
         type: 'move',
@@ -948,13 +927,15 @@
 
   // Engagement Range (1") tracking
   // Determine if any model is being dragged
-  $: isAnyModelDragging = isDraggingGroup || isDraggingSingle;
+  $: isAnyModelDragging = isDraggingGroup || isDraggingUnit || isDraggingSingle;
 
   // Get the models currently being dragged
   $: draggingModels = isAnyModelDragging
     ? (isDraggingGroup
         ? selectedModels
-        : (draggingSingleId ? $models.filter(m => m.id === draggingSingleId) : []))
+        : isDraggingUnit
+          ? $models.filter(m => unitDragIds.includes(m.id))
+          : (draggingSingleId ? $models.filter(m => m.id === draggingSingleId) : []))
     : [];
 
   // Get player IDs of dragging models
@@ -1215,6 +1196,33 @@
                 <span class="value">{losResults.filter(r => r.canSee).length}/{losResults.length} visible</span>
               </div>
             {/if}
+            <div class="field" style="margin-top: 0.5rem; border-top: 1px solid #333; padding-top: 0.5rem;">
+              <span class="label-text">Range Zones</span>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={!!selectedModel.show6InchZone}
+                  on:change={(e) => models.updateModel(selectedModel.id, { show6InchZone: e.target.checked })}
+                />
+                Show 6" zone
+              </label>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={!!selectedModel.show9InchZone}
+                  on:change={(e) => models.updateModel(selectedModel.id, { show9InchZone: e.target.checked })}
+                />
+                Show 9" zone
+              </label>
+              <label class="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={!!selectedModel.show12InchZone}
+                  on:change={(e) => models.updateModel(selectedModel.id, { show12InchZone: e.target.checked })}
+                />
+                Show 12" zone
+              </label>
+            </div>
             <button class="danger" on:click={handleRemoveSelected}>
               Remove
             </button>
@@ -1226,50 +1234,16 @@
 
       <!-- Measure Tool Section -->
       <CollapsibleSection title="Measure Tool">
-        <div class="edit-form">
-          <div class="field">
-            <label class="checkbox-label">
-              <input type="checkbox" bind:checked={lineToolActive} />
-              Line Tool Active (M)
-            </label>
-          </div>
-          {#if lineToolActive}
-            <p class="hint">Click and drag on battlefield to draw a measurement line</p>
-          {/if}
-          {#if selectedLine}
-            <div class="field">
-              <span class="label-text">Length</span>
-              <span class="value">{calculateLineLength(selectedLine.x1, selectedLine.y1, selectedLine.x2, selectedLine.y2).toFixed(2)}"</span>
-            </div>
-            <button class="danger" on:click={() => { measurementLines = measurementLines.filter(l => l.id !== selectedLineId); selectedLineId = null; }}>
-              Remove Line
-            </button>
-          {/if}
-          {#if measurementLines.length > 0}
-            <div class="field">
-              <span class="label-text">Lines</span>
-              <span class="value">{measurementLines.length} line{measurementLines.length !== 1 ? 's' : ''}</span>
-            </div>
-            <button class="secondary" on:click={handleClearAllLines}>
-              Clear All Lines
-            </button>
-          {/if}
-          <div class="field" style="margin-top: 0.5rem; border-top: 1px solid #333; padding-top: 0.5rem;">
-            <span class="label-text">Range Zones</span>
-            <label class="checkbox-label">
-              <input type="checkbox" bind:checked={show6InchZone} />
-              Show 6" zones
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" bind:checked={show9InchZone} />
-              Show 9" zones
-            </label>
-            <label class="checkbox-label">
-              <input type="checkbox" bind:checked={show12InchZone} />
-              Show 12" zones
-            </label>
-          </div>
-        </div>
+        <MeasureToolPanel
+          bind:lineToolActive
+          bind:show6InchZone
+          bind:show9InchZone
+          bind:show12InchZone
+          {selectedLine}
+          lineCount={measurementLines.length}
+          onDeleteSelectedLine={() => { measurementLines = measurementLines.filter(l => l.id !== selectedLineId); selectedLineId = null; }}
+          onClearAllLines={handleClearAllLines}
+        />
       </CollapsibleSection>
 
       <!-- Actions -->
@@ -1292,7 +1266,7 @@
             </button>
           </div>
           <div class="button-row">
-            <button on:click={exportState} title="Export battle state to share">
+            <button on:click={() => exportToFile($loadedTerrain, `battle-${new Date().toISOString().slice(0,10)}.json`)} title="Export battle state to share">
               Export
             </button>
             <button on:click={triggerImport} title="Import battle state from JSON">
@@ -1307,8 +1281,8 @@
             style="display: none;"
           />
           <button on:click={handleExportPng} title="Export battlefield as PNG image">Export PNG</button>
-          <button on:click={saveBattleState}>Save to Browser</button>
-          <button on:click={restoreBattleState}>Restore from Browser</button>
+          <button on:click={() => saveState($loadedTerrain)}>Save to Browser</button>
+          <button on:click={() => { restoreState(); selectedModelIds = []; }}>Restore from Browser</button>
           <button class="secondary" on:click={handleClearAll}>Clear All Models</button>
         </div>
       </CollapsibleSection>
@@ -1337,8 +1311,8 @@
 
             <!-- Objectives -->
             {#each $selectedDeployment.objectives as obj}
-              {@const markerColor = obj.isPrimary ? '#fbbf24' : '#9ca3af'}
-              {@const controlColor = obj.isPrimary ? 'rgba(251, 191, 36, 0.15)' : 'rgba(156, 163, 175, 0.15)'}
+              {@const markerColor = obj.isPrimary ? COLORS.objective.primary : COLORS.objective.secondary}
+              {@const controlColor = obj.isPrimary ? COLORS.objective.primaryControl : COLORS.objective.secondaryControl}
               <circle
                 cx={obj.x}
                 cy={obj.y}
@@ -1354,7 +1328,7 @@
                 cy={obj.y}
                 r={OBJECTIVE_RADIUS}
                 fill={markerColor}
-                stroke="#000"
+                stroke={COLORS.ui.black}
                 stroke-width="0.06"
                 pointer-events="none"
               />
@@ -1362,7 +1336,7 @@
                 cx={obj.x}
                 cy={obj.y}
                 r="0.15"
-                fill="#000"
+                fill={COLORS.ui.black}
                 pointer-events="none"
               />
             {/each}
@@ -1376,8 +1350,8 @@
                 y={terrain.y}
                 width={terrain.width}
                 height={terrain.height}
-                fill="rgba(139, 90, 43, 0.2)"
-                stroke="#8b5a2b"
+                fill={COLORS.terrain.fillReadonly}
+                stroke={COLORS.terrain.stroke}
                 stroke-width="0.1"
                 pointer-events="none"
               />
@@ -1404,157 +1378,12 @@
           {/each}
 
           <!-- Range zone visualization (6", 9", and 12" zones) -->
-          {#if show6InchZone || show9InchZone || show12InchZone}
-            {#each $models as model (model.id)}
-              {@const baseSize = getBaseSize(model.baseType, model)}
-              {@const isOval = isOvalBase(model.baseType)}
-              {@const isRect = isRectangularBase(model.baseType)}
-              {@const playerColor = model.playerId === 1 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(239, 68, 68, 0.15)'}
-              {@const playerStroke = model.playerId === 1 ? '#3b82f6' : '#ef4444'}
-              {#if show12InchZone}
-                {#if isRect}
-                  <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
-                    <rect
-                      x={model.x - model.customWidth / 2 - 12}
-                      y={model.y - model.customHeight / 2 - 12}
-                      width={model.customWidth + 24}
-                      height={model.customHeight + 24}
-                      rx="12"
-                      ry="12"
-                      fill={playerColor}
-                      stroke={playerStroke}
-                      stroke-width="0.05"
-                      stroke-dasharray="0.5,0.25"
-                      pointer-events="none"
-                      opacity="0.4"
-                    />
-                  </g>
-                {:else if isOval}
-                  <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
-                    <ellipse
-                      cx={model.x}
-                      cy={model.y}
-                      rx={baseSize.width / 2 + 12}
-                      ry={baseSize.height / 2 + 12}
-                      fill={playerColor}
-                      stroke={playerStroke}
-                      stroke-width="0.05"
-                      stroke-dasharray="0.5,0.25"
-                      pointer-events="none"
-                      opacity="0.4"
-                    />
-                  </g>
-                {:else}
-                  <circle
-                    cx={model.x}
-                    cy={model.y}
-                    r={baseSize.radius + 12}
-                    fill={playerColor}
-                    stroke={playerStroke}
-                    stroke-width="0.05"
-                    stroke-dasharray="0.5,0.25"
-                    pointer-events="none"
-                    opacity="0.4"
-                  />
-                {/if}
-              {/if}
-              {#if show9InchZone}
-                {#if isRect}
-                  <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
-                    <rect
-                      x={model.x - model.customWidth / 2 - 9}
-                      y={model.y - model.customHeight / 2 - 9}
-                      width={model.customWidth + 18}
-                      height={model.customHeight + 18}
-                      rx="9"
-                      ry="9"
-                      fill={playerColor}
-                      stroke={playerStroke}
-                      stroke-width="0.05"
-                      stroke-dasharray="0.5,0.25"
-                      pointer-events="none"
-                      opacity="0.5"
-                    />
-                  </g>
-                {:else if isOval}
-                  <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
-                    <ellipse
-                      cx={model.x}
-                      cy={model.y}
-                      rx={baseSize.width / 2 + 9}
-                      ry={baseSize.height / 2 + 9}
-                      fill={playerColor}
-                      stroke={playerStroke}
-                      stroke-width="0.05"
-                      stroke-dasharray="0.5,0.25"
-                      pointer-events="none"
-                      opacity="0.5"
-                    />
-                  </g>
-                {:else}
-                  <circle
-                    cx={model.x}
-                    cy={model.y}
-                    r={baseSize.radius + 9}
-                    fill={playerColor}
-                    stroke={playerStroke}
-                    stroke-width="0.05"
-                    stroke-dasharray="0.5,0.25"
-                    pointer-events="none"
-                    opacity="0.5"
-                  />
-                {/if}
-              {/if}
-              {#if show6InchZone}
-                {#if isRect}
-                  <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
-                    <rect
-                      x={model.x - model.customWidth / 2 - 6}
-                      y={model.y - model.customHeight / 2 - 6}
-                      width={model.customWidth + 12}
-                      height={model.customHeight + 12}
-                      rx="6"
-                      ry="6"
-                      fill="none"
-                      stroke={playerStroke}
-                      stroke-width="0.08"
-                      stroke-dasharray="0.3,0.15"
-                      pointer-events="none"
-                      opacity="0.7"
-                    />
-                  </g>
-                {:else if isOval}
-                  <g transform="rotate({model.rotation || 0}, {model.x}, {model.y})">
-                    <ellipse
-                      cx={model.x}
-                      cy={model.y}
-                      rx={baseSize.width / 2 + 6}
-                      ry={baseSize.height / 2 + 6}
-                      fill="none"
-                      stroke={playerStroke}
-                      stroke-width="0.08"
-                      stroke-dasharray="0.3,0.15"
-                      pointer-events="none"
-                      opacity="0.7"
-                    />
-                  </g>
-                {:else}
-                  <circle
-                    cx={model.x}
-                    cy={model.y}
-                    r={baseSize.radius + 6}
-                    fill="none"
-                    stroke={playerStroke}
-                    stroke-width="0.08"
-                    stroke-dasharray="0.3,0.15"
-                    pointer-events="none"
-                    opacity="0.7"
-                  />
-                {/if}
-              {/if}
-            {/each}
-          {/if}
-
+          <RangeZones
+            models={$models}
+            {show6InchZone}
+            {show9InchZone}
+            {show12InchZone}
+          />
           <!-- Engagement Range zones (1" around enemy models when dragging) -->
           {#if isAnyModelDragging && enemyModelsForEngagement.length > 0}
             {#each enemyModelsForEngagement as enemy (enemy.id)}
@@ -1570,8 +1399,8 @@
                     height={enemy.customHeight + 2}
                     rx="1"
                     ry="1"
-                    fill="rgba(239, 68, 68, 0.2)"
-                    stroke="#ef4444"
+                    fill={COLORS.engagement.zoneFill}
+                    stroke={COLORS.player2.primary}
                     stroke-width="0.08"
                     stroke-dasharray="0.2,0.1"
                     pointer-events="none"
@@ -1585,8 +1414,8 @@
                     cy={enemy.y}
                     rx={baseSize.width / 2 + 1}
                     ry={baseSize.height / 2 + 1}
-                    fill="rgba(239, 68, 68, 0.2)"
-                    stroke="#ef4444"
+                    fill={COLORS.engagement.zoneFill}
+                    stroke={COLORS.player2.primary}
                     stroke-width="0.08"
                     stroke-dasharray="0.2,0.1"
                     pointer-events="none"
@@ -1598,8 +1427,8 @@
                   cx={enemy.x}
                   cy={enemy.y}
                   r={baseSize.radius + 1}
-                  fill="rgba(239, 68, 68, 0.2)"
-                  stroke="#ef4444"
+                  fill={COLORS.engagement.zoneFill}
+                  stroke={COLORS.player2.primary}
                   stroke-width="0.08"
                   stroke-dasharray="0.2,0.1"
                   pointer-events="none"
@@ -1644,8 +1473,8 @@
               cx={groupCenter.x}
               cy={groupCenter.y}
               r="0.4"
-              fill="rgba(147, 51, 234, 0.5)"
-              stroke="#9333ea"
+              fill={COLORS.selection.groupCenter}
+              stroke={COLORS.selection.handle}
               stroke-width="0.1"
               pointer-events="none"
             />
@@ -1654,7 +1483,7 @@
               y1={groupCenter.y}
               x2={groupHandleX}
               y2={groupHandleY}
-              stroke="#9333ea"
+              stroke={COLORS.selection.handle}
               stroke-width="0.1"
               stroke-dasharray="0.3,0.15"
               pointer-events="none"
@@ -1663,8 +1492,8 @@
               cx={groupHandleX}
               cy={groupHandleY}
               r="0.8"
-              fill="#9333ea"
-              stroke="#7e22ce"
+              fill={COLORS.selection.handle}
+              stroke={COLORS.selection.handleDark}
               stroke-width="0.1"
               on:mousedown={handleGroupRotateMouseDown}
               role="button"
@@ -1675,13 +1504,13 @@
               <path
                 d="M -0.3 0 A 0.3 0.3 0 1 1 0.3 0"
                 fill="none"
-                stroke="white"
+                stroke={COLORS.ui.white}
                 stroke-width="0.08"
               />
               <path
                 d="M 0.22 -0.15 L 0.3 0 L 0.15 0.08"
                 fill="none"
-                stroke="white"
+                stroke={COLORS.ui.white}
                 stroke-width="0.08"
               />
             </g>
@@ -1699,7 +1528,7 @@
                 y1={line.y1}
                 x2={line.x2}
                 y2={line.y2}
-                stroke={isSelected && lineToolActive ? '#3b82f6' : '#f59e0b'}
+                stroke={isSelected && lineToolActive ? COLORS.selection.highlight : COLORS.measurement.line}
                 stroke-width={isSelected && lineToolActive ? 0.2 : 0.15}
                 stroke-linecap="round"
                 on:click={(e) => lineToolActive && handleSelectLine(line.id, e)}
@@ -1712,8 +1541,8 @@
                   cx={line.x1}
                   cy={line.y1}
                   r="0.4"
-                  fill={isSelected ? '#3b82f6' : '#f59e0b'}
-                  stroke="#000"
+                  fill={isSelected ? COLORS.selection.highlight : COLORS.measurement.line}
+                  stroke={COLORS.ui.black}
                   stroke-width="0.05"
                   class="endpoint"
                   on:mousedown={(e) => handleEndpointDragStart(line.id, 1, e)}
@@ -1724,8 +1553,8 @@
                   cx={line.x2}
                   cy={line.y2}
                   r="0.4"
-                  fill={isSelected ? '#3b82f6' : '#f59e0b'}
-                  stroke="#000"
+                  fill={isSelected ? COLORS.selection.highlight : COLORS.measurement.line}
+                  stroke={COLORS.ui.black}
                   stroke-width="0.05"
                   class="endpoint"
                   on:mousedown={(e) => handleEndpointDragStart(line.id, 2, e)}
@@ -1739,7 +1568,7 @@
                   y="-0.6"
                   width="4"
                   height="1.2"
-                  fill="rgba(0,0,0,0.75)"
+                  fill={COLORS.measurement.labelBg}
                   rx="0.3"
                   pointer-events="none"
                 />
@@ -1769,14 +1598,14 @@
                 y1={lineDrawStart.y}
                 x2={lineDrawEnd.x}
                 y2={lineDrawEnd.y}
-                stroke="#f59e0b"
+                stroke={COLORS.measurement.line}
                 stroke-width="0.15"
                 stroke-dasharray="0.3,0.15"
                 stroke-linecap="round"
                 pointer-events="none"
               />
-              <circle cx={lineDrawStart.x} cy={lineDrawStart.y} r="0.3" fill="#f59e0b" pointer-events="none" />
-              <circle cx={lineDrawEnd.x} cy={lineDrawEnd.y} r="0.3" fill="#f59e0b" pointer-events="none" />
+              <circle cx={lineDrawStart.x} cy={lineDrawStart.y} r="0.3" fill={COLORS.measurement.line} pointer-events="none" />
+              <circle cx={lineDrawEnd.x} cy={lineDrawEnd.y} r="0.3" fill={COLORS.measurement.line} pointer-events="none" />
               {#if length > 0.5}
                 <g transform="translate({midX}, {midY})">
                   <rect
@@ -1784,7 +1613,7 @@
                     y="-0.6"
                     width="4"
                     height="1.2"
-                    fill="rgba(0,0,0,0.75)"
+                    fill={COLORS.measurement.labelBg}
                     rx="0.3"
                     pointer-events="none"
                   />
@@ -1792,7 +1621,7 @@
                     x="0"
                     y="0.35"
                     text-anchor="middle"
-                    fill="#f59e0b"
+                    fill={COLORS.measurement.line}
                     font-size="0.8"
                     font-weight="bold"
                     pointer-events="none"
@@ -1813,7 +1642,7 @@
                   y1={ray.from.y}
                   x2={ray.to.x}
                   y2={ray.to.y}
-                  stroke={ray.blocked ? '#ff000033' : '#00ff0033'}
+                  stroke={ray.blocked ? COLORS.los.rayBlocked : COLORS.los.rayVisible}
                   stroke-width="0.05"
                   pointer-events="none"
                 />
@@ -1830,7 +1659,7 @@
                   y1={result.firstClearRay.from.y}
                   x2={result.firstClearRay.to.x}
                   y2={result.firstClearRay.to.y}
-                  stroke="#22c55e"
+                  stroke={COLORS.los.visible}
                   stroke-width="0.15"
                   opacity="0.7"
                   pointer-events="none"
@@ -1841,7 +1670,7 @@
                   y1={result.source.y}
                   x2={result.target.x}
                   y2={result.target.y}
-                  stroke="#ef4444"
+                  stroke={COLORS.los.blocked}
                   stroke-width="0.1"
                   stroke-dasharray="0.5 0.25"
                   opacity="0.7"
@@ -1862,8 +1691,8 @@
               y={minY}
               width={width}
               height={height}
-              fill="rgba(59, 130, 246, 0.1)"
-              stroke="#3b82f6"
+              fill={COLORS.player1.zone}
+              stroke={COLORS.player1.primary}
               stroke-width="0.1"
               stroke-dasharray="0.3 0.2"
               pointer-events="none"

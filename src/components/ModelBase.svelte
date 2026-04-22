@@ -26,6 +26,8 @@
   export let onRename = () => {};
 
   let isDragging = false;
+  let hasDragged = false;
+  let pendingSelectEvent = null;
   let isRotating = false;
   let dragOffset = { x: 0, y: 0 };
   let dragStartState = null;
@@ -41,8 +43,8 @@
   $: playerFill = playerColors.fill;
   $: previewFill = playerColors.fillLight;
   $: strokeWidth = selected ? 0.15 : (marqueePreview ? 0.12 : (coherencyViolation ? 0.15 : 0.1));
-  $: fillColor = selected ? playerColor : (marqueePreview ? previewFill : (coherencyViolation ? 'rgba(239, 68, 68, 0.3)' : playerFill));
-  $: strokeColor = coherencyViolation ? '#ef4444' : (unitStrokeColor || playerColor); // Red for coherency violation
+  $: fillColor = selected ? playerColor : (marqueePreview ? previewFill : (coherencyViolation ? COLORS.player2.fillLight : playerFill));
+  $: strokeColor = coherencyViolation ? COLORS.player2.primary : (unitStrokeColor || playerColor);
 
   // For circles
   $: radius = baseSize?.radius || 0.5;
@@ -79,7 +81,7 @@
   })();
 
   function handleClick(event) {
-    // Just stop propagation - selection is handled in mousedown
+    // Just stop propagation - selection is handled in mouseup
     event.stopPropagation();
   }
 
@@ -96,7 +98,9 @@
     event.preventDefault();
     event.stopPropagation();
 
-    onSelect(id, event);
+    // Defer selection until mouseup so dragging never changes selection
+    pendingSelectEvent = event;
+    hasDragged = false;
     isDragging = true;
 
     // Capture starting position for history
@@ -116,11 +120,21 @@
     let newX = svgCoords.x - dragOffset.x;
     let newY = svgCoords.y - dragOffset.y;
 
-    // No battlefield constraints - models can be dragged anywhere
+    if (!hasDragged) {
+      const dx = newX - dragStartState.x;
+      const dy = newY - dragStartState.y;
+      if (Math.sqrt(dx * dx + dy * dy) > 0.15) hasDragged = true;
+    }
+
     onDrag(id, newX, newY);
   }
 
   function handleMouseUp() {
+    // Only select on click (no drag), preserving selection during drags
+    if (!hasDragged && pendingSelectEvent) {
+      onSelect(id, pendingSelectEvent);
+    }
+
     if (isDragging && dragStartState) {
       // Only save to history if position actually changed
       if (dragStartState.x !== x || dragStartState.y !== y) {
@@ -130,6 +144,8 @@
     }
 
     isDragging = false;
+    hasDragged = false;
+    pendingSelectEvent = null;
     window.removeEventListener('mousemove', handleMouseMove);
     window.removeEventListener('mouseup', handleMouseUp);
   }
@@ -188,7 +204,7 @@
           height={rectHeight + 0.3}
           rx="0.1"
           ry="0.1"
-          fill="rgba(239, 68, 68, 0.6)"
+          fill={COLORS.engagement.glowFill}
           pointer-events="none"
           class="engagement-glow"
         />
@@ -200,7 +216,7 @@
           cy={y}
           rx={rx + 0.15}
           ry={ry + 0.15}
-          fill="rgba(239, 68, 68, 0.6)"
+          fill={COLORS.engagement.glowFill}
           pointer-events="none"
           class="engagement-glow"
         />
@@ -279,8 +295,8 @@
       dominant-baseline="middle"
       font-size={labelFontSize}
       font-weight="bold"
-      fill="white"
-      stroke="black"
+      fill={COLORS.ui.white}
+      stroke={COLORS.ui.black}
       stroke-width="0.02"
       paint-order="stroke"
       pointer-events="none"
@@ -318,13 +334,13 @@
       <path
         d="M -0.3 0 A 0.3 0.3 0 1 1 0.3 0"
         fill="none"
-        stroke="white"
+        stroke={COLORS.ui.white}
         stroke-width="0.08"
       />
       <path
         d="M 0.22 -0.15 L 0.3 0 L 0.15 0.08"
         fill="none"
-        stroke="white"
+        stroke={COLORS.ui.white}
         stroke-width="0.08"
       />
     </g>
@@ -357,7 +373,7 @@
       font-size="0.5"
       font-weight="bold"
       fill={COLORS.selection.dragRuler}
-      stroke="#000"
+      stroke={COLORS.ui.black}
       stroke-width="0.05"
       paint-order="stroke"
       pointer-events="none"
