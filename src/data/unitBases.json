@@ -3045,6 +3045,9 @@
     "Sun Shark Bomber": {
       "baseType": "120x92mm"
     },
+    "The Twin Lance": {
+      "baseType": "60mm"
+    },
     "Tidewall Defence Platform": {
       "baseType": "hull",
       "hullDimensions": {
