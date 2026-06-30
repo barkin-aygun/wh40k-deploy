@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Reference rules PDFs (GW copyright) — git-ignored, re-fetch via docs/11th-edition/sources/MANIFEST.md
+docs/11th-edition/sources/**/*.pdf
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
