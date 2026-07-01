@@ -2,11 +2,12 @@
   import { BATTLEFIELD } from '../stores/elements.js';
   import { COLORS, getPlayerColors } from '../lib/colors.js';
   import { pathToSvgD, OBJECTIVE_RADIUS } from '../stores/deployment.js';
-  import { getWallVertices } from '../stores/layout.js';
+  import { getWallVertices, getFootprintVertices } from '../stores/layout.js';
   import { getBaseSize, isOvalBase, isRectangularBase } from '../stores/models.js';
   import { battlefieldView, resetView } from '../stores/battlefieldView.js';
   import TerrainRect from './TerrainRect.svelte';
   import WallPiece from './WallPiece.svelte';
+  import FootprintPiece from './FootprintPiece.svelte';
   import ModelBase from './ModelBase.svelte';
 
   let svgElement;
@@ -21,6 +22,7 @@
   export let objectives = null;
   export let terrains = null;
   export let walls = null;
+  export let footprints = null;
   export let models = null;
   export let losResults = null;
 
@@ -29,12 +31,14 @@
   export let showRuler = true;
   export let interactiveTerrain = false;
   export let interactiveWalls = false;
+  export let interactiveFootprints = false;
   export let interactiveModels = false;
   export let showDebugRays = false;
 
   // Selection state
   export let selectedTerrainId = null;
   export let selectedWallId = null;
+  export let selectedFootprintId = null;
   export let selectedModelId = null;
 
   // Callbacks for interactive modes
@@ -44,6 +48,9 @@
   export let onWallSelect = () => {};
   export let onWallDrag = () => {};
   export let onWallRotate = () => {};
+  export let onFootprintSelect = () => {};
+  export let onFootprintDrag = () => {};
+  export let onFootprintRotate = () => {};
   export let onModelSelect = () => {};
   export let onModelDrag = () => {};
   export let onModelDragEnd = () => {};
@@ -398,6 +405,56 @@
       {/each}
     {/if}
 
+    <!-- Footprints layer (area terrain ground) -->
+    {#if footprints}
+      {#if interactiveFootprints}
+        {#each footprints as footprint (footprint.id)}
+          <FootprintPiece
+            id={footprint.id}
+            x={footprint.x}
+            y={footprint.y}
+            shapeId={footprint.shapeId}
+            rotation={footprint.rotation}
+            objectiveGroup={footprint.objectiveGroup}
+            selected={footprint.id === selectedFootprintId}
+            {screenToSvg}
+            onSelect={onFootprintSelect}
+            onDrag={onFootprintDrag}
+            onRotate={onFootprintRotate}
+          />
+        {/each}
+      {:else}
+        {#each footprints as footprint}
+          {@const verts = getFootprintVertices(footprint.shapeId)}
+          {#if verts.length > 0}
+            {@const cx = footprint.x + (Math.min(...verts.map(v => v.x)) + Math.max(...verts.map(v => v.x))) / 2}
+            {@const cy = footprint.y + (Math.min(...verts.map(v => v.y)) + Math.max(...verts.map(v => v.y))) / 2}
+            <g transform="rotate({footprint.rotation || 0}, {cx}, {cy})">
+              <path
+                d={`M ${verts.map(v => `${footprint.x + v.x},${footprint.y + v.y}`).join(' L ')} Z`}
+                fill={COLORS.footprint.fill}
+                stroke={COLORS.footprint.stroke}
+                stroke-width="0.1"
+              />
+              {#if footprint.objectiveGroup}
+                <path
+                  d={`M ${verts.map(v => `${footprint.x + v.x},${footprint.y + v.y}`).join(' L ')} Z`}
+                  fill={COLORS.footprint.objectiveFill}
+                  stroke={COLORS.footprint.objectiveStroke}
+                  stroke-width="0.18"
+                  stroke-dasharray="0.4,0.2"
+                />
+              {/if}
+            </g>
+            {#if footprint.objectiveGroup}
+              <circle cx={cx} cy={cy} r="0.9" fill={COLORS.footprint.objectiveStroke} stroke={COLORS.ui.black} stroke-width="0.08" />
+              <text x={cx} y={cy} text-anchor="middle" dominant-baseline="central" class="objective-label">{footprint.objectiveGroup}</text>
+            {/if}
+          {/if}
+        {/each}
+      {/if}
+    {/if}
+
     <!-- Terrain layer -->
     {#if terrains}
       {#if interactiveTerrain}
@@ -611,6 +668,14 @@
   .ruler-text {
     font-size: 1px;
     fill: #888;
+    font-family: system-ui, -apple-system, sans-serif;
+    user-select: none;
+  }
+
+  .objective-label {
+    font-size: 1px;
+    font-weight: 700;
+    fill: #000;
     font-family: system-ui, -apple-system, sans-serif;
     user-select: none;
   }

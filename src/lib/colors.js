@@ -39,11 +39,22 @@ export const COLORS = {
     stroke: '#8b5a2b',
   },
 
-  // Walls
+  // Walls (11th-ed ruin walls AB/CD/EF/GH — green, placed on footprints)
   wall: {
-    fill: 'rgba(52, 45, 39, 1)',
-    fillSelected: 'rgba(52, 45, 39, 0.6)',
-    stroke: '#000000ba',
+    fill: 'rgba(45, 122, 74, 0.9)',
+    fillSelected: 'rgba(59, 130, 246, 0.6)',
+    stroke: '#1e5638',
+  },
+
+  // Terrain area footprints (gray ruined-ground area terrain)
+  footprint: {
+    fill: 'rgba(170, 170, 170, 0.55)',
+    fillSelected: 'rgba(59, 130, 246, 0.45)',
+    stroke: '#6b6b6b',
+    // Objective-tagged footprints (11th ed: terrain footprints themselves are objectives)
+    objectiveStroke: '#d4af37',
+    objectiveFill: 'rgba(212, 175, 55, 0.22)',
+    objectiveLabel: '#f7e7ac',
   },
 
   // Objectives

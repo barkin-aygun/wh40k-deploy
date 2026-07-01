@@ -9,16 +9,66 @@ export const TERRAIN_SIZES = [
   { label: '4" x 6"', width: 4, height: 6 }
 ];
 
-// Wall shape presets
+// Wall shape presets (11th edition ruin walls, L-shaped; sit on top of footprints)
 export const WALL_SHAPES = [
-  { label: 'L 4x8', shape: 'L-4x8' },
-  { label: 'L 4x8 ⌐', shape: 'L-4x8-mirror' },
-  { label: 'C 4-8-4', shape: 'C-4-8-4' },
-  { label: 'L 5x6', shape: 'L-5x6' },
-  { label: 'L 5x6 ⌐', shape: 'L-5x6-mirror' },
-  { label: 'L 4x6', shape: 'L-4x6' },
-  { label: 'L 4x6 ⌐', shape: 'L-4x6-mirror' }
+  { label: 'AB (4.75×4.75)', shape: 'L-4.75x4.75' },
+  { label: 'CD (6×2.5)', shape: 'L-6x2.5' },
+  { label: 'EF (6×5)', shape: 'L-6x5' },
+  { label: 'GH (3×6)', shape: 'L-3x6' }
 ];
+
+// GW Terrain Area Footprint pieces (11th edition).
+// Each footprint is a placeable/rotatable area-terrain polygon.
+// `vertices` are in inches relative to the piece origin (0,0 = top-left of bounding box).
+// Outlines were traced from the official GW "Terrain Area Footprints" PDF green cut-lines.
+export const FOOTPRINT_SHAPES = [
+  {
+    id: 'fp-long',
+    label: 'Long platform',
+    quantity: 2,
+    // Traced from GW footprint PDF, scaled to 10" x 3.5", mirrored horizontally
+    vertices: [{ x: 6.24, y: 3.44 }, { x: 5.84, y: 3.5 }, { x: 5.49, y: 2.99 }, { x: 0.0, y: 2.99 }, { x: 0.0, y: 0.52 }, { x: 0.54, y: 0.52 }, { x: 0.64, y: 0.4 }, { x: 0.94, y: 0.33 }, { x: 1.33, y: 0.1 }, { x: 1.83, y: 0.0 }, { x: 2.09, y: 0.03 }, { x: 2.2, y: 0.1 }, { x: 2.61, y: 0.53 }, { x: 7.38, y: 0.53 }, { x: 7.49, y: 0.42 }, { x: 7.62, y: 0.39 }, { x: 8.37, y: 0.53 }, { x: 10.0, y: 0.53 }, { x: 10.0, y: 2.99 }, { x: 7.15, y: 2.99 }, { x: 6.98, y: 3.26 }, { x: 6.55, y: 3.43 }]
+  },
+  {
+    id: 'fp-ruin-triangle',
+    label: 'Ruin (triangle)',
+    quantity: 2,
+    // Traced from GW footprint PDF; scaled so its long straight (bottom) edge is 11.5"
+    // and its short straight (right) edge is 8" (a rubble/pipe detail overhangs slightly
+    // beyond the bottom-right corner, as on the real piece)
+    vertices: [{ x: 0.01, y: 1.9 }, { x: 0.02, y: 2.02 }, { x: 0.77, y: 2.09 }, { x: 1.53, y: 2.29 }, { x: 2.06, y: 2.5 }, { x: 2.34, y: 2.48 }, { x: 2.82, y: 2.83 }, { x: 3.47, y: 3.64 }, { x: 3.82, y: 3.79 }, { x: 4.21, y: 4.14 }, { x: 4.64, y: 4.26 }, { x: 5.28, y: 4.77 }, { x: 5.47, y: 4.8 }, { x: 6.04, y: 5.2 }, { x: 6.32, y: 5.27 }, { x: 6.88, y: 5.76 }, { x: 7.27, y: 5.84 }, { x: 7.58, y: 6.14 }, { x: 8.06, y: 6.39 }, { x: 8.7, y: 7.18 }, { x: 9.07, y: 7.42 }, { x: 9.15, y: 7.53 }, { x: 9.45, y: 7.53 }, { x: 10.92, y: 7.98 }, { x: 11.5, y: 8.0 }, { x: 11.51, y: 5.66 }, { x: 11.67, y: 5.29 }, { x: 11.79, y: 5.15 }, { x: 11.91, y: 4.64 }, { x: 11.77, y: 4.47 }, { x: 11.74, y: 4.29 }, { x: 11.52, y: 4.08 }, { x: 11.5, y: 0.0 }, { x: 0.0, y: 0.0 }, { x: 0.0, y: 0.12 }]
+  },
+  {
+    id: 'fp-ruin-field',
+    label: 'Ruin (field)',
+    quantity: 4,
+    // Traced from GW footprint PDF; scaled so its long straight edge is 11.5"
+    // and its short straight edges are 7" (rubble overhangs slightly beyond, as on the real piece)
+    vertices: [{ x: 0.0, y: 6.86 }, { x: 0.0, y: 7.01 }, { x: 1.36, y: 7.02 }, { x: 1.87, y: 7.34 }, { x: 2.25, y: 7.32 }, { x: 2.4, y: 7.42 }, { x: 3.09, y: 7.59 }, { x: 3.33, y: 7.43 }, { x: 3.58, y: 7.07 }, { x: 3.85, y: 7.01 }, { x: 4.5, y: 7.05 }, { x: 4.98, y: 7.2 }, { x: 5.9, y: 7.1 }, { x: 7.02, y: 7.46 }, { x: 7.5, y: 7.33 }, { x: 7.64, y: 7.22 }, { x: 7.78, y: 7.22 }, { x: 8.15, y: 7.01 }, { x: 11.5, y: 7.01 }, { x: 11.51, y: 0.01 }, { x: 0.01, y: 0.0 }, { x: 0.0, y: 3.26 }]
+  },
+  {
+    id: 'fp-tall',
+    label: 'Tall platform',
+    quantity: 4,
+    // Traced from GW footprint PDF; scaled so its two straight sides are 4" x 6"
+    // (rubble overhangs slightly beyond the straight rectangle, as on the real piece)
+    vertices: [{ x: 4.19, y: 3.23 }, { x: 4.06, y: 3.07 }, { x: 4.04, y: 0.53 }, { x: 3.14, y: 0.52 }, { x: 2.92, y: 0.19 }, { x: 2.75, y: 0.19 }, { x: 2.57, y: 0.27 }, { x: 1.94, y: 0.0 }, { x: 1.42, y: 0.19 }, { x: 1.23, y: 0.44 }, { x: 1.04, y: 0.53 }, { x: 0.0, y: 0.53 }, { x: 0.0, y: 6.53 }, { x: 0.05, y: 6.57 }, { x: 4.05, y: 6.55 }, { x: 4.05, y: 5.3 }, { x: 4.18, y: 5.22 }, { x: 4.3, y: 5.04 }, { x: 4.43, y: 4.51 }, { x: 4.35, y: 4.06 }, { x: 4.17, y: 3.81 }, { x: 4.2, y: 3.52 }]
+  },
+  {
+    id: 'fp-small',
+    label: 'Small platform',
+    quantity: 4,
+    // Traced from GW footprint PDF; scaled so its short straight sides are 2" long
+    // (width already spans 6" between those sides; rubble overhangs slightly beyond, as on the real piece)
+    vertices: [{ x: 5.89, y: 2.24 }, { x: 6.0, y: 2.24 }, { x: 6.0, y: 0.24 }, { x: 2.02, y: 0.24 }, { x: 1.95, y: 0.06 }, { x: 1.84, y: 0.0 }, { x: 1.21, y: 0.03 }, { x: 0.91, y: 0.25 }, { x: 0.0, y: 0.24 }, { x: 0.0, y: 2.25 }, { x: 3.47, y: 2.25 }, { x: 3.78, y: 2.6 }, { x: 4.36, y: 2.74 }, { x: 4.66, y: 2.65 }, { x: 4.8, y: 2.44 }, { x: 5.1, y: 2.25 }, { x: 5.21, y: 2.25 }]
+  }
+];
+
+// Look up a footprint shape's vertices by id
+export function getFootprintVertices(shapeId) {
+  const shape = FOOTPRINT_SHAPES.find(s => s.id === shapeId);
+  return shape ? shape.vertices : [];
+}
 
 // Preset terrain layouts organized by tournament type
 export const TERRAIN_LAYOUT_CATEGORIES = [
@@ -455,6 +505,58 @@ function createWallStore() {
 
 export const layoutWalls = createWallStore();
 
+// Create footprint store (GW terrain area footprints)
+function createFootprintStore() {
+  const { subscribe, set, update } = writable([]);
+
+  return {
+    subscribe,
+    set,
+    update,
+
+    // Add a new footprint piece by shape id
+    add(shapeId) {
+      const verts = getFootprintVertices(shapeId);
+      const xs = verts.map(v => v.x);
+      const ys = verts.map(v => v.y);
+      const w = verts.length ? Math.max(...xs) - Math.min(...xs) : 0;
+      const h = verts.length ? Math.max(...ys) - Math.min(...ys) : 0;
+      update(footprints => [
+        ...footprints,
+        {
+          id: 'fp-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+          x: 30 - w / 2, // center horizontally
+          y: 22 - h / 2, // center vertically
+          shapeId,
+          rotation: 0
+        }
+      ]);
+    },
+
+    // Update a footprint piece
+    updateFootprint(id, changes) {
+      update(footprints => footprints.map(f =>
+        f.id === id ? { ...f, ...changes } : f
+      ));
+    },
+
+    // Remove a footprint piece
+    remove(id) {
+      update(footprints => footprints.filter(f => f.id !== id));
+    },
+
+    // Clear all footprints
+    clear() {
+      set([]);
+    }
+  };
+}
+
+export const layoutFootprints = createFootprintStore();
+
+// Currently selected footprint ID
+export const selectedFootprintId = writable(null);
+
 // Debug mode terrain/walls (separate from main layout builder)
 export const debugTerrains = createTerrainStore();
 export const debugWalls = createWallStore();
@@ -467,22 +569,22 @@ export function parseWallShape(shapeType) {
   const baseShape = shapeType.replace('-mirror', '');
 
   if (baseShape.startsWith('L-')) {
-    // L-4x8 -> [4, 8]
-    const match = baseShape.match(/L-(\d+)x(\d+)/);
+    // L-4.75x4.75 -> [4.75, 4.75]
+    const match = baseShape.match(/L-([\d.]+)x([\d.]+)/);
     if (match) {
       return {
         type: 'L',
-        segments: [parseInt(match[1]), parseInt(match[2])],
+        segments: [parseFloat(match[1]), parseFloat(match[2])],
         mirrored
       };
     }
   } else if (baseShape.startsWith('C-')) {
     // C-4-8-4 -> [4, 8, 4]
-    const match = baseShape.match(/C-(\d+)-(\d+)-(\d+)/);
+    const match = baseShape.match(/C-([\d.]+)-([\d.]+)-([\d.]+)/);
     if (match) {
       return {
         type: 'C',
-        segments: [parseInt(match[1]), parseInt(match[2]), parseInt(match[3])],
+        segments: [parseFloat(match[1]), parseFloat(match[2]), parseFloat(match[3])],
         mirrored
       };
     }
@@ -602,10 +704,12 @@ export const savedLayoutsList = writable([]);
 export function saveLayout(name, models = []) {
   const terrains = get(layoutTerrains);
   const walls = get(layoutWalls);
+  const footprints = get(layoutFootprints);
   const layouts = getSavedLayouts();
   layouts[name] = {
     terrains,
     walls,
+    footprints,
     models,  // Include models
     savedAt: Date.now()
   };
@@ -613,15 +717,17 @@ export function saveLayout(name, models = []) {
 }
 
 // Load a layout by name
-// Returns { terrains, walls, models } or null
+// Returns { terrains, walls, footprints, models } or null
 export function loadLayout(name) {
   const layouts = getSavedLayouts();
   if (layouts[name]) {
     layoutTerrains.set(layouts[name].terrains || []);
     layoutWalls.set(layouts[name].walls || []);
+    layoutFootprints.set(layouts[name].footprints || []);
     return {
       terrains: layouts[name].terrains || [],
       walls: layouts[name].walls || [],
+      footprints: layouts[name].footprints || [],
       models: layouts[name].models || []
     };
   }
@@ -643,6 +749,7 @@ export function getSavedLayoutNames() {
     savedAt: layouts[name].savedAt,
     terrainCount: (layouts[name].terrains || []).length,
     wallCount: (layouts[name].walls || []).length,
+    footprintCount: (layouts[name].footprints || []).length,
     modelCount: (layouts[name].models || []).length
   })).sort((a, b) => b.savedAt - a.savedAt);
 }

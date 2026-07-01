@@ -1,32 +1,11 @@
 <script>
-  import { onMount } from 'svelte';
   import Battlefield from '../components/Battlefield.svelte';
   import CollapsibleSection from '../components/CollapsibleSection.svelte';
   import { DEPLOYMENT_PRESETS } from '../stores/deployment.js';
-  import { savedLayoutsList, refreshSavedLayouts, TERRAIN_LAYOUT_CATEGORIES } from '../stores/layout.js';
-  import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
-
-  onMount(() => {
-    refreshSavedLayouts();
-  });
+  import { selectedDeployment } from '../stores/battlefieldSetup.js';
 
   function handleSelectDeployment(preset) {
     selectedDeployment.set(preset);
-  }
-
-  function handleSelectPreset(preset) {
-    selectedLayoutName.set(preset.name);
-    selectedLayoutType.set('preset');
-  }
-
-  function handleSelectSavedLayout(name) {
-    selectedLayoutName.set(name);
-    selectedLayoutType.set('saved');
-  }
-
-  function handleClearLayout() {
-    selectedLayoutName.set(null);
-    selectedLayoutType.set(null);
   }
 
   function handleClearDeployment() {
@@ -55,43 +34,6 @@
         {/if}
       </CollapsibleSection>
 
-      <!-- Terrain Layout Selection -->
-      <CollapsibleSection title="Terrain Layout">
-        {#if $selectedLayoutName}
-          <div class="selected-item">
-            <span class="selected-name">{$selectedLayoutName}</span>
-            <button class="small secondary" on:click={handleClearLayout}>Change</button>
-          </div>
-        {:else}
-          <div class="layout-sections">
-            {#each TERRAIN_LAYOUT_CATEGORIES as category}
-              <div class="layout-group">
-                <h4>{category.name}</h4>
-                <div class="button-group">
-                  {#each category.presets as preset}
-                    <button on:click={() => handleSelectPreset(preset)}>
-                      {preset.name}
-                    </button>
-                  {/each}
-                </div>
-              </div>
-            {/each}
-            {#if $savedLayoutsList.length > 0}
-              <div class="layout-group">
-                <h4>Saved</h4>
-                <div class="button-group">
-                  {#each $savedLayoutsList as layout}
-                    <button on:click={() => handleSelectSavedLayout(layout.name)}>
-                      {layout.name}
-                    </button>
-                  {/each}
-                </div>
-              </div>
-            {/if}
-          </div>
-        {/if}
-      </CollapsibleSection>
-
       <!-- Summary -->
       <CollapsibleSection title="Summary">
         <div class="summary">
@@ -99,20 +41,10 @@
             <span class="label">Deployment:</span>
             <span class="value">{$selectedDeployment?.name || 'None'}</span>
           </div>
-          <div class="summary-row">
-            <span class="label">Terrain:</span>
-            <span class="value">{$selectedLayoutName || 'None'}</span>
-          </div>
           {#if $selectedDeployment}
             <div class="summary-row">
               <span class="label">Objectives:</span>
               <span class="value">{$selectedDeployment.objectives.length}</span>
-            </div>
-          {/if}
-          {#if $loadedTerrain.terrains.length > 0 || $loadedTerrain.walls.length > 0}
-            <div class="summary-row">
-              <span class="label">Pieces:</span>
-              <span class="value">{$loadedTerrain.terrains.length} terrain, {$loadedTerrain.walls.length} walls</span>
             </div>
           {/if}
         </div>
@@ -125,8 +57,6 @@
           deploymentZones={$selectedDeployment?.zones}
           territoryDivider={$selectedDeployment?.territory}
           objectives={$selectedDeployment?.objectives}
-          terrains={$loadedTerrain.terrains}
-          walls={$loadedTerrain.walls}
         />
       </div>
       <div class="info">
@@ -169,19 +99,6 @@
     gap: 0.5rem;
     max-height: 150px;
     overflow-y: auto;
-  }
-
-  .layout-sections {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .layout-group h4 {
-    margin: 0 0 0.5rem 0;
-    font-size: 0.75rem;
-    color: #666;
-    font-weight: 500;
   }
 
   button {

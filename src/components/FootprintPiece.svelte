@@ -1,21 +1,20 @@
 <script>
   import { BATTLEFIELD } from '../stores/elements.js';
-  import { getWallVertices } from '../stores/layout.js';
+  import { getFootprintVertices } from '../stores/layout.js';
   import { COLORS } from '../lib/colors.js';
 
   export let id;
   export let x;
   export let y;
-  export let shape; // 'L-4x8', 'L-4x8-mirror', 'C-4-8-4', 'L-5x6', 'L-5x6-mirror'
-  export let segments = null; // Custom segment lengths, e.g., [4, 8] for L or [4, 8, 4] for C
+  export let shapeId;
   export let rotation = 0;
+  export let objectiveGroup = null;
   export let selected = false;
   export let screenToSvg;
   export let onSelect = () => {};
   export let onDrag = () => {};
   export let onRotate = () => {};
 
-  // Get bounding box for shape
   function getBoundingBox(vertices) {
     const xs = vertices.map(v => v.x);
     const ys = vertices.map(v => v.y);
@@ -27,14 +26,14 @@
     };
   }
 
-  $: vertices = getWallVertices(shape, segments);
+  $: vertices = getFootprintVertices(shapeId);
   $: bounds = getBoundingBox(vertices);
-  $: wallWidth = bounds.maxX - bounds.minX;
-  $: wallHeight = bounds.maxY - bounds.minY;
+  $: fpWidth = bounds.maxX - bounds.minX;
+  $: fpHeight = bounds.maxY - bounds.minY;
 
   // Center point for rotation
-  $: centerX = x + bounds.minX + wallWidth / 2;
-  $: centerY = y + bounds.minY + wallHeight / 2;
+  $: centerX = x + bounds.minX + fpWidth / 2;
+  $: centerY = y + bounds.minY + fpHeight / 2;
 
   // Convert vertices to SVG path
   $: pathD = vertices.length > 0
@@ -42,7 +41,7 @@
     : '';
 
   // Rotation handle position
-  $: handleDistance = Math.max(wallWidth, wallHeight) / 2 + 1.5;
+  $: handleDistance = Math.max(fpWidth, fpHeight) / 2 + 1.5;
   $: handleX = centerX + handleDistance * Math.cos((rotation - 45) * Math.PI / 180);
   $: handleY = centerY + handleDistance * Math.sin((rotation - 45) * Math.PI / 180);
 
@@ -84,9 +83,9 @@
     }
 
     // Constrain to battlefield (with some margin for rotation)
-    const margin = Math.max(wallWidth, wallHeight);
-    newX = Math.max(-margin, Math.min(BATTLEFIELD.width + margin - wallWidth, newX));
-    newY = Math.max(-margin, Math.min(BATTLEFIELD.height + margin - wallHeight, newY));
+    const margin = Math.max(fpWidth, fpHeight);
+    newX = Math.max(-margin, Math.min(BATTLEFIELD.width + margin - fpWidth, newX));
+    newY = Math.max(-margin, Math.min(BATTLEFIELD.height + margin - fpHeight, newY));
 
     onDrag(id, newX, newY);
   }
@@ -128,19 +127,51 @@
   }
 </script>
 
-<g class="wall-piece" class:selected class:dragging={isDragging}>
+<g class="footprint-piece" class:selected class:dragging={isDragging}>
   <g transform="rotate({rotation}, {centerX}, {centerY})">
     <path
       d={pathD}
-      fill={selected ? COLORS.wall.fillSelected : COLORS.wall.fill}
-      stroke={selected ? COLORS.selection.highlight : COLORS.wall.stroke}
+      fill={selected ? COLORS.footprint.fillSelected : COLORS.footprint.fill}
+      stroke={selected ? COLORS.selection.highlight : COLORS.footprint.stroke}
       stroke-width={selected ? 0.15 : 0.1}
       on:click={handleClick}
       on:mousedown={handleMouseDown}
       role="button"
       tabindex="0"
     />
+    {#if objectiveGroup}
+      <path
+        d={pathD}
+        fill={COLORS.footprint.objectiveFill}
+        stroke={COLORS.footprint.objectiveStroke}
+        stroke-width="0.18"
+        stroke-dasharray="0.4,0.2"
+        pointer-events="none"
+      />
+    {/if}
   </g>
+
+  <!-- Objective number label (rendered outside the rotated group so it stays upright;
+       centerX/centerY is the rotation pivot, so its position is invariant to rotation) -->
+  {#if objectiveGroup}
+    <circle
+      cx={centerX}
+      cy={centerY}
+      r="0.9"
+      fill={COLORS.footprint.objectiveStroke}
+      stroke={COLORS.ui.black}
+      stroke-width="0.08"
+      pointer-events="none"
+    />
+    <text
+      x={centerX}
+      y={centerY}
+      text-anchor="middle"
+      dominant-baseline="central"
+      class="objective-label"
+      pointer-events="none"
+    >{objectiveGroup}</text>
+  {/if}
 
   <!-- Rotation handle (only show when selected) -->
   {#if selected}
@@ -169,17 +200,24 @@
 </g>
 
 <style>
-  .wall-piece path {
+  .footprint-piece path {
     cursor: grab;
   }
-  .wall-piece.dragging path {
+  .footprint-piece.dragging path {
     cursor: grabbing;
   }
-  .wall-piece.selected path {
+  .footprint-piece.selected path {
     filter: drop-shadow(0 0 0.3px #3b82f6);
   }
   .rotate-handle {
     cursor: grab;
     filter: drop-shadow(0.05px 0.05px 0.1px rgba(0,0,0,0.5));
+  }
+  .objective-label {
+    font-size: 1px;
+    font-weight: 700;
+    fill: #000;
+    font-family: system-ui, -apple-system, sans-serif;
+    user-select: none;
   }
 </style>
