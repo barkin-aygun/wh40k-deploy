@@ -7,7 +7,7 @@ import { EXPORT_COLORS } from './exportColors.js';
 import { getWallVertices, transformWallVertices } from '../stores/layout.js';
 import { getBaseSize, isOvalBase, isRectangularBase } from '../stores/models.js';
 import { BATTLEFIELD } from '../stores/elements.js';
-import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
+import { pathToSvgD, OBJECTIVE_RADIUS } from '../stores/deployment.js';
 
 // Export settings - adjust these for quality/size tradeoff
 const EXPORT_SETTINGS = {
@@ -66,24 +66,27 @@ function buildZoneSvg(zone) {
 }
 
 /**
+ * Build territory divider SVG element
+ */
+function buildTerritorySvg(territory) {
+  const colors = EXPORT_COLORS.territory;
+  return `<line
+    x1="${territory.x1}"
+    y1="${territory.y1}"
+    x2="${territory.x2}"
+    y2="${territory.y2}"
+    stroke="${colors.stroke}"
+    stroke-width="${colors.strokeWidth}"
+    stroke-dasharray="${colors.strokeDasharray}"
+  />`;
+}
+
+/**
  * Build objective SVG element
  */
 function buildObjectiveSvg(objective) {
   const colors = objective.isPrimary ? EXPORT_COLORS.objective.primary : EXPORT_COLORS.objective.secondary;
-  const controlColors = EXPORT_COLORS.objective.controlRadius;
   const centerColors = EXPORT_COLORS.objective.centerDot;
-
-  // Control radius circle (outer dashed circle)
-  const controlCircle = `<circle
-    cx="${objective.x}"
-    cy="${objective.y}"
-    r="${OBJECTIVE_CONTROL_RADIUS}"
-    fill="${colors.fill}"
-    fill-opacity="${controlColors.fillOpacity}"
-    stroke="${colors.fill}"
-    stroke-width="${controlColors.strokeWidth}"
-    stroke-dasharray="${controlColors.strokeDasharray}"
-  />`;
 
   // Objective marker (solid circle)
   const markerCircle = `<circle
@@ -103,7 +106,7 @@ function buildObjectiveSvg(objective) {
     fill="${centerColors.fill}"
   />`;
 
-  return controlCircle + markerCircle + centerDot;
+  return markerCircle + centerDot;
 }
 
 /**
@@ -259,6 +262,7 @@ function buildExportSvg(terrains, walls, models, deployment = null) {
   // Deployment zones and objectives (if provided)
   const zonesSvg = deployment?.zones ? deployment.zones.map(buildZoneSvg).join('\n    ') : '';
   const objectivesSvg = deployment?.objectives ? deployment.objectives.map(buildObjectiveSvg).join('\n    ') : '';
+  const territorySvg = deployment?.territory ? buildTerritorySvg(deployment.territory) : '';
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width * ppi}" height="${height * ppi}">
@@ -268,6 +272,11 @@ function buildExportSvg(terrains, walls, models, deployment = null) {
   <!-- Deployment zones -->
   <g id="deployment-zones">
     ${zonesSvg}
+  </g>
+
+  <!-- Territory divider -->
+  <g id="territory-divider">
+    ${territorySvg}
   </g>
 
   <!-- Objectives -->

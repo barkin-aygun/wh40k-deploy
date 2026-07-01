@@ -25,7 +25,7 @@
   } from '../stores/models.js';
   import { history } from '../stores/history.js';
   import { selectedDeployment, selectedLayoutName, selectedLayoutType, loadedTerrain } from '../stores/battlefieldSetup.js';
-  import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
+  import { pathToSvgD, OBJECTIVE_RADIUS } from '../stores/deployment.js';
   import { checkLineOfSight, checkUnitToUnitLineOfSight } from '../lib/visibility/lineOfSight.js';
   import { getRotatedRectVertices } from '../lib/visibility/geometry.js';
   import { armyImports } from '../stores/armyImports.js';
@@ -1598,20 +1598,23 @@
               />
             {/each}
 
+            <!-- Territory divider (attacker/defender halves) -->
+            {#if $selectedDeployment.territory}
+              <line
+                x1={$selectedDeployment.territory.x1}
+                y1={$selectedDeployment.territory.y1}
+                x2={$selectedDeployment.territory.x2}
+                y2={$selectedDeployment.territory.y2}
+                stroke={COLORS.territory.line}
+                stroke-width="0.1"
+                stroke-dasharray="1.5,0.75"
+                pointer-events="none"
+              />
+            {/if}
+
             <!-- Objectives -->
             {#each $selectedDeployment.objectives as obj}
               {@const markerColor = obj.isPrimary ? COLORS.objective.primary : COLORS.objective.secondary}
-              {@const controlColor = obj.isPrimary ? COLORS.objective.primaryControl : COLORS.objective.secondaryControl}
-              <circle
-                cx={obj.x}
-                cy={obj.y}
-                r={OBJECTIVE_CONTROL_RADIUS}
-                fill={controlColor}
-                stroke={markerColor}
-                stroke-width="0.05"
-                stroke-dasharray="0.3,0.15"
-                pointer-events="none"
-              />
               <circle
                 cx={obj.x}
                 cy={obj.y}

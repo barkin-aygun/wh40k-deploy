@@ -1,7 +1,7 @@
 <script>
   import { BATTLEFIELD } from '../stores/elements.js';
   import { COLORS, getPlayerColors } from '../lib/colors.js';
-  import { pathToSvgD, OBJECTIVE_RADIUS, OBJECTIVE_CONTROL_RADIUS } from '../stores/deployment.js';
+  import { pathToSvgD, OBJECTIVE_RADIUS } from '../stores/deployment.js';
   import { getWallVertices } from '../stores/layout.js';
   import { getBaseSize, isOvalBase, isRectangularBase } from '../stores/models.js';
   import { battlefieldView, resetView } from '../stores/battlefieldView.js';
@@ -17,6 +17,7 @@
 
   // Data props - when provided, these layers render
   export let deploymentZones = null;
+  export let territoryDivider = null; // { x1, y1, x2, y2 } line splitting the field into halves
   export let objectives = null;
   export let terrains = null;
   export let walls = null;
@@ -248,27 +249,23 @@
       />
     {/each}
 
-    <!-- 6x6 grid lines (slightly more visible) -->
-    {#each Array(Math.floor(BATTLEFIELD.width / 6) + 1) as _, i}
-      <line
-        x1={RULER_SIZE + i * 6}
-        y1={RULER_SIZE}
-        x2={RULER_SIZE + i * 6}
-        y2={RULER_SIZE + BATTLEFIELD.height}
-        stroke={COLORS.battlefield.gridCoarse}
-        stroke-width="0.08"
-      />
-    {/each}
-    {#each Array(Math.floor(BATTLEFIELD.height / 6) + 1) as _, i}
-      <line
-        x1={RULER_SIZE}
-        y1={RULER_SIZE + i * 6}
-        x2={RULER_SIZE + BATTLEFIELD.width}
-        y2={RULER_SIZE + i * 6}
-        stroke={COLORS.battlefield.gridCoarse}
-        stroke-width="0.08"
-      />
-    {/each}
+    <!-- Quadrant divider lines (vertical at 30", horizontal at 22") -->
+    <line
+      x1={RULER_SIZE + BATTLEFIELD.width / 2}
+      y1={RULER_SIZE}
+      x2={RULER_SIZE + BATTLEFIELD.width / 2}
+      y2={RULER_SIZE + BATTLEFIELD.height}
+      stroke={COLORS.battlefield.gridCoarse}
+      stroke-width="0.1"
+    />
+    <line
+      x1={RULER_SIZE}
+      y1={RULER_SIZE + BATTLEFIELD.height / 2}
+      x2={RULER_SIZE + BATTLEFIELD.width}
+      y2={RULER_SIZE + BATTLEFIELD.height / 2}
+      stroke={COLORS.battlefield.gridCoarse}
+      stroke-width="0.1"
+    />
   {/if}
 
   <!-- Rulers -->
@@ -369,6 +366,20 @@
       {/each}
     {/if}
 
+    <!-- Territory divider (attacker/defender halves) -->
+    {#if territoryDivider}
+      <line
+        x1={territoryDivider.x1}
+        y1={territoryDivider.y1}
+        x2={territoryDivider.x2}
+        y2={territoryDivider.y2}
+        stroke={COLORS.territory.line}
+        stroke-width="0.1"
+        stroke-dasharray="1.5,0.75"
+        pointer-events="none"
+      />
+    {/if}
+
     <!-- LOS debug rays layer (render early, behind other elements) -->
     {#if showDebugRays && losResults && losResults.length > 0}
       {#each losResults as result}
@@ -461,16 +472,6 @@
     {#if objectives}
       {#each objectives as obj}
         {@const markerColor = obj.isPrimary ? COLORS.objective.primary : COLORS.objective.secondary}
-        {@const controlColor = obj.isPrimary ? COLORS.objective.primaryControl : COLORS.objective.secondaryControl}
-        <circle
-          cx={obj.x}
-          cy={obj.y}
-          r={OBJECTIVE_CONTROL_RADIUS}
-          fill={controlColor}
-          stroke={markerColor}
-          stroke-width="0.05"
-          stroke-dasharray="0.3,0.15"
-        />
         <circle
           cx={obj.x}
           cy={obj.y}

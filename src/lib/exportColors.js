@@ -52,6 +52,13 @@ export const EXPORT_COLORS = {
     strokeDasharray: '0.5,0.25'  // Dashed border
   },
 
+  // Territory divider (attacker/defender halves)
+  territory: {
+    stroke: '#e2e8f0',
+    strokeWidth: 0.1,
+    strokeDasharray: '1.5,0.75'
+  },
+
   // Objectives
   objective: {
     primary: {

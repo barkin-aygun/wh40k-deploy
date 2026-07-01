@@ -33,7 +33,10 @@
 </script>
 
 <div class="app-header">
-  <h1 class="app-title">Procinctum</h1>
+  <h1 class="app-title">
+    <span class="aquila" aria-hidden="true">╬</span>
+    <span class="title-text">Procinctum<sup class="edition">11<span class="ord">th</span></sup></span>
+  </h1>
   <nav class="nav-links">
     <a href="#/setup" class:active={currentPage === 'setup'}>Battlefield Setup</a>
     <a href="#/deployment" class:active={currentPage === 'deployment'}>Deployment</a>
@@ -80,16 +83,50 @@
     align-items: center;
     gap: 2rem;
     padding: 1rem;
-    background: #1a1a1a;
-    border-bottom: 1px solid #333;
+    background: linear-gradient(180deg, #14100a 0%, #0d0b07 100%);
+    border-bottom: 2px solid #b8912f;
+    box-shadow: 0 2px 0 #2a2114, 0 4px 12px rgba(0, 0, 0, 0.6);
     z-index: 100;
   }
 
   .app-title {
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-family: 'Cinzel', 'Trajan Pro', 'Times New Roman', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    /* Aged Imperial gold */
+    background: linear-gradient(180deg, #f7e7ac 0%, #d4af37 45%, #a9791d 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #d4af37; /* fallback */
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.8));
+  }
+
+  .app-title .aquila {
+    font-family: serif;
+    -webkit-text-fill-color: #c9a227;
+    color: #c9a227;
     font-size: 1.5rem;
-    color: #e0e0e0;
+    filter: drop-shadow(0 0 3px rgba(212, 175, 55, 0.4));
+  }
+
+  .app-title .edition {
+    font-size: 0.5em;
     font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-left: 0.08em;
+    top: -0.75em;
+  }
+
+  .app-title .edition .ord {
+    font-size: 0.75em;
   }
 
   .nav-links {
@@ -98,18 +135,21 @@
   }
 
   .nav-links a {
-    color: #888;
+    color: #8a7a52;
     text-decoration: none;
     font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
   }
 
   .nav-links a:hover {
-    color: #aaa;
-    text-decoration: underline;
+    color: #d4af37;
+    text-decoration: none;
   }
 
   .nav-links a.active {
-    color: #fff;
+    color: #f7e7ac;
+    text-shadow: 0 0 6px rgba(212, 175, 55, 0.35);
   }
 
   .app-footer {

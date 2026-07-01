@@ -7,14 +7,14 @@ export const COLORS = {
   // Player colors
   player1: {
     primary: '#3b82f6',
-    fill: 'rgba(59, 130, 246, 0.5)',
+    fill: 'rgba(59, 130, 246, 0.6)',
     fillLight: 'rgba(59, 130, 246, 0.3)',
     fillLighter: 'rgba(59, 130, 246, 0.15)',
     zone: 'rgba(59, 130, 246, 0.1)',
   },
   player2: {
     primary: '#ef4444',
-    fill: 'rgba(239, 68, 68, 0.5)',
+    fill: 'rgba(239, 68, 68, 0.6)',
     fillLight: 'rgba(239, 68, 68, 0.3)',
     fillLighter: 'rgba(239, 68, 68, 0.15)',
     zone: 'rgba(239, 68, 68, 0.1)',
@@ -22,9 +22,9 @@ export const COLORS = {
 
   // Battlefield
   battlefield: {
-    background: 'rgb(76, 86, 76)',
-    gridFine: '#2328235f',
-    gridCoarse: '#5a6a5a',
+    background: 'rgb(173, 190, 173)',
+    gridFine: 'rgba(70, 92, 70, 0.25)',
+    gridCoarse: 'rgba(180, 145, 47, 0.55)', // faint Imperial gold quadrant lines
     ruler: '#666',
     rulerText: '#888',
     rulerBackground: '#1a1a1a',
@@ -32,18 +32,18 @@ export const COLORS = {
 
   // Terrain
   terrain: {
-    fill: 'rgba(139, 90, 43, 0.6)',
+    fill: 'rgba(116, 102, 63, 0.71)',
     fillSelected: 'rgba(59, 130, 246, 0.6)',
-    fillStatic: 'rgba(139, 90, 43, 0.8)',
-    fillReadonly: 'rgba(139, 90, 43, 0.2)', // subtle tint in read-only battle/deployment view
+    fillStatic: 'rgba(116, 102, 63, 0.71)',
+    fillReadonly: 'rgba(116, 102, 63, 0.2)', // subtle tint in read-only battle/deployment view
     stroke: '#8b5a2b',
   },
 
   // Walls
   wall: {
-    fill: 'rgba(139, 69, 19, 0.8)',
-    fillSelected: 'rgba(139, 69, 19, 0.6)',
-    stroke: '#5c3317',
+    fill: 'rgba(52, 45, 39, 1)',
+    fillSelected: 'rgba(52, 45, 39, 0.6)',
+    stroke: '#000000ba',
   },
 
   // Objectives
@@ -77,6 +77,11 @@ export const COLORS = {
   measurement: {
     line: '#f59e0b',
     labelBg: 'rgba(0,0,0,0.75)',
+  },
+
+  // Territory divider (splits battlefield into attacker/defender halves)
+  territory: {
+    line: '#e2e8f0',
   },
 
   // Engagement range indicator (shown while dragging models)

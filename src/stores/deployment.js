@@ -99,6 +99,8 @@ export const selectedObjectiveId = writable(null);
 export const DEPLOYMENT_PRESETS = [
   {
     name: 'Dawn of War',
+    // Territory divider: horizontal midline (connects the two short edges)
+    territory: { x1: 0, y1: 22, x2: 60, y2: 22 },
     zones: [
       {
         name: 'Player 1',
@@ -129,14 +131,18 @@ export const DEPLOYMENT_PRESETS = [
     ],
     objectives: [
       { x: 30, y: 22, isPrimary: true },
-      { x: 10, y: 22, isPrimary: false },
-      { x: 50, y: 22, isPrimary: false },
-      { x: 30, y: 6, isPrimary: false },
-      { x: 30, y: 38, isPrimary: false }
+      // No man's land
+      { x: 10, y: 19, isPrimary: false },
+      { x: 50, y: 25, isPrimary: false },
+      // Home objectives: centered, 10" from the long edge
+      { x: 30, y: 10, isPrimary: false },
+      { x: 30, y: 34, isPrimary: false }
     ]
   },
   {
     name: 'Hammer and Anvil',
+    // Territory divider: vertical midline (along the long edge)
+    territory: { x1: 30, y1: 0, x2: 30, y2: 44 },
     zones: [
       {
         name: 'Player 1',
@@ -167,14 +173,16 @@ export const DEPLOYMENT_PRESETS = [
     ],
     objectives: [
       { x: 30, y: 22, isPrimary: true },
-      { x: 30, y: 6, isPrimary: false },
-      { x: 30, y: 38, isPrimary: false },
-      { x: 10, y: 22, isPrimary: false },
-      { x: 50, y: 22, isPrimary: false }
+      { x: 14, y: 34, isPrimary: false },
+      { x: 24, y: 8, isPrimary: false },
+      { x: 46, y: 10, isPrimary: false },
+      { x: 36, y: 36, isPrimary: false }
     ]
   },
   {
     name: 'Tipping Point',
+    // Territory divider
+    territory: { x1: 26, y1: 0, x2: 34, y2: 44 },
     zones: [
       {
         name: 'Player 1',
@@ -207,15 +215,19 @@ export const DEPLOYMENT_PRESETS = [
       }
     ],
     objectives: [
+      // Three in no man's land (only the center sits on the territory divider)
       { x: 30, y: 22, isPrimary: true },
-      { x: 14, y: 34, isPrimary: false },
-      { x: 22, y: 8, isPrimary: false },
-      { x: 38, y: 36, isPrimary: false },
-      { x: 46, y: 10, isPrimary: false }
+      { x: 24, y: 6, isPrimary: false },
+      { x: 36, y: 38, isPrimary: false },
+      // One in each deep corner: 14" from short edge, 11" from long edge
+      { x: 14, y: 33, isPrimary: false },
+      { x: 46, y: 11, isPrimary: false }
     ]
   },
   {
     name: 'Search and Destroy',
+    // Territory divider: diagonal through the two no-man's-land corners
+    territory: { x1: 0, y1: 0, x2: 60, y2: 44 },
     zones: [
       {
         name: 'Player 1',
@@ -256,6 +268,8 @@ export const DEPLOYMENT_PRESETS = [
   },
   {
     name: 'Sweeping Engagement',
+    // Territory divider: 19" from the corner beside each shallow zone, along the short edges
+    territory: { x1: 0, y1: 19, x2: 60, y2: 25 },
     zones: [
       {
         name: 'Player 1',
@@ -290,14 +304,16 @@ export const DEPLOYMENT_PRESETS = [
     ],
     objectives: [
       { x: 30, y: 22, isPrimary: true },
-      { x: 10, y: 18, isPrimary: false },
-      { x: 50, y: 26, isPrimary: false },
-      { x: 18, y: 38, isPrimary: false },
-      { x: 42, y: 6, isPrimary: false }
+      { x: 46, y: 10, isPrimary: false },
+      { x: 10, y: 14, isPrimary: false },
+      { x: 50, y: 30, isPrimary: false },
+      { x: 14, y: 34, isPrimary: false }
     ]
   },
   {
     name: 'Crucible of Battle',
+    // Territory divider: 15" from each deployment triangle's sharp tip along the long edges
+    territory: { x1: 15, y1: 0, x2: 45, y2: 44 },
     zones: [
       {
         name: 'Player 1',
@@ -325,10 +341,10 @@ export const DEPLOYMENT_PRESETS = [
     ],
     objectives: [
       { x: 30, y: 22, isPrimary: true },
-      { x: 20, y: 8, isPrimary: false },
-      { x: 40, y: 36, isPrimary: false },
-      { x: 14, y: 34, isPrimary: false },
-      { x: 46, y: 10, isPrimary: false }
+      { x: 12, y: 34, isPrimary: false },
+      { x: 15, y: 10, isPrimary: false },
+      { x: 45, y: 34, isPrimary: false },
+      { x: 48, y: 10, isPrimary: false }
     ]
   }
 ];

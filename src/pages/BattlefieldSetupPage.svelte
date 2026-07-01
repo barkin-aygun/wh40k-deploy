@@ -123,6 +123,7 @@
       <div class="battlefield-container">
         <Battlefield
           deploymentZones={$selectedDeployment?.zones}
+          territoryDivider={$selectedDeployment?.territory}
           objectives={$selectedDeployment?.objectives}
           terrains={$loadedTerrain.terrains}
           walls={$loadedTerrain.walls}
