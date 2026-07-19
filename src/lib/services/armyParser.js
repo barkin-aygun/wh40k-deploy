@@ -1,17 +1,27 @@
 /**
  * Army List Parser Service
- * Wrapper around 40kCompactor library for parsing army lists
+ * Wrapper around 40kCompactor library for parsing army lists (11th edition only)
  */
 
 import {
   detectFormat,
-  parseGwApp,
-  parseWtc,
-  parseWtcCompact,
-  parseNrGw,
-  parseNrNr,
-  parseLf
-} from '40k-compactor';
+  parseV11List,
+  parseGwAppV11,
+  parseWarOrganV11,
+  parseNRWTCCompact,
+  parseNRWTC,
+  parseNRGW
+} from '40k-compactor/modules/parsers.js';
+import skippableWargearMap from '40k-compactor/skippable_wargear.json' with { type: 'json' };
+
+const PARSERS = {
+  V11_GENERIC: parseV11List,
+  GW_APP_V11: parseGwAppV11,
+  WAR_ORGAN_V11: parseWarOrganV11,
+  NR_WTC_COMPACT: parseNRWTCCompact,
+  NR_WTC: parseNRWTC,
+  NR_GW: parseNRGW
+};
 
 /**
  * Parse an army list from text
@@ -28,43 +38,21 @@ export async function parseArmyList(text) {
   // Detect the format
   const format = detectFormat(lines);
 
-  if (format === 'UNKNOWN') {
-    throw new Error('Unable to detect army list format. Supported formats: GW App, WTC, WTC Compact, NR-GW, NR-NR, ListForge');
+  const parser = PARSERS[format];
+  if (!parser) {
+    throw new Error('Unable to detect army list format. Supported formats: 11th Edition GW App, War Organ, New Recruit (WTC, WTC-Compact, GW/NR)');
   }
 
   let parsedData;
-
   try {
-    // Parse based on detected format
-    switch (format) {
-      case 'GW_APP':
-        parsedData = parseGwApp(lines);
-        break;
-      case 'WTC':
-        parsedData = parseWtc(lines);
-        break;
-      case 'WTC_COMPACT':
-        parsedData = parseWtcCompact(lines);
-        break;
-      case 'NR_GW':
-        parsedData = parseNrGw(lines);
-        break;
-      case 'NRNR':
-        parsedData = parseNrNr(lines);
-        break;
-      case 'LF':
-        parsedData = parseLf(lines);
-        break;
-      default:
-        throw new Error(`Unsupported format: ${format}`);
-    }
+    parsedData = parser(lines, skippableWargearMap);
   } catch (err) {
     console.error('Parse error:', err);
     throw new Error(`Failed to parse ${format} format: ${err.message}`);
   }
 
   // Normalize the parsed data structure
-  const normalized = normalizeArmyData(parsedData, format);
+  const normalized = normalizeArmyData(parsedData);
 
   return {
     format,
@@ -73,41 +61,36 @@ export async function parseArmyList(text) {
 }
 
 /**
- * Normalize parsed data from different formats into a consistent structure
+ * Normalize parsed data (the library's {metadata, units[]} shape) into a
+ * consistent structure. "Attached Units" groups are flattened so each
+ * character/bodyguard unit appears as its own flat entry, matching how every
+ * other section's units are represented.
  * @param {object} parsedData - Raw parsed data from 40kCompactor
- * @param {string} format - Detected format
  * @returns {object} Normalized data
  */
-function normalizeArmyData(parsedData, format) {
-  const summary = parsedData.SUMMARY || {};
+function normalizeArmyData(parsedData) {
+  const metadata = parsedData.metadata || {};
 
-  // Collect all units from different sections
   const units = [];
-
-  // Common sections to check
-  const sections = [
-    'CHARACTER',
-    'CHARACTERS',
-    'BATTLELINE',
-    'OTHER DATASHEETS',
-    'ALLIED UNITS',
-    'DEDICATED TRANSPORTS'
-  ];
-
-  for (const section of sections) {
-    if (parsedData[section] && Array.isArray(parsedData[section])) {
-      units.push(...parsedData[section].map(unit => ({
-        ...unit,
-        section
-      })));
+  for (const unit of parsedData.units || []) {
+    if (unit.isAttached && Array.isArray(unit.attachedParts)) {
+      units.push(...unit.attachedParts.map(part => ({ ...part, section: part.category || unit.category })));
+    } else {
+      units.push({ ...unit, section: unit.category });
     }
   }
 
+  const detachment = Array.isArray(metadata.detachments) && metadata.detachments.length
+    ? metadata.detachments.join(' and ')
+    : (metadata.detachment || '');
+  const totalPoints = metadata.pointsTotal || metadata.totalPoints || 0;
+  const pointsLimit = metadata.pointsLimit || 0;
+
   return {
-    FACTION_KEYWORD: summary.FACTION_KEYWORD || summary.FACTION_KEY || 'Unknown',
-    DETACHMENT: summary.DETACHMENT || '',
-    TOTAL_ARMY_POINTS: summary.TOTAL_ARMY_POINTS || '0pts',
-    LIST_TITLE: summary.LIST_TITLE || '',
+    FACTION_KEYWORD: metadata.faction || 'Unknown',
+    DETACHMENT: detachment,
+    TOTAL_ARMY_POINTS: pointsLimit ? `${totalPoints} / ${pointsLimit}pts` : `${totalPoints}pts`,
+    LIST_TITLE: metadata.title || metadata.armyName || '',
     UNITS: units
   };
 }

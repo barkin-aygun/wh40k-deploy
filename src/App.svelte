@@ -5,6 +5,8 @@
   import BattlePage from './pages/BattlePage.svelte';
   import DebugPage from './pages/DebugPage.svelte';
     import LayoutPage from './pages/LayoutPage.svelte';
+  // ExpanderPage is loaded on demand — it pulls in the large BSData datasheet
+  // corpus, which we don't want in the initial bundle.
 
   let currentPage = 'main';
 
@@ -20,6 +22,8 @@
       currentPage = 'battle';
     } else if (hash === '#/layout') {
       currentPage = 'layout';
+    } else if (hash === '#/expander') {
+      currentPage = 'expander';
     } else {
       currentPage = 'deployment';
     }
@@ -42,6 +46,7 @@
     <a href="#/deployment" class:active={currentPage === 'deployment'}>Deployment</a>
     <a href="#/battle" class:active={currentPage === 'battle'}>Battle</a>
     <a href="#/layout" class:active={currentPage === 'layout'}>Layout Builder</a>
+    <a href="#/expander" class:active={currentPage === 'expander'}>List Expander</a>
   </nav>
 </div>
 
@@ -55,6 +60,12 @@
   <BattlePage />
 {:else if currentPage === 'layout'}
   <LayoutPage />
+{:else if currentPage === 'expander'}
+  {#await import('./pages/ExpanderPage.svelte')}
+    <p class="lazy-loading">Loading expander…</p>
+  {:then Module}
+    <svelte:component this={Module.default} />
+  {/await}
 {:else}
   <DeploymentPage />
 {/if}
@@ -167,6 +178,12 @@
     font-size: 0.75rem;
     color: #666;
     z-index: 100;
+  }
+
+  .lazy-loading {
+    padding: 6rem 1.5rem;
+    text-align: center;
+    color: #8a7a52;
   }
 
   .app-footer .separator {
