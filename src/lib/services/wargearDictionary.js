@@ -25,7 +25,7 @@ import wargearNames from '../../data/wargearNames.js'; // skippable-seed + curat
 // must also pull every Chapter's items in — otherwise chapter-specific relics
 // are invisible to the dictionary and same-abbreviation items from an unrelated
 // bucket win by default (e.g. "LW" wrongly resolving to a Space Wolves name).
-const SM_CHAPTERS = [
+export const SM_CHAPTERS = [
   'Black Templars', 'Blood Angels', 'Dark Angels', 'Deathwatch', 'Imperial Fists',
   'Iron Hands', 'Raven Guard', 'Salamanders', 'Space Wolves', 'Ultramarines', 'White Scars',
 ];
@@ -143,17 +143,21 @@ export function registerWargearNames(faction, names) {
 
 // Normalize for comparison: strip diacritics, unify curly apostrophes to ASCII,
 // lowercase. Matches the compactor's own key normalization so "T’au" == "T'au".
-function normKey(s) {
+export function normKey(s) {
   return (s || '')
     .toString()
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/[‘’‛′]/g, "'")
     .toLowerCase()
+    // BSData mixes British/American spelling ("Ancient in Terminator Armor" vs
+    // the GW app's "Armour"); fold the common "-our" -> "-or" difference so
+    // both match ("armour"/"armor", "colour"/"color", "honour"/"honor").
+    .replace(/our\b/g, 'or')
     .trim();
 }
 
-function normalizeFactionKey(faction) {
+export function normalizeFactionKey(faction) {
   if (!faction) return '';
   // Compact/parsed factions can arrive as "Chaos - World Eaters"; take the leaf.
   return faction.toString().split(' - ').pop().trim();

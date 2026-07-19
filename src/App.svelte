@@ -24,6 +24,8 @@
       currentPage = 'layout';
     } else if (hash === '#/expander') {
       currentPage = 'expander';
+    } else if (hash === '#/datasheets') {
+      currentPage = 'datasheets';
     } else {
       currentPage = 'deployment';
     }
@@ -47,6 +49,7 @@
     <a href="#/battle" class:active={currentPage === 'battle'}>Battle</a>
     <a href="#/layout" class:active={currentPage === 'layout'}>Layout Builder</a>
     <a href="#/expander" class:active={currentPage === 'expander'}>List Expander</a>
+    <a href="#/datasheets" class:active={currentPage === 'datasheets'}>Datasheets</a>
   </nav>
 </div>
 
@@ -63,6 +66,12 @@
 {:else if currentPage === 'expander'}
   {#await import('./pages/ExpanderPage.svelte')}
     <p class="lazy-loading">Loading expander…</p>
+  {:then Module}
+    <svelte:component this={Module.default} />
+  {/await}
+{:else if currentPage === 'datasheets'}
+  {#await import('./pages/DatasheetsPage.svelte')}
+    <p class="lazy-loading">Loading datasheets…</p>
   {:then Module}
     <svelte:component this={Module.default} />
   {/await}

@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(__dirname, '..');
 const outPath = resolve(repoRoot, 'src/data/datasheets11e.js');
+const detailsOutPath = resolve(repoRoot, 'src/data/datasheetDetails11e.js');
 
 const srcDir = process.argv[2];
 if (!srcDir) {
@@ -60,6 +61,113 @@ function cleanName(raw) {
     .replace(/^[^\p{L}\p{N}]+/u, '')
     .replace(/\s*\[[^\]]*\]\s*$/, '') // drop "[Crucible]" style detachment tags
     .trim();
+}
+
+/** BSData rules text uses ^^underline^^ markers we don't render; strip them. */
+function cleanText(t) {
+  return String(t || '').replace(/\^\^/g, '').replace(/[ \t]+\n/g, '\n').trim();
+}
+
+/** A profile's characteristics array -> plain {CharName: text} object. */
+function charsToObj(characteristics) {
+  const obj = {};
+  for (const c of characteristics || []) {
+    if (c && c.name) obj[c.name] = cleanText(c.$text || '');
+  }
+  return obj;
+}
+
+// Stable across the whole dataset — some resolved profile objects (reached via
+// infoLinks below) omit typeName, so typeId is the more robust discriminator.
+const UNIT_PROFILE_TYPE_ID = 'c547-1836-d8a-ff4f';
+function isUnitProfile(p) {
+  return !!p && (p.typeName === 'Unit' || p.typeId === UNIT_PROFILE_TYPE_ID);
+}
+
+// A model's statline can be (a) inline in its own `profiles`, or (b) reached
+// only via an `infoLinks` entry of type "profile" pointing by targetId at a
+// shared profile object elsewhere (e.g. Tyranids' "Ripper Swarm" — the model
+// selectionEntry itself carries no `profiles` array at all).
+function findUnitProfile(node, idMap) {
+  const direct = (node.profiles || []).find(isUnitProfile);
+  if (direct) return direct;
+  if (idMap) {
+    for (const l of node.infoLinks || []) {
+      if (l.type !== 'profile' || !l.targetId || !idMap.has(l.targetId)) continue;
+      const tgt = idMap.get(l.targetId);
+      if (isUnitProfile(tgt) || (tgt && tgt.characteristics)) return tgt;
+    }
+  }
+  return null;
+}
+
+/** Every distinct model statline (M/T/Sv/W/Ld/OC/InSv) on a datasheet. */
+// BSData places the shared statline inconsistently: sometimes on the nested
+// model entry itself (e.g. Khorne Berzerker Champion), sometimes only on the
+// top-level unit entry with the nested models carrying no profile of their own
+// (e.g. Eradicator/Eradicator Sergeant both share the squad's own profile).
+// Try the model's own profile first, falling back to the unit's shared one.
+function collectModelStatlines(entry, idMap) {
+  const stats = [];
+  const seen = new Set();
+  const ownProfile = findUnitProfile(entry, idMap);
+
+  const addFrom = (node, displayName, fallbackProfile) => {
+    if (!displayName || seen.has(displayName)) return;
+    const p = findUnitProfile(node, idMap) || fallbackProfile;
+    if (!p) return;
+    seen.add(displayName);
+    stats.push({ name: displayName, chars: charsToObj(p.characteristics) });
+  };
+
+  if (entry.type === 'model') {
+    addFrom(entry, cleanName(entry.name), null);
+    return stats;
+  }
+
+  const modelChildren = [];
+  for (const se of entry.selectionEntries || []) if (se.type === 'model') modelChildren.push(se);
+  for (const g of entry.selectionEntryGroups || []) {
+    for (const se of g.selectionEntries || []) if (se.type === 'model') modelChildren.push(se);
+  }
+  for (const se of modelChildren) addFrom(se, cleanName(se.name), ownProfile);
+
+  // No nested model children found at all (rare) — fall back to the unit itself.
+  if (!stats.length && ownProfile) addFrom(entry, cleanName(entry.name), ownProfile);
+
+  return stats;
+}
+
+// Unlike unitAbilities (noise-filtered, abbreviation-index only), this keeps
+// every named ability with real text — including universal rules like "Deep
+// Strike" — because a real datasheet legitimately lists those.
+function collectDatasheetAbilities(entry) {
+  const abilities = [];
+  const seen = new Set();
+  for (const p of entry.profiles || []) {
+    if (p.typeName !== 'Abilities') continue;
+    const name = cleanName(p.name);
+    if (!name || seen.has(name)) continue;
+    const chars = charsToObj(p.characteristics);
+    const text = chars.Description || Object.values(chars)[0] || '';
+    if (!text) continue;
+    seen.add(name);
+    abilities.push({ name, text });
+  }
+  return abilities;
+}
+
+/** categoryLinks -> { factionKeyword, keywords[] }. */
+function collectKeywords(entry) {
+  const links = (entry.categoryLinks || []).map((c) => cleanName(c.name)).filter(Boolean);
+  let factionKeyword = '';
+  const keywords = [];
+  for (const k of links) {
+    const m = k.match(/^Faction:\s*(.+)$/i);
+    if (m) factionKeyword = m[1].trim();
+    else keywords.push(k);
+  }
+  return { factionKeyword, keywords };
 }
 
 // BSData upgrade entries include loadout *options* ("2 magma cutters",
@@ -157,6 +265,18 @@ function walk(node, sink) {
       const { full, base } = cleanWeaponName(node.name);
       if (!isNoisyName(base)) sink.weapons.add(base);
       if (full !== base && !isNoisyName(full)) sink.weapons.add(full);
+      // Full stat profile, keyed by base name. Multi-profile weapons (e.g.
+      // Plasma pistol: Standard/Supercharge) collect multiple {mode, chars} rows.
+      if (base && !isNoisyName(base)) {
+        const mode = full !== base ? full.slice(base.length).replace(/^\s*-\s*/, '').trim() : null;
+        const modeLabel = mode ? mode[0].toUpperCase() + mode.slice(1) : null;
+        const key = base.toLowerCase();
+        const rec = sink.weaponProfiles.get(key) || { name: base, typeName: node.typeName, profiles: [] };
+        if (!rec.profiles.some((p) => p.mode === modeLabel)) {
+          rec.profiles.push({ mode: modeLabel, chars: charsToObj(node.characteristics) });
+        }
+        sink.weaponProfiles.set(key, rec);
+      }
     } else if (node.type === 'upgrade') {
       const n = cleanName(node.name);
       if (!isNoisyName(n)) sink.wargear.add(n);
@@ -169,10 +289,19 @@ function walk(node, sink) {
 }
 
 // Enhancements are grouped under a "<Detachment> Enhancements" selectionEntryGroup.
-// Map detachment name -> its enhancement names so resolution can be scoped.
+// Map detachment name -> its enhancement names (for scoping resolution) and, in
+// detachEnhDetails, full text + points (for datasheet-page display).
 const ENH_GROUP = /^(.+?)\s+Enhancements?$/i;
 const GENERIC_ENH = /^(boarding actions?|breaching operation)$/i;
-function collectDetachmentEnhancements(cat, sink) {
+function enhancementDetail(node) {
+  const name = cleanName(node.name);
+  if (!name) return null;
+  const chars = charsToObj((node.profiles || [])[0]?.characteristics);
+  const text = chars.Description || Object.values(chars)[0] || '';
+  const pts = (node.costs || []).find((c) => c.name === 'pts');
+  return { name, text, points: pts ? pts.value : null };
+}
+function collectDetachmentEnhancements(cat, sink, idMap) {
   const walk = (n) => {
     if (!n || typeof n !== 'object') return;
     if (Array.isArray(n)) {
@@ -184,15 +313,24 @@ function collectDetachmentEnhancements(cat, sink) {
       const det = cleanName(m[1]).toLowerCase();
       if (det && !GENERIC_ENH.test(det)) {
         const set = sink.detachEnh.get(det) || new Set();
+        const details = sink.detachEnhDetails.get(det) || new Map();
         for (const e of n.selectionEntries || []) {
           const nm = cleanName(e.name);
-          if (nm && !isNoisyName(nm)) set.add(nm.toLowerCase());
+          if (!nm || isNoisyName(nm)) continue;
+          set.add(nm.toLowerCase());
+          const d = enhancementDetail(e);
+          if (d) details.set(nm.toLowerCase(), d);
         }
         for (const l of n.entryLinks || []) {
           const nm = cleanName(l.name);
-          if (nm && !isNoisyName(nm)) set.add(nm.toLowerCase());
+          if (!nm || isNoisyName(nm)) continue;
+          set.add(nm.toLowerCase());
+          const tgt = l.targetId && idMap.get(l.targetId);
+          const d = tgt ? enhancementDetail(tgt) : null;
+          if (d) details.set(nm.toLowerCase(), d);
         }
         sink.detachEnh.set(det, set);
+        sink.detachEnhDetails.set(det, details);
       }
     }
     for (const v of Object.values(n)) if (v && typeof v === 'object') walk(v);
@@ -216,6 +354,18 @@ function collectDatasheets(cat, sink, idMap) {
     const aset = sink.unitAbilities.get(key) || new Set();
     for (const a of abilities) aset.add(a);
     sink.unitAbilities.set(key, aset);
+
+    // Full datasheet record for display (first definition wins per faction file).
+    if (!sink.datasheets.has(key)) {
+      const { factionKeyword, keywords } = collectKeywords(entry);
+      sink.datasheets.set(key, {
+        name: cleanName(entry.name),
+        factionKeyword,
+        keywords,
+        abilities: collectDatasheetAbilities(entry),
+        stats: collectModelStatlines(entry, idMap),
+      });
+    }
   }
 }
 
@@ -230,6 +380,9 @@ const ensure = (f) => {
       unitItems: new Map(),
       unitAbilities: new Map(),
       detachEnh: new Map(),
+      detachEnhDetails: new Map(),
+      datasheets: new Map(),
+      weaponProfiles: new Map(),
     });
   return byFaction.get(f);
 };
@@ -265,7 +418,7 @@ for (const { faction, cat } of cats) {
   const sink = ensure(faction);
   walk(cat, sink);
   collectDatasheets(cat, sink, idMap);
-  collectDetachmentEnhancements(cat, sink);
+  collectDetachmentEnhancements(cat, sink, idMap);
 }
 
 // Merge the core Space Marines corpus into each Chapter.
@@ -285,6 +438,15 @@ if (sm) {
       for (const it of set) cur.add(it);
       b.unitAbilities.set(u, cur);
     }
+    // Chapter's own datasheet/weapon-profile definition (if any) wins; otherwise
+    // fall back to the core Space Marines one.
+    for (const [u, ds] of sm.datasheets) if (!b.datasheets.has(u)) b.datasheets.set(u, ds);
+    for (const [w, wp] of sm.weaponProfiles) if (!b.weaponProfiles.has(w)) b.weaponProfiles.set(w, wp);
+    for (const [det, m] of sm.detachEnhDetails) {
+      const cur = b.detachEnhDetails.get(det) || new Map();
+      for (const [k, v] of m) if (!cur.has(k)) cur.set(k, v);
+      b.detachEnhDetails.set(det, cur);
+    }
   }
 }
 
@@ -299,6 +461,9 @@ const units = {};
 const unitItems = {};
 const unitAbilities = {};
 const detachmentEnhancements = {};
+const datasheets = {};
+const weaponProfiles = {};
+const detachmentEnhancementDetails = {};
 for (const [faction, b] of [...byFaction.entries()].sort()) {
   // A name that is a weapon profile stays in weapons only.
   const wargearOnly = new Set([...b.wargear].filter((n) => !b.weapons.has(n)));
@@ -330,9 +495,29 @@ for (const [faction, b] of [...byFaction.entries()].sort()) {
     if (set.size) de[det] = [...set].sort();
   }
   detachmentEnhancements[faction] = de;
+  // Full datasheet records, lowercased-name keyed.
+  const dsOut = {};
+  for (const [u, ds] of [...b.datasheets.entries()].sort()) dsOut[u] = ds;
+  datasheets[faction] = dsOut;
+  // Weapon stat profiles, lowercased-name keyed.
+  const wpOut = {};
+  for (const [w, wp] of [...b.weaponProfiles.entries()].sort()) wpOut[w] = wp;
+  weaponProfiles[faction] = wpOut;
+  // Detachment -> enhancement name -> {name, text, points}.
+  const ded = {};
+  for (const [det, m] of [...b.detachEnhDetails.entries()].sort()) {
+    const inner = {};
+    for (const [k, v] of [...m.entries()].sort()) inner[k] = v;
+    if (Object.keys(inner).length) ded[det] = inner;
+  }
+  detachmentEnhancementDetails[faction] = ded;
 }
 
-const out = {
+// datasheets11e.js: names only — this is what wargearDictionary.js loads for
+// abbreviation resolution, and it must stay small since it's part of the
+// expander page's bundle. Unchanged shape from before this script grew a
+// "full datasheet" mode, so existing consumers are unaffected.
+const namesOut = {
   generatedFrom: 'BSData/wh40k-11e',
   common: {
     weapons: sorted(commonBucket.weapons),
@@ -345,14 +530,29 @@ const out = {
   detachmentEnhancements,
 };
 
+// datasheetDetails11e.js: full stat blocks, ability text, weapon profiles,
+// enhancement text. Much larger — only the datasheet-viewer page imports this.
+const detailsOut = {
+  generatedFrom: 'BSData/wh40k-11e',
+  datasheets,
+  weaponProfiles,
+  detachmentEnhancementDetails,
+};
+
 mkdirSync(dirname(outPath), { recursive: true });
+mkdirSync(dirname(detailsOutPath), { recursive: true });
 const banner =
   '// AUTO-GENERATED by scripts/gen-datasheets-11e.mjs from BSData/wh40k-11e — do not edit by hand.\n';
-writeFileSync(outPath, banner + 'export default ' + JSON.stringify(out) + ';\n');
+writeFileSync(outPath, banner + 'export default ' + JSON.stringify(namesOut) + ';\n');
+writeFileSync(detailsOutPath, banner + 'export default ' + JSON.stringify(detailsOut) + ';\n');
 
 const fc = Object.keys(factions).length;
 const wc = Object.values(factions).reduce((n, a) => n + a.weapons.length, 0);
 const gc = Object.values(factions).reduce((n, a) => n + a.wargear.length, 0);
 const uc = Object.values(units).reduce((n, a) => n + a.length, 0);
+const dc = Object.values(datasheets).reduce((n, o) => n + Object.keys(o).length, 0);
+const wpc = Object.values(weaponProfiles).reduce((n, o) => n + Object.keys(o).length, 0);
 console.log(`Wrote ${outPath}`);
 console.log(`  factions: ${fc}, weapons: ${wc}, wargear: ${gc}, unit/model names: ${uc}`);
+console.log(`Wrote ${detailsOutPath}`);
+console.log(`  full datasheets: ${dc}, weapon stat profiles: ${wpc}`);

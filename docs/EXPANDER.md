@@ -11,6 +11,10 @@ style) are also accepted and normalised losslessly.
 11th edition only — the compactor dropped 10th-edition and legacy-format (NRNR,
 ListForge) support upstream; this project follows that.
 
+**Want full datasheets, not just parsed text?** See `#/datasheets` — it uses this
+same expansion, then renders each unit's actual BSData datasheet (stats, abilities,
+weapon profiles, enhancements). See `src/lib/services/datasheetLookup.js`.
+
 ## Dependency: keep `40k-compactor` current
 
 `node_modules/40k-compactor` is a git dependency pinned to a commit SHA in
