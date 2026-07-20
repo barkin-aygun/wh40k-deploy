@@ -12,6 +12,6 @@ function escapeHtml(s) {
 
 export function formatRulesText(text) {
   return escapeHtml(text)
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*\*(.+?)\*\*/gs, '<strong>$1</strong>')
     .replace(/\n/g, '<br>');
 }

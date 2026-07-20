@@ -288,6 +288,57 @@ function walk(node, sink) {
   for (const v of Object.values(node)) if (v && typeof v === 'object') walk(v, sink);
 }
 
+// Rules referenced on nearly every datasheet in a faction (Oath of Moment,
+// Blessings of Khorne, Martial Ka'tah, ...) are that faction's Army Rule — BSData
+// has no dedicated container for it, so it's identified by frequency instead (see
+// collectDatasheets below, which tallies this while it's already walking `tops`).
+// This denylist guards against a universal per-model-category ability (granted to
+// every unit of some type, e.g. every Knight is a "Super-Heavy Walker") winning by
+// coincidence on a small faction file.
+const GENERIC_RULE_NAME =
+  /^(leader|deep strike|deadly demise|feel no pain|scouts?|infiltrators?|stealth|firing deck( \d+)?|fights first|lone operative|battle-?shock|super-heavy walker|walker|vehicle|titanic|aircraft|monster|infantry|battleline|hover)$/i;
+
+/** A detachment selectionEntry's own rule: inline `rules[0]`, or an `infoLinks`
+ *  rule reference resolved through the global id map. */
+function detachmentRuleText(node, idMap) {
+  const r = (node.rules || [])[0];
+  if (r) {
+    const text = cleanText(r.description);
+    if (text) return { name: cleanName(r.name), text };
+  }
+  for (const l of node.infoLinks || []) {
+    if (l.type !== 'rule' || !l.targetId || !idMap.has(l.targetId)) continue;
+    const tgt = idMap.get(l.targetId);
+    const text = cleanText(tgt.description || '');
+    if (text) return { name: cleanName(l.name || tgt.name), text };
+  }
+  return null;
+}
+
+// Detachment definitions are scattered across wildly different tree shapes
+// (inline selectionEntryGroups, entryLink indirection one or two files away,
+// shared-across-chapters groups, ...) so rather than chase a specific path we
+// scan the whole tree for the one structural marker every real detachment has:
+// a nonzero "Detachment Points" cost. (Every selectable entry carries this cost
+// type at value 0 by default — only an actual detachment choice sets it >0.)
+function collectDetachmentRules(cat, sink, idMap) {
+  const walk = (n) => {
+    if (!n || typeof n !== 'object') return;
+    if (Array.isArray(n)) {
+      for (const x of n) walk(x);
+      return;
+    }
+    const dp = (n.costs || []).find((c) => c.name === 'Detachment Points');
+    if (dp && dp.value > 0 && n.name) {
+      const name = cleanName(n.name);
+      const rule = name && detachmentRuleText(n, idMap);
+      if (rule) sink.detachmentRules.set(name.toLowerCase(), { name, ruleName: rule.name, ruleText: rule.text });
+    }
+    for (const v of Object.values(n)) if (v && typeof v === 'object') walk(v);
+  };
+  walk(cat);
+}
+
 // Enhancements are grouped under a "<Detachment> Enhancements" selectionEntryGroup.
 // Map detachment name -> its enhancement names (for scoping resolution) and, in
 // detachEnhDetails, full text + points (for datasheet-page display).
@@ -355,6 +406,16 @@ function collectDatasheets(cat, sink, idMap) {
     for (const a of abilities) aset.add(a);
     sink.unitAbilities.set(key, aset);
 
+    // Army Rule candidate tally — see GENERIC_RULE_NAME comment above.
+    for (const l of entry.infoLinks || []) {
+      if (l.type !== 'rule') continue;
+      const n = cleanName(l.name);
+      if (!n || GENERIC_RULE_NAME.test(n)) continue;
+      const rec = sink.armyRuleCounts.get(n) || { count: 0, targetId: l.targetId };
+      rec.count += 1;
+      sink.armyRuleCounts.set(n, rec);
+    }
+
     // Full datasheet record for display (first definition wins per faction file).
     if (!sink.datasheets.has(key)) {
       const { factionKeyword, keywords } = collectKeywords(entry);
@@ -383,6 +444,8 @@ const ensure = (f) => {
       detachEnhDetails: new Map(),
       datasheets: new Map(),
       weaponProfiles: new Map(),
+      armyRuleCounts: new Map(),
+      detachmentRules: new Map(),
     });
   return byFaction.get(f);
 };
@@ -419,6 +482,7 @@ for (const { faction, cat } of cats) {
   walk(cat, sink);
   collectDatasheets(cat, sink, idMap);
   collectDetachmentEnhancements(cat, sink, idMap);
+  collectDetachmentRules(cat, sink, idMap);
 }
 
 // Merge the core Space Marines corpus into each Chapter.
@@ -447,6 +511,11 @@ if (sm) {
       for (const [k, v] of m) if (!cur.has(k)) cur.set(k, v);
       b.detachEnhDetails.set(det, cur);
     }
+    // Chapters reference the core Space Marines catalogue's shared "Detachment"
+    // group by link rather than redefining it, so their own file contributes no
+    // Detachment Points entries at all — inherit the full set, chapter-specific
+    // detachments (if any, found locally) win.
+    for (const [det, val] of sm.detachmentRules) if (!b.detachmentRules.has(det)) b.detachmentRules.set(det, val);
   }
 }
 
@@ -464,6 +533,8 @@ const detachmentEnhancements = {};
 const datasheets = {};
 const weaponProfiles = {};
 const detachmentEnhancementDetails = {};
+const armyRules = {};
+const detachmentRules = {};
 for (const [faction, b] of [...byFaction.entries()].sort()) {
   // A name that is a weapon profile stays in weapons only.
   const wargearOnly = new Set([...b.wargear].filter((n) => !b.weapons.has(n)));
@@ -511,6 +582,28 @@ for (const [faction, b] of [...byFaction.entries()].sort()) {
     if (Object.keys(inner).length) ded[det] = inner;
   }
   detachmentEnhancementDetails[faction] = ded;
+  // Army Rule: the most-referenced rule-type infoLink among this faction's own
+  // units (see GENERIC_RULE_NAME comment). Require at least 2 references so a
+  // sparse file (e.g. a 1-unit Legends library) can't crown a fluke winner.
+  let bestName = null;
+  let bestRec = null;
+  for (const [name, rec] of b.armyRuleCounts) {
+    if (rec.count < 2) continue;
+    if (!bestRec || rec.count > bestRec.count) {
+      bestName = name;
+      bestRec = rec;
+    }
+  }
+  if (bestName && bestRec.targetId && idMap.has(bestRec.targetId)) {
+    const text = cleanText(idMap.get(bestRec.targetId).description || '');
+    if (text) armyRules[faction] = { name: bestName, text };
+  }
+  // Detachment -> { name, ruleName, ruleText }.
+  if (b.detachmentRules.size) {
+    const dr = {};
+    for (const [det, val] of [...b.detachmentRules.entries()].sort()) dr[det] = val;
+    detachmentRules[faction] = dr;
+  }
 }
 
 // datasheets11e.js: names only — this is what wargearDictionary.js loads for
@@ -537,6 +630,8 @@ const detailsOut = {
   datasheets,
   weaponProfiles,
   detachmentEnhancementDetails,
+  armyRules,
+  detachmentRules,
 };
 
 mkdirSync(dirname(outPath), { recursive: true });
@@ -552,7 +647,9 @@ const gc = Object.values(factions).reduce((n, a) => n + a.wargear.length, 0);
 const uc = Object.values(units).reduce((n, a) => n + a.length, 0);
 const dc = Object.values(datasheets).reduce((n, o) => n + Object.keys(o).length, 0);
 const wpc = Object.values(weaponProfiles).reduce((n, o) => n + Object.keys(o).length, 0);
+const arc = Object.keys(armyRules).length;
+const drc = Object.values(detachmentRules).reduce((n, o) => n + Object.keys(o).length, 0);
 console.log(`Wrote ${outPath}`);
 console.log(`  factions: ${fc}, weapons: ${wc}, wargear: ${gc}, unit/model names: ${uc}`);
 console.log(`Wrote ${detailsOutPath}`);
-console.log(`  full datasheets: ${dc}, weapon stat profiles: ${wpc}`);
+console.log(`  full datasheets: ${dc}, weapon stat profiles: ${wpc}, army rules: ${arc}, detachment rules: ${drc}`);

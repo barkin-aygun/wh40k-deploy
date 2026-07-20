@@ -87,6 +87,48 @@ export function getEnhancementDetail(faction, enhancementName) {
   return searchBuckets(Object.keys(map));
 }
 
+/** Faction-wide Army Rule: { name, text } | null. Own faction only — unlike
+ *  getDatasheet's cross-faction fallback, a blind scan across factions would
+ *  risk attributing the wrong faction's rule, so an unmatched faction (e.g. a
+ *  sub-faction whose datasheets live entirely under a parent bucket) is left
+ *  unresolved rather than guessed. */
+export function getArmyRule(faction) {
+  const map = details.armyRules || {};
+  const fkey = Object.keys(map).find((k) => normKey(k) === normKey(normalizeFactionKey(faction)));
+  return fkey ? map[fkey] : null;
+}
+
+/**
+ * Detachment rule(s) for a list's detachment string — may combine several
+ * ("Advanced Acquisition Cadre and Kauyon"), each contributing its own rule.
+ * @returns {Array<{name, ruleName, ruleText}>}
+ */
+export function getDetachmentRules(faction, detachmentString) {
+  const map = details.detachmentRules || {};
+  const dstr = normKey(detachmentString || '');
+  if (!dstr) return [];
+
+  const fkey = Object.keys(map).find((k) => normKey(k) === normKey(normalizeFactionKey(faction)));
+  const dets = fkey ? map[fkey] : null;
+  if (!dets) return [];
+
+  const out = [];
+  for (const [det, val] of Object.entries(dets)) {
+    // Guard against trivially-short detachment keys causing spurious matches.
+    if (normKey(det).length >= 4 && dstr.includes(normKey(det))) out.push(val);
+  }
+  return out;
+}
+
+/** Roster-level rules (not per-unit): the faction's Army Rule plus this list's
+ *  detachment rule(s). */
+export function buildRosterRules(normalized) {
+  return {
+    armyRule: getArmyRule(normalized.faction),
+    detachmentRules: getDetachmentRules(normalized.faction, normalized.detachment),
+  };
+}
+
 function resolveWargearList(faction, list) {
   return (list || []).map((w) => ({
     name: w.name,

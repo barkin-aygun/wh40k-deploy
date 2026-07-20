@@ -1,17 +1,20 @@
 <script>
   import { expandArmyList } from '../lib/services/armyExpander.js';
-  import { buildArmyDatasheets } from '../lib/services/datasheetLookup.js';
+  import { buildArmyDatasheets, buildRosterRules } from '../lib/services/datasheetLookup.js';
   import DatasheetCard from './DatasheetCard.svelte';
+  import RosterRulesPanel from './RosterRulesPanel.svelte';
 
   let inputText = '';
   let result = null;
   let sheets = [];
+  let rosterRules = null;
   let error = '';
 
   function handleShow() {
     error = '';
     result = null;
     sheets = [];
+    rosterRules = null;
     const text = inputText.trim();
     if (!text) {
       error = 'Paste an army list first — compacted or full, any supported format.';
@@ -20,6 +23,7 @@
     try {
       result = expandArmyList(text);
       sheets = buildArmyDatasheets(result.normalized);
+      rosterRules = buildRosterRules(result.normalized);
     } catch (e) {
       error = e.message || 'Failed to parse list.';
     }
@@ -29,6 +33,7 @@
     inputText = '';
     result = null;
     sheets = [];
+    rosterRules = null;
     error = '';
   }
 
@@ -59,6 +64,8 @@
       <span class="badge">{sheets.length} units</span>
       {#if missingCount}<span class="badge warn">{missingCount} without a datasheet match</span>{/if}
     </div>
+
+    <RosterRulesPanel rules={rosterRules} />
 
     <div class="sheets">
       {#each sheets as sheet, i (i)}

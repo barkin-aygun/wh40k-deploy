@@ -13,7 +13,8 @@ ListForge) support upstream; this project follows that.
 
 **Want full datasheets, not just parsed text?** See `#/datasheets` — it uses this
 same expansion, then renders each unit's actual BSData datasheet (stats, abilities,
-weapon profiles, enhancements). See `src/lib/services/datasheetLookup.js`.
+weapon profiles, enhancements), plus the list's Army Rule and Detachment Rule(s).
+See `src/lib/services/datasheetLookup.js`.
 
 ## Dependency: keep `40k-compactor` current
 
@@ -91,6 +92,18 @@ a `wargear` list (from upgrade entries), a `units` name list, and `unitItems`
 references against a **global id map spanning every file**, so options defined in
 shared libraries or other faction files (e.g. the shared Drones group, Space
 Marine chapters using the core catalogue) are still attributed to the unit.
+
+It also produces, per faction: `armyRules` (`{name, text}`, one per faction — BSData
+has no dedicated container for this, so it's identified as whichever `rule`-type
+`infoLink` is referenced by the most top-level datasheets in that faction's files,
+e.g. Oath of Moment/Blessings of Khorne/Martial Ka'tah all win their faction by a
+wide margin) and `detachmentRules` (`{detachmentNameLower: {name, ruleName,
+ruleText}}` — every detachment is identified by the one structural marker every
+real detachment selectionEntry has regardless of where in the tree it lives: a
+`costs[]` entry named `"Detachment Points"` with `value > 0`). Space Marine
+Chapters inherit the core catalogue's 50+ detachments by link rather than
+redefining them locally, so `detachmentRules` is merged from `Space Marines` into
+each chapter the same way `detachEnhDetails` already is.
 
 ## CLI
 
