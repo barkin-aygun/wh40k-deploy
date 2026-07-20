@@ -64,10 +64,16 @@ export const FOOTPRINT_SHAPES = [
   }
 ];
 
-// Look up a footprint shape's vertices by id
-export function getFootprintVertices(shapeId) {
+// Look up a footprint shape's vertices by id. When flipped, the shape is mirrored
+// horizontally within its own bounding box (all traced shapes have minX/minY at 0),
+// so the piece's world-space anchor (x, y = top-left of the bounding box) — and any
+// grid snap already applied to it — stays put.
+export function getFootprintVertices(shapeId, flipped = false) {
   const shape = FOOTPRINT_SHAPES.find(s => s.id === shapeId);
-  return shape ? shape.vertices : [];
+  if (!shape) return [];
+  if (!flipped) return shape.vertices;
+  const width = Math.max(...shape.vertices.map(v => v.x));
+  return shape.vertices.map(v => ({ x: width - v.x, y: v.y }));
 }
 
 // Preset terrain layouts organized by tournament type
@@ -528,7 +534,8 @@ function createFootprintStore() {
           x: 30 - w / 2, // center horizontally
           y: 22 - h / 2, // center vertically
           shapeId,
-          rotation: 0
+          rotation: 0,
+          flipped: false
         }
       ]);
     },

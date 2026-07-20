@@ -8,6 +8,7 @@
   export let y;
   export let shapeId;
   export let rotation = 0;
+  export let flipped = false;
   export let objectiveGroup = null;
   export let selected = false;
   export let screenToSvg;
@@ -26,7 +27,7 @@
     };
   }
 
-  $: vertices = getFootprintVertices(shapeId);
+  $: vertices = getFootprintVertices(shapeId, flipped);
   $: bounds = getBoundingBox(vertices);
   $: fpWidth = bounds.maxX - bounds.minX;
   $: fpHeight = bounds.maxY - bounds.minY;

@@ -72,6 +72,12 @@
     layoutFootprints.updateFootprint(id, { rotation });
   }
 
+  function handleFlipFootprint() {
+    if (!$selectedFootprintId) return;
+    const footprint = $layoutFootprints.find(f => f.id === $selectedFootprintId);
+    layoutFootprints.updateFootprint($selectedFootprintId, { flipped: !footprint?.flipped });
+  }
+
   function handleDeleteFootprint() {
     if ($selectedFootprintId) {
       layoutFootprints.remove($selectedFootprintId);
@@ -252,6 +258,12 @@
       selectedFootprintId.set(null);
       selectedWallId.set(null);
     }
+
+    // Flip selected footprint
+    if ((event.key === 'f' || event.key === 'F') && $selectedFootprintId) {
+      event.preventDefault();
+      handleFlipFootprint();
+    }
   }
 
   $: selectedFootprint = $layoutFootprints.find(f => f.id === $selectedFootprintId);
@@ -288,6 +300,16 @@
           {/each}
         </div>
       </CollapsibleSection>
+
+      <!-- Footprint Section (only when a footprint is selected) -->
+      {#if selectedFootprint}
+        <CollapsibleSection title="Footprint">
+          <button on:click={handleFlipFootprint}>
+            {selectedFootprint.flipped ? 'Unflip' : 'Flip'} <span class="layout-meta">(F)</span>
+          </button>
+          <p class="hint">Mirrors the piece in place — its snapped corner stays put</p>
+        </CollapsibleSection>
+      {/if}
 
       <!-- Objective Tagging Section (only when a footprint is selected) -->
       {#if selectedFootprint}
@@ -389,6 +411,7 @@
           interactiveTerrain={true}
           interactiveFootprints={true}
           interactiveWalls={true}
+          panOnDrag={true}
           selectedTerrainId={$selectedTerrainId}
           selectedFootprintId={$selectedFootprintId}
           selectedWallId={$selectedWallId}
@@ -406,7 +429,7 @@
       </div>
       <div class="info">
         <p>Battlefield: 60" × 44" | {$layoutFootprints.length} footprints | {$layoutWalls.length} walls</p>
-        <p class="hint">Del to remove | Scroll to zoom | Space+drag to pan | Shift+drag for fine rotation</p>
+        <p class="hint">Del to remove | F to flip footprint | Scroll to zoom | Click-drag empty area to pan | Shift+drag for fine rotation</p>
       </div>
     </div>
   </div>

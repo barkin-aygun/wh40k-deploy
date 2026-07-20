@@ -59,13 +59,21 @@
   export let onModelRename = () => {};
   export let onBackgroundClick = () => {};
 
+  // When true, left-click-dragging an empty spot on the battlefield pans the view
+  // (instead of requiring middle-click or space+drag). Opt-in per page since some
+  // pages use plain left-drag on the background for marquee selection instead.
+  export let panOnDrag = false;
+
   // Pan and zoom state (shared across routes via store)
   let isPanning = false;
   let lastPanPoint = { x: 0, y: 0 };
   let spacePressed = false;
+  let pendingPanStart = null; // screen coords of a left-click on background, before we know it's a drag
+  let suppressNextClick = false;
 
   const MIN_ZOOM = 0.5;
   const MAX_ZOOM = 4;
+  const PAN_DRAG_THRESHOLD = 3; // px of movement before a click-drag counts as a pan
 
   // Calculate viewBox based on pan/zoom from store
   $: viewWidth = TOTAL_WIDTH / $battlefieldView.zoom;
@@ -119,11 +127,30 @@
       event.preventDefault();
       isPanning = true;
       lastPanPoint = { x: event.clientX, y: event.clientY };
+      return;
+    }
+
+    // Plain left-click on empty background: wait to see if it turns into a drag
+    // before committing to panning, so a simple click can still deselect.
+    if (panOnDrag && event.button === 0) {
+      pendingPanStart = { x: event.clientX, y: event.clientY };
     }
   }
 
   function handleMouseMove(event) {
-    if (!isPanning) return;
+    if (!isPanning) {
+      if (pendingPanStart && (event.buttons & 1)) {
+        const dx = event.clientX - pendingPanStart.x;
+        const dy = event.clientY - pendingPanStart.y;
+        if (Math.hypot(dx, dy) >= PAN_DRAG_THRESHOLD) {
+          isPanning = true;
+          suppressNextClick = true;
+          lastPanPoint = { x: event.clientX, y: event.clientY };
+          pendingPanStart = null;
+        }
+      }
+      return;
+    }
 
     const rect = svgElement.getBoundingClientRect();
     const dx = (event.clientX - lastPanPoint.x) / rect.width * viewWidth;
@@ -140,6 +167,7 @@
 
   function handleMouseUp() {
     isPanning = false;
+    pendingPanStart = null;
   }
 
   // Handle keyboard for space key (pan mode)
@@ -163,6 +191,10 @@
 
   // Handle background click for deselection
   function handleBackgroundClick(event) {
+    if (suppressNextClick) {
+      suppressNextClick = false;
+      return;
+    }
     // Only trigger if clicking directly on background, not on child elements
     if (event.target === event.currentTarget || event.target.tagName === 'rect') {
       onBackgroundClick();
@@ -208,6 +240,7 @@
   preserveAspectRatio="xMidYMid meet"
   class="battlefield"
   class:panning={isPanning || spacePressed}
+  class:pannable={panOnDrag}
   on:wheel={handleWheel}
   on:mousedown={handleMouseDown}
   on:dblclick={handleDblClick}
@@ -415,6 +448,7 @@
             y={footprint.y}
             shapeId={footprint.shapeId}
             rotation={footprint.rotation}
+            flipped={footprint.flipped}
             objectiveGroup={footprint.objectiveGroup}
             selected={footprint.id === selectedFootprintId}
             {screenToSvg}
@@ -425,7 +459,7 @@
         {/each}
       {:else}
         {#each footprints as footprint}
-          {@const verts = getFootprintVertices(footprint.shapeId)}
+          {@const verts = getFootprintVertices(footprint.shapeId, footprint.flipped)}
           {#if verts.length > 0}
             {@const cx = footprint.x + (Math.min(...verts.map(v => v.x)) + Math.max(...verts.map(v => v.x))) / 2}
             {@const cy = footprint.y + (Math.min(...verts.map(v => v.y)) + Math.max(...verts.map(v => v.y))) / 2}
@@ -657,11 +691,13 @@
     cursor: default;
   }
 
-  .battlefield.panning {
+  .battlefield.panning,
+  .battlefield.pannable {
     cursor: grab;
   }
 
-  .battlefield.panning:active {
+  .battlefield.panning:active,
+  .battlefield.pannable:active {
     cursor: grabbing;
   }
 
