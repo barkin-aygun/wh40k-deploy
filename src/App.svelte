@@ -5,7 +5,7 @@
   import BattlePage from './pages/BattlePage.svelte';
   import DebugPage from './pages/DebugPage.svelte';
     import LayoutPage from './pages/LayoutPage.svelte';
-  // ExpanderPage is loaded on demand — it pulls in the large BSData datasheet
+  // ExpanderPage is loaded on demand — it pulls in the large datasheet
   // corpus, which we don't want in the initial bundle.
 
   let currentPage = 'main';

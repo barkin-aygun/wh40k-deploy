@@ -1,7 +1,8 @@
 /**
- * Datasheet lookup — combines the BSData static datasheet (stats, abilities,
+ * Datasheet lookup — combines the static datasheet (stats, abilities,
  * keywords, weapon profiles, enhancement text) with what a specific unit in an
  * expanded army list actually has equipped, producing a render-ready datasheet.
+ * Data source: @alpaca-software/40kdc-data (see scripts/gen-datasheets.mjs).
  *
  * Pairs with armyExpander.js: feed it normalized.units[] entries.
  */
@@ -47,7 +48,7 @@ function lookupWithFallback(map, faction, name) {
   return null;
 }
 
-/** Static BSData datasheet: { name, factionKeyword, keywords[], abilities[], stats[] }. */
+/** Static datasheet: { name, factionKeyword, keywords[], abilities[], stats[] }. */
 export function getDatasheet(faction, unitName) {
   return lookupWithFallback(details.datasheets || {}, faction, unitName);
 }
@@ -151,7 +152,7 @@ export function buildUnitDatasheet(faction, unit) {
   const enhancements = (unit.enhancements || []).map((e) => {
     const detail = getEnhancementDetail(faction, e.name);
     // A real enhancement never costs 0 points, so a parsed 0 means "the source
-    // text had no inline point suffix" — prefer the authoritative BSData value.
+    // text had no inline point suffix" — prefer the authoritative corpus value.
     const points = e.points || detail?.points || null;
     return { name: e.name, points, text: detail?.text || '' };
   });

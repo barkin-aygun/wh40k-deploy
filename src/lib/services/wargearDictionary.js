@@ -15,16 +15,19 @@
  *     forms too so either the base or an expanded form resolves.
  */
 
-import datasheets from '../../data/datasheets11e.js'; // BSData/wh40k-11e — primary corpus
+import datasheets from '../../data/datasheets11e.js'; // @alpaca-software/40kdc-data — primary corpus
 import wargearNames from '../../data/wargearNames.js'; // skippable-seed + curated — supplement
 
 // Compact-format exports often label a Chapter's army with the generic "Space
 // Marines" faction (the header/detachment names the Chapter, not this field).
-// BSData keeps each Chapter (and its named characters/relics, e.g. Azrael,
-// "The Lion Helm") in its own faction file, so a "Space Marines" army's corpus
-// must also pull every Chapter's items in — otherwise chapter-specific relics
-// are invisible to the dictionary and same-abbreviation items from an unrelated
-// bucket win by default (e.g. "LW" wrongly resolving to a Space Wolves name).
+// Every Space Marine unit/weapon/relic lives in one shared corpus regardless
+// of Chapter (scripts/gen-datasheets.mjs fans it out to each Chapter name
+// below at generation time), so this merge is normally a no-op today — kept
+// as a defensive second layer in case a future corpus source goes back to
+// splitting Chapters out (as BSData/wh40k-11e used to), since without it a
+// "Space Marines" army's corpus would miss chapter-specific relics and
+// same-abbreviation items from an unrelated bucket would win by default
+// (e.g. "LW" wrongly resolving to a Space Wolves name).
 export const SM_CHAPTERS = [
   'Black Templars', 'Blood Angels', 'Dark Angels', 'Deathwatch', 'Imperial Fists',
   'Iron Hands', 'Raven Guard', 'Salamanders', 'Space Wolves', 'Ultramarines', 'White Scars',
@@ -150,7 +153,7 @@ export function normKey(s) {
     .replace(/[̀-ͯ]/g, '')
     .replace(/[‘’‛′]/g, "'")
     .toLowerCase()
-    // BSData mixes British/American spelling ("Ancient in Terminator Armor" vs
+    // Sources sometimes mix British/American spelling ("Terminator Armor" vs
     // the GW app's "Armour"); fold the common "-our" -> "-or" difference so
     // both match ("armour"/"armor", "colour"/"color", "honour"/"honor").
     .replace(/our\b/g, 'or')
@@ -171,9 +174,9 @@ function factionEntry(source, factionLeaf) {
 }
 
 // Item tiers, highest wins collision tie-breaks: real weapons > other wargear
-// (upgrades) > relic/ability-modelled items (last resort — BSData sometimes
-// represents a wargear-granting relic as an Abilities profile, e.g. Azrael's
-// "The Lion Helm", which would otherwise be invisible to the dictionary).
+// (upgrades) > relic/ability-modelled items (last resort — a wargear-granting
+// relic is sometimes only represented as an ability, e.g. Azrael's "The Lion
+// Helm", which would otherwise be invisible to the dictionary).
 const TIER_WEAPON = 2;
 const TIER_WARGEAR = 1;
 const TIER_ABILITY = 0;
@@ -193,7 +196,7 @@ function corpusForFaction(factionLeaf) {
     entries.push({ name, specific, tier });
   };
 
-  // BSData (tiered: {weapons, wargear, abilities}).
+  // Primary datasheet corpus (tiered: {weapons, wargear, abilities}).
   const dsCommon = datasheets.common || {};
   for (const n of dsCommon.weapons || []) push(n, false, TIER_WEAPON);
   for (const n of dsCommon.wargear || []) push(n, false, TIER_WARGEAR);
@@ -272,7 +275,7 @@ function resolvePool(entries, queryForBaseExact, allowedNames) {
   if (specific.length) pool = specific;
 
   // Collapse candidates that are the same item in different casing/punctuation
-  // (BSData carries e.g. "Neo-volkite Pistol" and "Neo-volkite pistol").
+  // (a source can carry both "Neo-volkite Pistol" and "Neo-volkite pistol").
   const groups = new Map(); // normKey -> [names]
   for (const e of pool) {
     const k = normKey(e.name);
@@ -384,9 +387,10 @@ export function expandAbbreviation(token, faction, allowedNames = null) {
 }
 
 /**
- * Return the set of item names (lowercased) a unit can field, per BSData.
- * Falls back across all factions so datasheets defined in other JSON files
- * (allied units, shared libraries) are still found — nothing unaccounted for.
+ * Return the set of item names (lowercased) a unit can field.
+ * Falls back across all factions so datasheets defined under a different
+ * faction (allied units, shared libraries) are still found — nothing
+ * unaccounted for.
  * @returns {Set<string>|null}
  */
 export function getUnitItems(faction, unitName) {
@@ -426,7 +430,7 @@ export function getUnitItems(faction, unitName) {
 /**
  * Enhancement names (lowercased) valid for a list's detachment. The detachment
  * string may combine several ("Advanced Acquisition Cadre and Kauyon") — union
- * the enhancements of every BSData detachment named within it.
+ * the enhancements of every corpus detachment named within it.
  * @returns {Set<string>|null}
  */
 export function getDetachmentEnhancements(faction, detachmentString) {

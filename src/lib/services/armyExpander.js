@@ -285,7 +285,7 @@ export function parseCompacted(lines) {
 
   // --- body ----------------------------------------------------------------
   let currentUnits = []; // the (possibly multiple) units from the last unit line
-  let currentAllowed = null; // BSData loadout items for the current unit (for disambiguation)
+  let currentAllowed = null; // corpus loadout items for the current unit (for disambiguation)
   const warnings = [];
 
   for (; i < lines.length; i++) {
@@ -376,7 +376,7 @@ function parseUnitLine(body, faction, warnings, detachEnh = null) {
   }
 
   const { name, itemsRaw } = splitNameAndItems(s);
-  const allowed = getUnitItems(faction, name); // BSData loadout for disambiguation
+  const allowed = getUnitItems(faction, name); // corpus loadout for disambiguation
 
   const made = [];
   for (let g = 0; g < groupCount; g++) {

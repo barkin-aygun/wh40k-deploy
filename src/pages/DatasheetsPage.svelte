@@ -7,8 +7,8 @@
     <h2>Datasheets</h2>
     <p>
       Paste an army list — compacted or full — and see the datasheet for every unit in it:
-      stats, abilities, wargear profiles, and enhancements, sourced from BSData's 11th-edition
-      catalogues.
+      stats, abilities, wargear profiles, enhancements, Army/Detachment Rules, and available
+      Stratagems, sourced from the community-owned 40kdc-data 11th-edition dataset.
     </p>
   </header>
 

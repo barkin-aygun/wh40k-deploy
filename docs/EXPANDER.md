@@ -12,22 +12,41 @@ style) are also accepted and normalised losslessly.
 ListForge) support upstream; this project follows that.
 
 **Want full datasheets, not just parsed text?** See `#/datasheets` — it uses this
-same expansion, then renders each unit's actual BSData datasheet (stats, abilities,
-weapon profiles, enhancements), plus the list's Army Rule and Detachment Rule(s).
-See `src/lib/services/datasheetLookup.js`.
+same expansion, then renders each unit's actual datasheet (stats, abilities,
+weapon profiles, enhancements), plus the list's Army Rule, Detachment Rule(s), and
+available Stratagems (core + detachment-specific). See
+`src/lib/services/datasheetLookup.js` and `src/lib/services/stratagemLookup.js`.
 
-That page also lists the list's available Stratagems (core + detachment-specific),
-sourced separately from the community-owned
+## Data source: `@alpaca-software/40kdc-data`
+
+Both the abbreviation corpus (`src/data/datasheets11e.js`) and the full-render
+corpus (`src/data/datasheetDetails11e.js`, `src/data/stratagems11e.js`) are
+generated from the community-owned
 [`@alpaca-software/40kdc-data`](https://github.com/wn-mitch/40kdc-data) package —
-BSData doesn't catalogue stratagems at all (it's a list-building format; stratagems
-aren't a roster choice). That project also deliberately doesn't store GW's
-copyrighted rule text, so most stratagems here carry metadata only (CP cost, phase,
-timing, type, targeting); where it has a structured effect definition, its own
-`describeAbility()` renders that into plain English. See
-`scripts/gen-stratagems.mjs` (regenerate via `npm run gen:stratagems` — no local
-clone needed, `@alpaca-software/40kdc-data` is a normal, version-pinned
-devDependency, same idea as `40k-compactor` for the expander) and
-`src/lib/services/stratagemLookup.js`.
+a normal, version-pinned **devDependency**, the same pinning discipline as
+`40k-compactor`. It's Node/CLI-oriented (~30MB installed, depends on `ajv`/`glob`/
+`commander`) and not meant for browser bundling, so it's imported only by the
+generation scripts below, at build time, never at runtime in the app.
+
+That project deliberately does **not** store GW's copyrighted rule/ability text
+(see its README's "IP Stance") — effects are a structured "Ability DSL" tree
+instead. Where a DSL definition exists, the generators render it into English via
+the package's own `describeAbility()` (their tested, conformance-pinned
+translator — not reimplemented here). Unit abilities have full DSL coverage;
+enhancements, Army/Detachment Rules, and stratagems are mixed — anything without a
+renderable definition is omitted (datasheets/rules) or shown as metadata-only with
+an honest "not available" note (stratagems) rather than left blank. Unit, weapon,
+and stat-line data (names, keywords, M/T/Sv/W/Ld/OC, weapon profiles, points) are
+all included — those are numerical/nominal facts, not creative expression, so
+40kdc-data covers them the same as BSData used to.
+
+Regenerate both corpora after a `npm update @alpaca-software/40kdc-data` (no local
+clone step — the whole source is the npm package):
+
+```bash
+npm run gen:datasheets
+npm run gen:stratagems
+```
 
 ## Dependency: keep `40k-compactor` current
 
@@ -82,41 +101,36 @@ Key facts the design relies on:
 |---|---|
 | `src/lib/services/armyExpander.js` | Core: detect → parse → normalize → render. `expandArmyList(text)` is the entry point. |
 | `src/lib/services/wargearDictionary.js` | Abbreviation reverse-index, unit-context resolver, `registerWargearNames()` hook. |
-| `src/data/datasheets11e.js` | **Primary corpus** — weapons/wargear + per-unit loadouts, extracted from BSData/wh40k-11e. |
-| `src/data/wargearNames.js` | Supplementary seed corpus (skippable + curated). |
-| `scripts/gen-datasheets-11e.mjs` | Regenerates the BSData corpus (`npm run gen:datasheets -- <clone>`). |
+| `src/lib/services/datasheetLookup.js` | Combines a parsed unit with its static datasheet/enhancement/rule text for rendering. |
+| `src/lib/services/stratagemLookup.js` | Core + detachment stratagem lookup. |
+| `src/data/datasheets11e.js` | **Primary corpus** — weapons/wargear + per-unit loadouts, names only (abbreviation resolution). |
+| `src/data/datasheetDetails11e.js` | Full stat blocks, ability/enhancement/Army-Rule/Detachment-Rule text (rendering). |
+| `src/data/stratagems11e.js` | Stratagem corpus (metadata + rendered text where available). |
+| `src/data/wargearNames.js` | Supplementary seed corpus (skippable + curated, from `40k-compactor`, unrelated to 40kdc-data). |
+| `scripts/gen-datasheets.mjs` | Regenerates the two datasheet corpora (`npm run gen:datasheets`). |
+| `scripts/gen-stratagems.mjs` | Regenerates the stratagem corpus (`npm run gen:stratagems`). |
 | `scripts/gen-wargear-dict.mjs` | Regenerates the supplementary seed corpus. |
 | `bin/expand.mjs` | CLI wrapper. |
 | `src/components/ArmyExpanderPanel.svelte`, `src/pages/ExpanderPage.svelte` | UI at `#/expander` (lazy-loaded). |
+| `src/components/DatasheetViewerPanel.svelte`, `src/components/RosterRulesPanel.svelte`, `src/pages/DatasheetsPage.svelte` | UI at `#/datasheets` (lazy-loaded). |
 
-## Regenerating the corpus from BSData
-
-The datasheet corpus is derived from [BSData/wh40k-11e](https://github.com/BSData/wh40k-11e)
-(JSON catalogue format). To refresh it after a data update:
-
-```bash
-git clone --depth 1 https://github.com/BSData/wh40k-11e.git /tmp/wh40k-11e
-npm run gen:datasheets -- /tmp/wh40k-11e
-```
-
-The extractor produces, per faction: a `weapons` list (from weapon profiles),
-a `wargear` list (from upgrade entries), a `units` name list, and `unitItems`
-(each datasheet's loadout options). It resolves `entryLink`/`infoLink` `targetId`
-references against a **global id map spanning every file**, so options defined in
-shared libraries or other faction files (e.g. the shared Drones group, Space
-Marine chapters using the core catalogue) are still attributed to the unit.
-
-It also produces, per faction: `armyRules` (`{name, text}`, one per faction — BSData
-has no dedicated container for this, so it's identified as whichever `rule`-type
-`infoLink` is referenced by the most top-level datasheets in that faction's files,
-e.g. Oath of Moment/Blessings of Khorne/Martial Ka'tah all win their faction by a
-wide margin) and `detachmentRules` (`{detachmentNameLower: {name, ruleName,
-ruleText}}` — every detachment is identified by the one structural marker every
-real detachment selectionEntry has regardless of where in the tree it lives: a
-`costs[]` entry named `"Detachment Points"` with `value > 0`). Space Marine
-Chapters inherit the core catalogue's 50+ detachments by link rather than
-redefining them locally, so `detachmentRules` is merged from `Space Marines` into
-each chapter the same way `detachEnhDetails` already is.
+`scripts/gen-datasheets.mjs` produces, per faction: a `weapons` list, a `units`
+name list, and `unitItems` (a unit's `.weapons` getter already aggregates its base
+loadout plus every `wargearOptions` replacement, so it doubles as "everything this
+unit could field" for abbreviation disambiguation — no separate options-walk
+needed). It also produces `armyRules` (`{name, text}`, straight from each
+faction's own `faction_rule_id` — Chapters carry their own distinct one, e.g.
+Black Templars' "Templar Vows" vs the generic "Oath of Moment") and
+`detachmentRules` (`{detachmentNameLower: {name, ruleName, ruleText}}`, from each
+detachment's `detachment_rule_id`). One quirk worth knowing if this needs
+revisiting: Space Marine Chapters have zero units of their own in 40kdc-data (the
+whole roster is one shared "Adeptus Astartes" faction, aliased to "Space Marines"
+here) but *do* have their own detachment records — and the ~16 detachments shared
+by every Chapter (Gladius Task Force, Anvil Siege Force, ...) have
+`detachment_rule_id: null` on every Chapter's own copy; only the "Adeptus
+Astartes" copy carries it, so the generator falls back to that shared copy's rule
+id by matching detachment `id` (not `name`, which isn't unique across factions the
+way `id` is scoped per-catalogue-entry) when a Chapter's own copy is empty.
 
 ## CLI
 
@@ -161,8 +175,8 @@ For each abbreviated token the reverse index gathers every full name that could
 produce it (base form + the compactor's collision-expanded steps), then narrows:
 
 1. **Unit context** — keep only names the current unit can actually field
-   (from BSData `unitItems`). This is what distinguishes the Maulerfiend's `MC`
-   (Magma cutter) from the Jakhal's `MC` (Mauler chainblade).
+   (from the corpus's `unitItems`). This is what distinguishes the Maulerfiend's
+   `MC` (Magma cutter) from the Jakhal's `MC` (Mauler chainblade).
 2. **Base-exact** — prefer names whose base abbreviation equals the token.
 3. **Weapon tier** — prefer weapons over other wargear/abilities.
 4. **Faction scope** — prefer faction-specific names over the generic bucket.

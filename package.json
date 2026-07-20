@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "expand": "node bin/expand.mjs",
     "gen:wargear-dict": "node scripts/gen-wargear-dict.mjs",
-    "gen:datasheets": "node scripts/gen-datasheets-11e.mjs",
+    "gen:datasheets": "node scripts/gen-datasheets.mjs",
     "gen:stratagems": "node scripts/gen-stratagems.mjs"
   },
   "dependencies": {
