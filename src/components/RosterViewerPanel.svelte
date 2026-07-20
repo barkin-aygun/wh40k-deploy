@@ -1,7 +1,9 @@
 <script>
+  import { onMount } from 'svelte';
   import { expandArmyList } from '../lib/services/armyExpander.js';
   import { buildArmyDatasheets, buildRosterRules } from '../lib/services/datasheetLookup.js';
   import { buildRosterStratagems } from '../lib/services/stratagemLookup.js';
+  import { buildRosterShareUrl, readSharedListFromUrl } from '../lib/shareLink.js';
   import DatasheetCard from './DatasheetCard.svelte';
   import RosterRulesPanel from './RosterRulesPanel.svelte';
 
@@ -11,6 +13,7 @@
   let rosterRules = null;
   let rosterStratagems = null;
   let error = '';
+  let shareState = 'idle'; // 'idle' | 'copying' | 'copied' | 'error'
 
   function handleShow() {
     error = '';
@@ -18,6 +21,7 @@
     sheets = [];
     rosterRules = null;
     rosterStratagems = null;
+    shareState = 'idle';
     const text = inputText.trim();
     if (!text) {
       error = 'Paste an army list first — compacted or full, any supported format.';
@@ -40,7 +44,31 @@
     rosterRules = null;
     rosterStratagems = null;
     error = '';
+    shareState = 'idle';
   }
+
+  async function handleShare() {
+    if (!inputText.trim()) return;
+    shareState = 'copying';
+    try {
+      const url = await buildRosterShareUrl(inputText);
+      await navigator.clipboard.writeText(url);
+      shareState = 'copied';
+      setTimeout(() => (shareState = 'idle'), 2000);
+    } catch (e) {
+      console.error('Failed to build/copy share link', e);
+      shareState = 'error';
+      setTimeout(() => (shareState = 'idle'), 2000);
+    }
+  }
+
+  onMount(async () => {
+    const shared = await readSharedListFromUrl();
+    if (shared) {
+      inputText = shared;
+      handleShow();
+    }
+  });
 
   $: missingCount = sheets.filter((s) => !s.found).length;
 </script>
@@ -54,7 +82,7 @@
       spellcheck="false"
     ></textarea>
     <div class="buttons">
-      <button class="primary" on:click={handleShow} disabled={!inputText.trim()}>Show Datasheets</button>
+      <button class="primary" on:click={handleShow} disabled={!inputText.trim()}>Show Roster</button>
       <button on:click={handleClear} disabled={!inputText && !result}>Clear</button>
     </div>
     {#if error}<div class="error">⚠ {error}</div>{/if}
@@ -68,6 +96,9 @@
       {#if result.normalized.points}<span class="badge">{result.normalized.points}</span>{/if}
       <span class="badge">{sheets.length} units</span>
       {#if missingCount}<span class="badge warn">{missingCount} without a datasheet match</span>{/if}
+      <button class="share" on:click={handleShare} disabled={shareState === 'copying'}>
+        {#if shareState === 'copied'}✓ Link copied{:else if shareState === 'error'}⚠ Couldn't copy{:else if shareState === 'copying'}Copying…{:else}🔗 Share{/if}
+      </button>
     </div>
 
     <RosterRulesPanel rules={rosterRules} stratagems={rosterStratagems} />
@@ -154,6 +185,7 @@
   .meta {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.4rem;
   }
   .badge {
@@ -168,6 +200,13 @@
     color: #e0a03a;
     border-color: #6b4e18;
     background: #241a0c;
+  }
+
+  button.share {
+    margin-left: auto;
+    padding: 0.2rem 0.65rem;
+    font-size: 0.72rem;
+    border-radius: 999px;
   }
 
   .sheets {

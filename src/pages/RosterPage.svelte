@@ -1,22 +1,23 @@
 <script>
-  import DatasheetViewerPanel from '../components/DatasheetViewerPanel.svelte';
+  import RosterViewerPanel from '../components/RosterViewerPanel.svelte';
 </script>
 
-<div class="datasheets-page">
+<div class="roster-page">
   <header class="page-head">
-    <h2>Datasheets</h2>
+    <h2>Roster</h2>
     <p>
       Paste an army list — compacted or full — and see the datasheet for every unit in it:
       stats, abilities, wargear profiles, enhancements, Army/Detachment Rules, and available
-      Stratagems, sourced from the community-owned 40kdc-data 11th-edition dataset.
+      Stratagems, sourced from the community-owned 40kdc-data 11th-edition dataset. Share a
+      link to hand someone else the same view.
     </p>
   </header>
 
-  <DatasheetViewerPanel />
+  <RosterViewerPanel />
 </div>
 
 <style>
-  .datasheets-page {
+  .roster-page {
     padding: 5rem 1.5rem 4rem;
     max-width: 900px;
     margin: 0 auto;
