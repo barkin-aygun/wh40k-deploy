@@ -16,6 +16,19 @@ same expansion, then renders each unit's actual BSData datasheet (stats, abiliti
 weapon profiles, enhancements), plus the list's Army Rule and Detachment Rule(s).
 See `src/lib/services/datasheetLookup.js`.
 
+That page also lists the list's available Stratagems (core + detachment-specific),
+sourced separately from the community-owned
+[`@alpaca-software/40kdc-data`](https://github.com/wn-mitch/40kdc-data) package —
+BSData doesn't catalogue stratagems at all (it's a list-building format; stratagems
+aren't a roster choice). That project also deliberately doesn't store GW's
+copyrighted rule text, so most stratagems here carry metadata only (CP cost, phase,
+timing, type, targeting); where it has a structured effect definition, its own
+`describeAbility()` renders that into plain English. See
+`scripts/gen-stratagems.mjs` (regenerate via `npm run gen:stratagems` — no local
+clone needed, `@alpaca-software/40kdc-data` is a normal, version-pinned
+devDependency, same idea as `40k-compactor` for the expander) and
+`src/lib/services/stratagemLookup.js`.
+
 ## Dependency: keep `40k-compactor` current
 
 `node_modules/40k-compactor` is a git dependency pinned to a commit SHA in

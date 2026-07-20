@@ -9,12 +9,14 @@
     "preview": "vite preview",
     "expand": "node bin/expand.mjs",
     "gen:wargear-dict": "node scripts/gen-wargear-dict.mjs",
-    "gen:datasheets": "node scripts/gen-datasheets-11e.mjs"
+    "gen:datasheets": "node scripts/gen-datasheets-11e.mjs",
+    "gen:stratagems": "node scripts/gen-stratagems.mjs"
   },
   "dependencies": {
     "40k-compactor": "github:desjani/40kCompactor"
   },
   "devDependencies": {
+    "@alpaca-software/40kdc-data": "^1.1.2",
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "svelte": "^5.43.8",
     "vite": "^7.2.4"
