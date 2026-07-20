@@ -427,6 +427,25 @@ function factionLeaf(metadata) {
   return matchFaction(raw) || raw.toString().split(' - ').pop().trim();
 }
 
+// GW App exports render the detachment as its own line, "<Detachment> (N
+// Detachment Points)" — e.g. "War Horde (3 Detachment Points)". The library's
+// GW_APP_V11 parser tries to fold a subfaction line into `faction` by peeking
+// the line after it, but that peek only recognises a bare "(N points/pts)"
+// suffix, not "(N Detachment Points)" — so it wrongly swallows the whole
+// detachment line into `faction` (-> "Orks - War Horde (3 Detachment Points)")
+// and then misreads the line *after* that (the mission/game type, e.g. "Take
+// and Hold") as the detachment. Detect and undo that here, format-agnostically
+// (matches whichever parser produced `metadata`, not just GW App), the same
+// way other real-export header quirks are patched in this file.
+const FACTION_EMBEDDED_DETACHMENT_RE =
+  /^(.*)\s-\s(.+?)\s*\(\s*\d+[\d,]*\s*Detachment\s*Points?\s*\)\s*$/i;
+function fixMisparsedGwAppDetachment(metadata) {
+  const m = FACTION_EMBEDDED_DETACHMENT_RE.exec(metadata.faction || '');
+  if (!m) return;
+  metadata.faction = m[1].trim();
+  metadata.detachments = [m[2].trim()];
+}
+
 function displayDetachment(metadata) {
   if (Array.isArray(metadata.detachments) && metadata.detachments.length) {
     return metadata.detachments.join(' and ');
@@ -491,6 +510,7 @@ function normalizeUnit(unit) {
 
 export function normalize(data) {
   const metadata = data.metadata || {};
+  fixMisparsedGwAppDetachment(metadata);
   const units = flattenUnits(data.units).map(normalizeUnit);
   return {
     faction: factionLeaf(metadata),
